@@ -1,0 +1,23 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ATmega1284P
+D 8-bit Microcontroller with 128K Bytes In-System Programmable Flash
+F https://ww1.microchip.com/downloads/en/DeviceDoc/doc8059.pdf
+$ENDCMP
+#
+$CMP TMP275
+D Analog thermistor temperature sensor, ±2.5C accuracy, -55C to +130C, SC-70-5
+K temperature sensor thermistor
+F https://www.ti.com/lit/ds/symlink/tmp275.pdf
+$ENDCMP
+#
+$CMP TPS63031
+F https://www.ti.com/lit/ds/slvs696d/slvs696d.pdf
+$ENDCMP
+#
+$CMP Xbee3
+D Digi XBee and XBee Pro XBees are tiny blue chips that can communicate wirelessly with each other. They can do simple things, like replacing a couple of wires in serial communication, which is nice when you want to make a remote for your paintball vehicle. <h4>SparkFun Products</h4><ul><li><a href="https://www.sparkfun.com/pages/xbee_guide">SparkFun XBee Buying Guide</a></li><li><a href="https://www.sparkfun.com/products/11812">SparkFun XBee Explorer USB</a> (WRL-11812)</li><li><a href="https://www.sparkfun.com/products/8276">Breakout Board for XBee Module</a> (WRL-8276)</li><li><a href="https://www.sparkfun.com/products/11373">SparkFun XBee Explorer Regulated</a> (WRL-11373)</li><li><a href="https://www.sparkfun.com/products/11697">SparkFun XBee Explorer Dongle</a> (WRL-11697)</li><li><a href="https://www.sparkfun.com/products/12847">SparkFun XBee Shield</a> (WRL-12847)</li><li><a href="https://www.sparkfun.com/products/13225">SparkFun XBee Explorer Serial</a> (WRL-13225)</li></ul>
+F https://www.digi.com/resources/library/data-sheets/ds_xbee-3-zigbee-3
+$ENDCMP
+#
+#End Doc Library
