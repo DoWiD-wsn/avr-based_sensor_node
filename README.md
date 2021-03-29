@@ -1,12 +1,13 @@
-# AVR-based Sensor Node (ASN)
+# AVR-based Sensor Node with Xbee (ASN(x))
 
-The **A**VR-based **S**ensor **N**ode (**ASN**) is a low-cost platform for low-power sensor nodes specifically for (environmental) monitoring applications, both indoor and outdoor.
+The **A**VR-based **S**ensor **N**ode with **X*bee (**ASN(x)**) is a low-cost platform for low-power sensor nodes specifically for (environmental) monitoring applications, both indoor and outdoor.
 It was designed with a focus on energy efficiency and robustness.
 
 
 ## Key Facts
 
 * Compact size of 77 x 43.5 mm
+* Powered by two AA batteries (but not limited to; see below)
 * [ATmega1284P](docs/datasheets/ATmega1284P.pdf) low-power 8-bit MCU (running at 4MHz)
     * 128kB flash memory
     * 16kB SRAM

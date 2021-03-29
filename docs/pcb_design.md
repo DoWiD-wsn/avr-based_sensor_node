@@ -1,4 +1,4 @@
-# ASN - PCB Design
+# ASN(x) - PCB Design
 
 The board was designed with KiCad `version 5.1.9` and mainly uses schematic symbols and PCB footprints available in the [KiCad libraries](https://kicad.org/libraries/download/).
 Parts not included in these libraries are available as project-specific libraries (see below).
@@ -28,8 +28,8 @@ kicad/
 ## Costs
 
 For the bill of materials (BOM) provided in the `.ods` file links to suitable components available at [Farnell](https://www.farnell.com/) are given including the prices valid at the time of the development (2021-03).
-The cost of one *ASN* was around 20€ for the components ([Farnell](https://www.farnell.com/)) and around 10€ for the PCB ([PCB Pool / Beta Layout](https://eu.beta-layout.com/pcb/)).
-Thus, the total costs of one *ASN* are around **30€**.
+The cost of one *ASN(x)* was around 20€ for the components ([Farnell](https://www.farnell.com/)) and around 10€ for the PCB ([PCB Pool / Beta Layout](https://eu.beta-layout.com/pcb/)).
+Thus, the total costs of one *ASN(x)* are around **30€**.
 Depending on the supplier and quantities ordered, the costs may vary.
 
 
