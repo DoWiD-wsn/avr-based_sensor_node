@@ -6,6 +6,7 @@ It was designed with a focus on energy efficiency and robustness.
 
 ## Key Facts
 
+* Compact size of 77 x 43.5 mm
 * [ATmega1284P](docs/datasheets/ATmega1284P.pdf) low-power 8-bit MCU (running at 4MHz)
     * 128kB flash memory
     * 16kB SRAM
