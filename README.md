@@ -24,8 +24,8 @@ It was designed with a focus on energy efficiency and robustness.
 * Xbee socket with connected sleep-request and sleep pins
 * Two low-current user LEDs (can be disconnected via cut-through solder jumpers)
 * Two solder jumpers to enable bridging of UART0 and UART1 (for loopbacks)
-* On-board ADC self-test resistor divider
-* On-board connector for thermistor temperature measurements
+* Onboard ADC self-test resistor divider
+* Onboard connector for thermistor temperature measurements
 * Two OWI connectors (incl. pull-up resistors; separate data pins)
 * Two TWI connectors (incl. pull-up resistors)
 * 2x14-pin expansion headers
@@ -45,7 +45,7 @@ It was designed with a focus on energy efficiency and robustness.
 ```
 
 For more information on the PCB (and its design) refer to [docs/pcb_design.md](docs/pcb_design.md).
-The C code library, its functionality and usage as well as example scripts are presented in [docs/code_library.md](docs/code_library.md).
+The C code library, its functionality, and usage as well as example scripts are presented in [docs/code_library.md](docs/code_library.md).
 
 
 ## Built with
@@ -65,4 +65,4 @@ However, for major changes or general discussions please contact [Dominik Widhal
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
