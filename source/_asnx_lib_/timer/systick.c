@@ -6,7 +6,7 @@
 /* STD */
 #include <stddef.h>
 /* OWN */
-#include "systick.h"
+#include "timer/systick.h"
 #include "timer.h"
 
 

@@ -7,7 +7,7 @@
 #include <util/delay.h>
 #include <util/twi.h>
 /* OWN */
-#include "i2c/i2c.h"
+#include "i2c.h"
 #include "util/fuses.h"
 
 

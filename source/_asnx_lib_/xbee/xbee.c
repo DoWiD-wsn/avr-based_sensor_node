@@ -7,7 +7,7 @@
 /* AVR */
 #include <util/delay.h>
 /* OWN */
-#include "xbee/xbee.h"
+#include "xbee.h"
 #include "uart/uart.h"
 
 

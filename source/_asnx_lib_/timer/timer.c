@@ -9,7 +9,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 /* OWN */
-#include "timer/timer.h"
+#include "timer.h"
 #include "util/fuses.h"
 
 

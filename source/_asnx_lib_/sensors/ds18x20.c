@@ -3,7 +3,7 @@
  */
 
 /***** INCLUDES ***************************************************************/
-#include "sensors/ds18x20.h"
+#include "ds18x20.h"
 #include <util/delay.h>
 
 

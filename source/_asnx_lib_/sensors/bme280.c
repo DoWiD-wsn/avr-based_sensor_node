@@ -3,7 +3,7 @@
  */
 
 /***** INCLUDES ***************************************************************/
-#include "sensors/bme280.h"
+#include "bme280.h"
 #include "i2c/i2c.h"
 #include <util/delay.h>
 
