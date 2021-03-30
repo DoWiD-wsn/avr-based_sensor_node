@@ -1,6 +1,6 @@
 # AVR-based Sensor Node with Xbee (ASN(x))
 
-The **A**VR-based **S**ensor **N**ode with **X*bee (**ASN(x)**) is a low-cost platform for low-power sensor nodes specifically for (environmental) monitoring applications, both indoor and outdoor.
+The **A**VR-based **S**ensor **N**ode with **X**bee, short **ASN(x)**, is a low-cost platform for low-power sensor nodes specifically for (environmental) monitoring applications, both indoor and outdoor.
 It was designed with a focus on energy efficiency and robustness.
 
 
