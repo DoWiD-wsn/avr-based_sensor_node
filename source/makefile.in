@@ -44,7 +44,8 @@ ASNX_LIB   		 = ../_asnx_lib_
 ASNX_SRC  		+= $(wildcard $(ASNX_LIB)/*.c)
 ASNX_SRC  		+= $(wildcard $(ASNX_LIB)/**/*.c)
 INCS 			+= -I$(ASNX_LIB)
-INCS 			+= $(addprefix -I, $(dir $(wildcard $(ASNX_LIB)/*/)))
+# Uncomment to avoid subdirectories in the #include statement
+#INCS 			+= $(addprefix -I, $(dir $(wildcard $(ASNX_LIB)/*/)))
 ASNXCOBJS 		:= $(ASNX_SRC:.c=.o)
 ASNXOBJS  		:= $(addprefix $(BUILDDIR)/,$(subst ../,,$(ASNXCOBJS)))
 # Compiler flags
