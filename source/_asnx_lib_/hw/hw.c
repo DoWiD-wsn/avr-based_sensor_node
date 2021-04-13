@@ -1,5 +1,5 @@
 /**
- *  Source file for AVR hardware (HW) functionality.
+ *  Source file for ASN(x) hardware (HW) functionality.
  */
 
 /***** INCLUDES ***************************************************************/
@@ -84,12 +84,8 @@ void hw_set_output_high(hw_io_t* gpio) {
  * Toggle the GPIO output state
  */
 void hw_set_output_toggle(hw_io_t* gpio) {
-    /* Toggle the GPIO state */
-    if(hw_read_input(gpio) == HW_STATE_HIGH) {
-        hw_set_output_state(gpio, HW_STATE_LOW);
-    } else {
-        hw_set_output_state(gpio, HW_STATE_HIGH);
-    }
+    /* Toggle the GPIO */
+    HW_GPIO_TOGGLE(gpio);
 }
 
 

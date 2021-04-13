@@ -1,9 +1,9 @@
 /**
- *  Header file for AVR hardware (HW) functionality.
+ *  Header file for ASN(x) hardware (HW) functionality.
  */
 
-#ifndef _AVR_HW_H_
-#define _AVR_HW_H_
+#ifndef _ASNX_HW_H_
+#define _ASNX_HW_H_
 
 /***** INCLUDES ***************************************************************/
 #include <stdint.h>
@@ -20,6 +20,7 @@
 #define HW_GPIO_OUTPUT(gpio)                (*(gpio->ddr) |= _BV(gpio->portpin))
 #define HW_GPIO_LOW(gpio)                   (*(gpio->port) &= ~_BV(gpio->portpin))
 #define HW_GPIO_HIGH(gpio)                  (*(gpio->port) |= _BV(gpio->portpin))
+#define HW_GPIO_TOGGLE(gpio)                (*(gpio->port) ^= _BV(gpio->portpin))
 #define HW_GPIO_READ(gpio)                  (*(gpio->pin) & _BV(gpio->portpin))
 
 
@@ -42,4 +43,4 @@ void hw_set_output_toggle(hw_io_t* gpio);
 uint8_t hw_read_input(hw_io_t* gpio);
 
 
-#endif // _AVR_HW_H_
+#endif // _ASNX_HW_H_

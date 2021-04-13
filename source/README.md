@@ -37,6 +37,10 @@ The basic commands are:
       `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U hfuse:w:0xXX:m`
     * *Extended fuses*:  
       `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U efuse:w:0xXX:m`
+* The default fuses for the ASN(x) are:  
+  `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U lfuse:w:0xE2:m`  
+  `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U hfuse:w:0xD9:m`  
+  `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U efuse:w:0xFF:m`
 
 
 ## Xbee3 Zigbee ##

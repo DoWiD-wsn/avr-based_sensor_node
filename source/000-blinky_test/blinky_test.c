@@ -2,47 +2,34 @@
  *          BLINKY TEST                                               *
  *                                                                    *
  *  Author: Dominik Widhalm                                           *
- *  Date:   2020-06-08                                                *
+ *  Date:   2021-04-13                                                *
  *                                                                    *
  *  Brief:                                                            *
- *      Simple test application to let the onboard LED blink.         *
+ *      Simple blinky application for the user LEDs.                  *
  *                                                                    *
  **********************************************************************/
  
 
 /***** INCLUDES *******************************************************/
-/*** STD ***/
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 /*** AVR ***/
 #include <avr/io.h>
 #include <util/delay.h>
-/*** OWN ***/
-
-
-/***** DEFINES ********************************************************/
-#define LED_DDR     DDRB
-#define LED_PIN     PINB
-#define LED         PB5
-
-
-/***** GLOBAL VARIABLES ***********************************************/
-
-
-/***** LOCAL FUNCTION PROTOTYPES **************************************/
-
-
-/***** FUNCTIONS ******************************************************/
+/*** _asnx_lib_ ***/
+#include "hw/led.h"
 
 
 /***** MAIN ROUTINE ***************************************************/
 int main (void) {
-    LED_DDR |= _BV(LED);
+    /* Initialize the user LEDs */
+    led_init();
+    led1_low();
+    led2_high();
 
+    /* Toggle them every 500ms */
     while (1) {
-        LED_PIN |= _BV(LED);
-        _delay_ms(250);
+        led1_toggle();
+        led2_toggle();
+        _delay_ms(500);
     }
 
     return(0);
