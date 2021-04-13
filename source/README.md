@@ -17,7 +17,8 @@ That's basically it :)
 ```
 .
 ├── _common_                           : Library files and other common stuff
-├── 000-blinky_test                    : Initial blinky demo to check the toolchain
+├── 000-blinky_demo                    : Initial blinky demo to check the toolchain
+├── 001-adc_uart_demo                  : ADC to UART output demo
 ├── xyz                                : Further applications
 └── ...
 ```
@@ -38,7 +39,7 @@ The basic commands are:
     * *Extended fuses*:  
       `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U efuse:w:0xXX:m`
 * The default fuses for the ASN(x) are:  
-  `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U lfuse:w:0xE2:m`  
+  `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U lfuse:w:0xDD:m`  
   `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U hfuse:w:0xD9:m`  
   `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U efuse:w:0xFF:m`
 
