@@ -1,36 +1,38 @@
-/**
- *  Source file for AVR ADC functionality.
- */
+/*****
+ * @brief   ASN(x) ADC library
+ *
+ * Library to support the use of the ADC.
+ *
+ * @file    /_asnx_lib_/adc/adc.h
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/13 $
+ *****/
 
-/***** INCLUDES ***************************************************************/
+/***** INCLUDES *******************************************************/
 #include "adc.h"
+/*** AVR ***/
 #include <avr/io.h>
 #include <util/delay.h>
 
 
-/***** GLOBAL VARIABLES *******************************************************/
-/* Use precalculated temperature compensation: *
- * (0)  ... use precalculated correction coefficients
- * (1)  ... use signature calculation values (not correct!?)
- */
-#define ADC_TEMP_CORRECTION     (0)
-
-
-/***** FUNCTION PROTOTYPES ****************************************************/
+/***** FUNCTION PROTOTYPES ********************************************/
 void adc_dummy_conversion(void);
 
 
-/***** FUNCTIONS **************************************************************/
-/*** GENERAL (DE)INIT *************************************************/
-/*
- * Initialization of the ADC
- */
-void adc_init(uint8_t prescaler, uint8_t reference) {
-    /* Select the input channel initially to CH0 */
-    adc_set_channel(ADC_CH0);
-    /* Select the prescaler */
+/***** FUNCTIONS ******************************************************/
+/***
+ * Initialize the ADC.
+ *
+ * @param[in]   prescaler   The ADC clock prescaler option
+ * @param[in]   reference   The ADC reference source option
+ ***/
+void adc_init(ADC_PRESCALER_t prescaler, ADC_AREF_t reference) {
+    /* Initially, select input CH0 */
+    adc_set_input(ADC_CH0);
+    /* Set the prescaler */
     adc_set_prescaler(prescaler);
-    /* Select the reference voltage */
+    /* Set the reference voltage */
     adc_set_reference(reference);
     /* Enable the ADC */
     adc_enable();
@@ -39,9 +41,9 @@ void adc_init(uint8_t prescaler, uint8_t reference) {
 }
 
 
-/*
- * De-initialization of the ADC
- */
+/***
+ * De-initialize the ADC.
+ ***/
 void adc_deinit(void) {
     /* Clear the ADC's internal multiplexer */
     ADMUX = 0x00;
@@ -50,57 +52,62 @@ void adc_deinit(void) {
 }
 
 
-/*** SPECIFIC INIT ****************************************************/
-/*
- * Enable the ADC peripheral
- */
+/***
+ * Enable the ADC peripheral.
+ ***/
 void adc_enable(void) {
     /* Enable the ADC */
     ADCSRA |= _BV(ADEN);
 }
 
 
-/*
- * Disable the ADC peripheral
- */
+/***
+ * Disable the ADC peripheral.
+ ***/
 void adc_disable(void) {
     /* Disable the ADC */
     ADCSRA &= ~_BV(ADEN);
 }
 
 
-/*
- * Set the ADC channel
- */
-void adc_set_channel(uint8_t channel) {
-     /* Select desired channel with internal multiplexer */
-    ADMUX = ((ADMUX & 0xE0) | (channel & 0x0F));
+/***
+ * Select the ADC input.
+ *
+ * @param[in]   input       The input to be used
+ ***/
+void adc_set_input(ADC_INPUT_t input) {
+    /* Select desired input with internal multiplexer */
+    ADMUX = ((ADMUX & 0xE0) | (input & 0x0F));
 }
 
 
-/*
- * Set the ADC prescaler
- */
-void adc_set_prescaler(uint8_t prescaler) {
+/***
+ * Select the ADC prescaler.
+ *
+ * @param[in]   prescaler   The prescaler to be used
+ ***/
+void adc_set_prescaler(ADC_PRESCALER_t prescaler) {
     /* Select desired prescaler */
     ADCSRA = ((ADCSRA & 0xF8) | (prescaler & 0x07));
 }
 
 
-/*
- * Set the ADC reference
- */
-void adc_set_reference(uint8_t reference) {
+/***
+ * Select the ADC reference source.
+ *
+ * @param[in]   reference   The reference source to be used
+ ***/
+void adc_set_reference(ADC_AREF_t reference) {
     /* Select desired reference */
     ADMUX = ((ADMUX & 0x2F) | ((reference & 0x03) << 6));
 }
 
 
-/*** READING **********************************************************/
-
-/*
- * Read the current channel of the ADC unit
- */
+/***
+ * Read the currently selected input of the ADC.
+ *
+ * @return      10-bit conversion result (stored in 16-bit right aligned)
+ ***/
 uint16_t adc_read(void) {
     /* Start a single conversion */
     ADCSRA |= _BV(ADSC);
@@ -113,73 +120,47 @@ uint16_t adc_read(void) {
 }
 
 
-/*
- * Read the given channel of the ADC unit
- */
-uint16_t adc_read_channel(uint8_t channel) {
-    /* Set the given channel */
-    adc_set_channel(channel);
+/***
+ * Read the given input of the ADC.
+ *
+ * @param[in]   input       The input to be read
+ * @return      10-bit conversion result (stored in 16-bit right aligned)
+ ***/
+uint16_t adc_read_input(ADC_INPUT_t input) {
+    /* Set the given input */
+    adc_set_input(input);
     /* Return the conversion result */
     return adc_read();
 }
 
 
-/*
- * Perform a dummy conversion
- */
+/***
+ * Perform a dummy conversion.
+ ***/
 void adc_dummy_conversion(void) {
-    /* Perform a conversion but neglect result */
+    /* Perform a conversion but neglect the result */
     (void)adc_read();
 }
 
 
-/*** SPECIAL FUNCTIONS ************************************************/
-/*
- * Measure the supply voltage
- */
+/***
+ * Measure the MCU's supply voltage internally.
+ *
+ * @return      Supply voltage in volts (V)
+ ***/
 float adc_read_vss(void) {
+    /* Save the current ADMUX configuration */
+    uint8_t reg = ADMUX;
     /* Set the register accordingly */
     ADMUX  = 0x4E;
     /* Give the reference some time to settle */
     _delay_ms(ADC_DELAY_CHANGE_REFERENCE);
     /* Perform a dummy conversion */
     adc_dummy_conversion();
-    /* Return the converted ADC value */
-    return (1.1 * (1023.0/(float)adc_read()));
-}
-
-
-/*
- * Measure the core temperature
- */
-float adc_read_temp(void) {
-    /* Set the register accordingly */
-    ADMUX  = 0xC8;
-    /* Give the reference some time to settle */
-    _delay_ms(ADC_DELAY_CHANGE_REFERENCE);
-    /* Perform a dummy conversion */
-    adc_dummy_conversion();
-    /* Return the converted ADC value */
-    return adc_convert_temperature(adc_read());
-}
-
-
-/*** MISC *************************************************************/
-/*
- * Convert temperature reading to degree Celsius
- */
-float adc_convert_temperature(uint16_t input) {
-#if (ADC_TEMP_CORRECTION==1)
-    #include <avr/boot.h>
-    /* Get the calibration values (see datasheet Table 26-5) */
-    float offset = boot_signature_byte_get(0x0002);
-    float gain = boot_signature_byte_get(0x0003);
-    /* Convert reading to degree Celsius (see datasheet 23.8.1) */
-    float temp = ((((float)input - (273.0 + 100.0 - offset)) * 128.0) / gain) + 25.0;
+    /* Store the converted ADC value */
+    float result = (1.1 * (1023.0/(float)adc_read()));
+    /* Restore the ADMUX configuration */
+    ADMUX = reg;
     /* Return the result */
-    return (float)(temp);
-#else
-    // https://playground.arduino.cc/Main/InternalTemperatureSensor/
-    return ((float)input - 324.31) / 1.22;
-#endif
+    return result;
 }

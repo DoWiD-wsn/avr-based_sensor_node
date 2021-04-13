@@ -26,7 +26,8 @@
 /*** AVR ***/
 #include <avr/io.h>
 #include <util/delay.h>
-/*** OWN ***/
+/*** ASNX LIB ***/
+#include "adc/adc.h"
 #include "uart/uart.h"
 #include "util/printf.h"
 
@@ -46,25 +47,19 @@
 /***** MAIN ROUTINE ***************************************************/
 int main(void) {
     /*** Variables ***/
-    uint8_t count=0;
     
     /*** Initialize the hardware ***/
-    /* PRINT/UART */
+    adc_init(ADC_ADPS_16,ADC_REFS_VCC); // Initialize the ADC
     uart1_init();                       // Initialize the UART0
     printf_init(uart1_putc);            // Initialize the printf function
     
-    uart1_putc('H');
-    uart1_putc('e');
-    uart1_putc('l');
-    uart1_putc('l');
-    uart1_putc('o');
-    uart1_putc('!');
-    uart1_putc('\n');
-    uart1_puts("What's up?\n");
-    
     /* Main Routine */
     while (1) {
-        printf("Test it! x = %d\n", count++);
+        printf("ADC0 value = %d\n", adc_read_input(ADC_CH0));
+        printf("ADC1 value = %d\n", adc_read_input(ADC_CH1));
+        printf("ADC2 value = %d\n", adc_read_input(ADC_CH2));
+        printf("ADC3 value = %d\n", adc_read_input(ADC_CH3));
+        printf("\n");
         _delay_ms(1000);
     }
 
