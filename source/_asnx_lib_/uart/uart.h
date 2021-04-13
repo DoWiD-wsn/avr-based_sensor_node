@@ -1,21 +1,28 @@
-/**
- *  Header file for ASN(x) UART functionality.
- */
+/*****
+ * @brief   ASN(x) UART library
+ *
+ * Library to support the use of the UART (blocking and non-blocking).
+ *
+ * @file    /_asnx_lib_/uart/uart.h
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/13 $
+ *****/
 
 #ifndef _ASNX_UART_H_
 #define _ASNX_UART_H_
 
-/***** INCLUDES ***************************************************************/
+/***** INCLUDES *******************************************************/
 #include <stdint.h>
 
 
-/***** MACROS *****************************************************************/
-/*** BASIC CPU FREQUENCY ***/
+/***** DEFINES ********************************************************/
+/*** CPU frequency (F_CPU) ***/
 #ifndef F_CPU
 # warning "F_CPU not defined for \"uart.h\""
 # define F_CPU 4000000UL
 #endif
-/*** UART SPECIFIC ***/
+/*** UART specifics ***/
 /* Use 2X mode for higher baud rate */
 #define UART_USE_2X                 (0)
 /* Function return values */
@@ -23,24 +30,18 @@
 #define UART_RET_ERROR              (-1)
 
 
-/***** GLOBAL VARIABLES *******************************************************/
-
-
-/***** ENUMERATION ************************************************************/
-
-
-/***** STRUCTURES *************************************************************/
+/***** STRUCTURES *****************************************************/
+/***
+ * A structure to store the UART function callbacks.
+ ***/
 typedef struct {
-    /* RX callback function (receive) */
-    void (*f_rx)(void);
-    /* TX callback function (transmit) */
-    void (*f_tx)(void);
-    /* EMTPY callback function (receive) */
-    void (*f_empty)(void);
+    void (*f_rx)(void);     /**< RX callback function (receive) */
+    void (*f_tx)(void);     /**< TX callback function (transmit) */
+    void (*f_empty)(void);  /**< EMTPY callback function (receive) */
 } uart_isr_t;
 
 
-/***** FUNCTION PROTOTYPES ****************************************************/
+/***** FUNCTION PROTOTYPES ********************************************/
 /*** GENERAL ***/
 void uart0_init(void);
 void uart1_init(void);
@@ -81,9 +82,6 @@ void uart0_rx_flush(void);
 void uart1_rx_flush(void);
 void uart0_tx_flush(void);
 void uart1_tx_flush(void);
-
-
-/***** INLINE FUNCTIONS *******************************************************/
 
 
 #endif // _ASNX_UART_H_

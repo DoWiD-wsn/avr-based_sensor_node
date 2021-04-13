@@ -1,3 +1,3 @@
-TARGET = blinky_test
+TARGET = blinky_demo
 
 include ../makefile.in

@@ -1,19 +1,27 @@
-/**
- *  Header file for PRINTF functionality.
- * 
- *  Adapted taken from Marco Paland (info@paland.com)
- */
+/*****
+ * @brief   ASN(x) printf library
+ *
+ * Library to enable printf functionality.
+ *
+ * @file    /_asnx_lib_/util/printf.h
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/13 $
+ *
+ * @see     https://github.com/mpaland/printf
+ *****/
 
 #ifndef _ASNX_PRINTF_H_
 #define _ASNX_PRINTF_H_
 
-/***** INCLUDES ***************************************************************/
+/***** INCLUDES *******************************************************/
+/*** STD ***/
 #include <stdint.h>
 #include <stdarg.h>
 #include <stddef.h>
 
 
-/***** MACROS *****************************************************************/
+/***** MACROS *********************************************************/
 /* 'ntoa' conversion buffer size (default: 32 byte) */
 #define PRINTF_NTOA_BUFFER_SIZE         (32U)
 /* 'ftoa' conversion buffer size (default: 32 byte) */
@@ -37,16 +45,8 @@
 #define PRINTF_FLAGS_ADAPT_EXP          (1U << 11U)
 
 
-/***** GLOBAL VARIABLES *******************************************************/
-
-
-/***** ENUMERATION ************************************************************/
-
-
-/***** STRUCTURES *************************************************************/
-
-
-/***** FUNCTION PROTOTYPES ****************************************************/
+/***** FUNCTION PROTOTYPES ********************************************/
+void printf_init(void (*callback)(char c));
 #define printf printf_
 int printf_(const char* format, ...);
 #define sprintf sprintf_
@@ -58,10 +58,6 @@ int vsnprintf_(char* buffer, size_t count, const char* format, va_list va);
 #define vprintf vprintf_
 int vprintf_(const char* format, va_list va);
 int fctprintf(void (*out)(char character, void* arg), void* arg, const char* format, ...);
-
-
-/***** INLINE FUNCTIONS *******************************************************/
-
 
 
 #endif // _ASNX_PRINTF_H_

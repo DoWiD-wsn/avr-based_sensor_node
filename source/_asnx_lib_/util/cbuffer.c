@@ -1,33 +1,27 @@
-/**
- *  Source file for Circular Buffer functionality.
- */
+/*****
+ * @brief   ASN(x) circular buffer library
+ *
+ * Library to enable circular buffer functionality.
+ *
+ * @file    /_asnx_lib_/util/cbufffer.h
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/13 $
+ *****/
 
-/***** INCLUDES ***************************************************************/
-/* STD */
-#include <stddef.h>
-/* OWN */
+/***** INCLUDES *******************************************************/
 #include "cbuffer.h"
+/*** STD ***/
+#include <stddef.h>
 
 
-/***** MACROS *****************************************************************/
-
-
-/***** ENUMERATION ************************************************************/
-
-
-/***** STRUCTURES *************************************************************/
-
-
-/***** GLOBAL VARIABLES *******************************************************/
-
-
-/***** LOCAL FUNCTION PROTOTYPES **********************************************/
-
-
-/***** FUNCTIONS **************************************************************/
-/*
- * Initialize the ring buffer structure
- */
+/***** FUNCTIONS ******************************************************/
+/***
+ * Initialize a circular buffer structure.
+ *
+ * @param[in]   cb      Pointer to the circular buffer structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
 int8_t cbuf_init(cbuf_t* cb) {
     uint8_t i;
     /* Check if the pointer is valid */
@@ -50,18 +44,25 @@ int8_t cbuf_init(cbuf_t* cb) {
 }
 
 
-/*
- * Flush the ring buffer structure
- */
+/***
+ * Flush a circular buffer structure.
+ *
+ * @param[in]   cb      Pointer to the circular buffer structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
 int8_t cbuf_flush(cbuf_t* cb) {
     /* Flushing does the same as init */
     return cbuf_init(cb);
 }
 
 
-/*
- * Push an element on the ring buffer
- */
+/***
+ * Push an element on the circular buffer.
+ *
+ * @param[in]   cb      Pointer to the circular buffer structure
+ * @param[in]   byte    Byte to be written to the circular buffer
+ * @return      OK in case of success; ERROR otherwise
+ ***/
 int8_t cbuf_push(cbuf_t* cb, uint8_t byte) {
     /* Check if the pointer is valid */
     if(cb != NULL) {
@@ -95,9 +96,13 @@ int8_t cbuf_push(cbuf_t* cb, uint8_t byte) {
 }
 
 
-/*
- * Pop an element from the ring buffer
- */
+/***
+ * Pop an element from the circular buffer.
+ *
+ * @param[in]   cb      Pointer to the circular buffer structure
+ * @param[out]  byte    Byte to be read from the circular buffer
+ * @return      OK in case of success; ERROR otherwise
+ ***/
 int8_t cbuf_pop(cbuf_t* cb, uint8_t* byte) {
     /* Check if the pointer is valid */
     if(cb != NULL) {
@@ -131,9 +136,12 @@ int8_t cbuf_pop(cbuf_t* cb, uint8_t* byte) {
 }
 
 
-/*
- * Get the number of stored elements (cnt)
- */
+/***
+ * Get the number of stored elements in the circular buffer.
+ *
+ * @param[in]   cb      Pointer to the circular buffer structure
+ * @return      Number of bytes in the circular buffer
+ ***/
 int8_t cbuf_getcnt(cbuf_t* cb) {
     /* Check if the pointer is valid */
     if(cb != NULL) {
@@ -145,9 +153,12 @@ int8_t cbuf_getcnt(cbuf_t* cb) {
 }
 
 
-/*
- * Check if the ring buffer is empty
- */
+/***
+ * Check if the circular buffer is empty.
+ *
+ * @param[in]   cb      Pointer to the circular buffer structure
+ * @return      1 if buffer is empty, 0 if not; ERROR otherwise
+ ***/
 int8_t cbuf_isempty(cbuf_t* cb) {
     /* Check if the pointer is valid */
     if(cb != NULL) {
@@ -165,9 +176,12 @@ int8_t cbuf_isempty(cbuf_t* cb) {
 }
 
 
-/*
- * Check if the ring buffer is full
- */
+/***
+ * Check if the circular buffer is full.
+ *
+ * @param[in]   cb      Pointer to the circular buffer structure
+ * @return      1 if buffer is full, 0 if not; ERROR otherwise
+ ***/
 int8_t cbuf_isfull(cbuf_t* cb) {
     /* Check if the pointer is valid */
     if(cb != NULL) {

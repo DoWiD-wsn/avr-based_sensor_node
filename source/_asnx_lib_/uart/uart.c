@@ -1,55 +1,46 @@
-/**
- *  Source file for ASN(x) UART functionality.
- */
+/*****
+ * @brief   ASN(x) UART library
+ *
+ * Library to support the use of the UART (blocking and non-blocking).
+ *
+ * @file    /_asnx_lib_/uart/uart.c
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/13 $
+ *****/
 
-/***** INCLUDES ***************************************************************/
-/* STD */
+/***** INCLUDES *******************************************************/
+#include "uart.h"
+/*** STD ***/
 #include <stddef.h>
-/* AVR */
+/*** AVR ***/
 #include <avr/io.h>
 #include <avr/interrupt.h>
-/* OWN */
+/*** ASNX LIB ***/
 #include "util/cbuffer.h"
-#include "uart.h"
 
 
-/***** MACROS *****************************************************************/
-/*** UART CONFIG ***/
-/* Macro to get the BAUD register value */
+/***** DEFINES ********************************************************/
+/* Calculate the BAUD register values */
 #define UART_UBRR_ASYNC_NORMAL(br)  ((F_CPU / (br * 16.0)) - 1.0)
 #define UART_UBRR_ASYNC_DOUBLE(br)  ((F_CPU / (br * 8.0)) - 1.0)
 
 
-/***** ENUMERATION ************************************************************/
-
-
-/***** STRUCTURES *************************************************************/
-
-
-/***** GLOBAL VARIABLES *******************************************************/
-/* Circular buffer (needs to be global due to ISR) */
+/***** GLOBAL VARIABLES ***********************************************/
+/* Circular buffers (need to be global due to ISR) */
 cbuf_t uart0_cb_rx;
 cbuf_t uart0_cb_tx;
 cbuf_t uart1_cb_rx;
 cbuf_t uart1_cb_tx;
-/* UART structure for function callbacks */
+/* UART structures for function callbacks */
 uart_isr_t uart0_isr;
 uart_isr_t uart1_isr;
 
 
-/***** LOCAL FUNCTION PROTOTYPES **********************************************/
-
-
-/***** WRAPPER FUNCTIONS ******************************************************/
-
-
-/***** INTERRUPT SERVICE ROUTINE (ISR) ****************************************/
-
-
-/***** FUNCTIONS **************************************************************/
-/*
- * Initialization of the UART
- */
+/***** FUNCTIONS ******************************************************/
+/***
+ * Initialize the UART0 interface (default: 9600 baud).
+ ***/
 void uart0_init(void) {
     /* Set baudrate per default to 9600 */
     uart0_set_baudrate(9600);
@@ -70,6 +61,11 @@ void uart0_init(void) {
     cbuf_init(&uart0_cb_rx);
     cbuf_init(&uart0_cb_tx);
 }
+
+
+/***
+ * Initialize the UART1 interface (default: 9600 baud).
+ ***/
 void uart1_init(void) {
     /* Set baudrate per default to 9600 */
     uart1_set_baudrate(9600);
@@ -92,9 +88,11 @@ void uart1_init(void) {
 }
 
 
-/*
- * Set the UART baudrate
- */
+/***
+ * Set the BAUD rate of UART0.
+ *
+ * @param[in]   baudrate    The baud rate to be set.
+ ***/
 void uart0_set_baudrate(uint32_t baudrate) {
     /* Set the baudrate */
 #if UART_USE_2X
@@ -105,6 +103,13 @@ void uart0_set_baudrate(uint32_t baudrate) {
     UBRR0L = (uint8_t)((uint16_t)(UART_UBRR_ASYNC_NORMAL(baudrate)) & 0x00FF);
 #endif
 }
+
+
+/***
+ * Set the BAUD rate of UART1.
+ *
+ * @param[in]   baudrate    The baud rate to be set.
+ ***/
 void uart1_set_baudrate(uint32_t baudrate) {
     /* Set the baudrate */
 #if UART_USE_2X
@@ -117,22 +122,27 @@ void uart1_set_baudrate(uint32_t baudrate) {
 }
 
 
-/*
- * Enable UART interrupts
- */
+/***
+ * Enable the UART0 interface.
+ ***/
 void uart0_interrupt_enable(void) {
     /* Enable "RX Complete Interrupt" */
     UCSR0B |= _BV(RXCIE0);
 }
+
+
+/***
+ * Enable the UART1 interface.
+ ***/
 void uart1_interrupt_enable(void) {
     /* Enable "RX Complete Interrupt" */
     UCSR1B |= _BV(RXCIE1);
 }
 
 
-/*
- * Disable UART interrupts
- */
+/***
+ * Disable the UART0 interface.
+ ***/
 void uart0_interrupt_disable(void) {
     /* Disable "RX Complete Interrupt" */
     UCSR0B &= ~_BV(RXCIE0);
@@ -141,6 +151,11 @@ void uart0_interrupt_disable(void) {
     /* Disable "USART Data Register Empty Interrupt" */
     UCSR0B &= ~_BV(UDRIE0);
 }
+
+
+/***
+ * Disable the UART1 interface.
+ ***/
 void uart1_interrupt_disable(void) {
     /* Disable "RX Complete Interrupt" */
     UCSR1B &= ~_BV(RXCIE1);
@@ -150,58 +165,91 @@ void uart1_interrupt_disable(void) {
     UCSR1B &= ~_BV(UDRIE1);
 }
 
-/*
- * Set a UART RX callback function
- */
+
+/***
+ * Set a UART0 RX callback function.
+ *
+ * @param[in]   callback    Callback function pointer
+ ***/
 void uart0_set_callback_rx(void (*callback)()) {
     /* Set the callback function */
     uart0_isr.f_rx = callback;
 }
+
+
+/***
+ * Set a UART1 RX callback function.
+ *
+ * @param[in]   callback    Callback function pointer
+ ***/
 void uart1_set_callback_rx(void (*callback)()) {
     /* Set the callback function */
     uart1_isr.f_rx = callback;
 }
 
 
-/*
- * Set a UART TX callback function
- */
+/***
+ * Set a UART0 TX callback function.
+ *
+ * @param[in]   callback    Callback function pointer
+ ***/
 void uart0_set_callback_tx(void (*callback)()) {
     /* Set the callback function */
     uart0_isr.f_tx = callback;
 }
+
+
+/***
+ * Set a UART1 TX callback function.
+ *
+ * @param[in]   callback    Callback function pointer
+ ***/
 void uart1_set_callback_tx(void (*callback)()) {
     /* Set the callback function */
     uart1_isr.f_tx = callback;
 }
 
 
-/*
- * Set a UART EMPTY callback function
- */
+/***
+ * Set a UART0 EMPTY callback function.
+ *
+ * @param[in]   callback    Callback function pointer
+ ***/
 void uart0_set_callback_empty(void (*callback)()) {
     /* Set the callback function */
     uart0_isr.f_empty = callback;
 }
+
+
+/***
+ * Set a UART1 EMPTY callback function.
+ *
+ * @param[in]   callback    Callback function pointer
+ ***/
 void uart1_set_callback_empty(void (*callback)()) {
     /* Set the callback function */
     uart1_isr.f_empty = callback;
 }
 
 
-/**************************************/
-/***** BLOCKING ***********************/
-/**************************************/
-
-/*
- * Write a character via UART
- */
+/***
+ * Transmit a character via UART0 (blocking).
+ *
+ * @param[in]   c           Character to be transmitted
+ ***/
 void uart0_putc(char c) {
     /* Wait for transmit buffer to be empty */
     while(!(UCSR0A & _BV(UDRE0)));
     /* Write byte to the output buffer */
     UDR0 = c;
 }
+
+
+/***
+ * Transmit a character via UART1 (blocking).
+ *
+ * @param[in]   c           Character to be transmitted
+ ***/
 void uart1_putc(char c) {
     /* Wait for transmit buffer to be empty */
     while(!(UCSR1A & _BV(UDRE1)));
@@ -210,15 +258,24 @@ void uart1_putc(char c) {
 }
 
 
-/*
- * Write a string via UART
- */
+/***
+ * Write a string via UART0 (blocking).
+ *
+ * @param[in]   s           String to be transmitted
+ ***/
 void uart0_puts(char* s) {
     /* Transmit the string character by character */
     while(*s) {
         uart0_putc(*s++);
     }
 }
+
+
+/***
+ * Write a string via UART1 (blocking).
+ *
+ * @param[in]   s           String to be transmitted
+ ***/
 void uart1_puts(char* s) {
     /* Transmit the string character by character */
     while(*s) {
@@ -226,9 +283,14 @@ void uart1_puts(char* s) {
     }
 }
 
-/*
- * Write data to the UART in blocking mode
- */
+
+/***
+ * Transmit a number of bytes via UART0 (blocking).
+ *
+ * @param[in]   data        Pointer to the data array
+ * @param[in]   len         Number of bytes to be transmitted
+ * @return      OK in case of successful
+ ***/
 int8_t uart0_write_blocking(uint8_t* data, uint16_t len) {
     uint16_t i;
     /* Put the specified number of bytes in the TX buffer */
@@ -236,9 +298,17 @@ int8_t uart0_write_blocking(uint8_t* data, uint16_t len) {
         /* Write the byte via UART */
         uart0_putc(data[i]);
     }
-    /* Return success */
     return UART_RET_OK;
 }
+
+
+/***
+ * Transmit a number of bytes via UART1 (blocking).
+ *
+ * @param[in]   data        Pointer to the data array
+ * @param[in]   len         Number of bytes to be transmitted
+ * @return      OK in case of successful
+ ***/
 int8_t uart1_write_blocking(uint8_t* data, uint16_t len) {
     uint16_t i;
     /* Put the specified number of bytes in the TX buffer */
@@ -246,20 +316,28 @@ int8_t uart1_write_blocking(uint8_t* data, uint16_t len) {
         /* Write the byte via UART */
         uart1_putc(data[i]);
     }
-    /* Return success */
     return UART_RET_OK;
 }
 
 
-/*
- * Read a character from UART
- */
+/***
+ * Receive a character from UART0 (blocking).
+ *
+ * @return      Character read
+ ***/
 uint8_t uart0_getc(void) {
     /* Wait until reception is finished */
     while(!(UCSR0A & _BV(RXC0)));
     /* Return the received byte */
     return UDR0;
 }
+
+
+/***
+ * Receive a character from UART1 (blocking).
+ *
+ * @return      Character read
+ ***/
 uint8_t uart1_getc(void) {
     /* Wait until reception is finished */
     while(!(UCSR1A & _BV(RXC1)));
@@ -268,13 +346,16 @@ uint8_t uart1_getc(void) {
 }
 
 
-/*
- * Read a string from UART
- */
+/***
+ * Receive a string from UART0 (blocking) up to a certain length.
+ *
+ * @param[out]  s           String to be received.
+ * @param[in]   len         Maximum number of bytes to be received
+ * @return      OK in case of successful
+ ***/
 int8_t uart0_gets(uint8_t* s, uint16_t len) {
     uint16_t index = 0;
     uint8_t temp;
-
     /* Read until string is finished or len is reached */
     do {
         /* Read next character */
@@ -282,17 +363,23 @@ int8_t uart0_gets(uint8_t* s, uint16_t len) {
         /* Store character in string buffer */
         s[index++] = temp;
     } while((index < len) && (temp != '\n'));
-
     /* Make sure the string is null terminated */
     s[index] = '\0';
-    
     /* Return success */
     return UART_RET_OK;
 }
+
+
+/***
+ * Receive a string from UART1 (blocking) up to a certain length.
+ *
+ * @param[out]  s           String to be received.
+ * @param[in]   len         Maximum number of bytes to be received
+ * @return      OK in case of successful
+ ***/
 int8_t uart1_gets(uint8_t* s, uint16_t len) {
     uint16_t index = 0;
     uint8_t temp;
-
     /* Read until string is finished or len is reached */
     do {
         /* Read next character */
@@ -300,22 +387,20 @@ int8_t uart1_gets(uint8_t* s, uint16_t len) {
         /* Store character in string buffer */
         s[index++] = temp;
     } while((index < len) && (temp != '\n'));
-
     /* Make sure the string is null terminated */
     s[index] = '\0';
-    
     /* Return success */
     return UART_RET_OK;
 }
 
 
-/**************************************/
-/***** NON-BLOCKING *******************/
-/**************************************/
-
-/*
- * Write data to the UART in non-blocking mode (ISR)
- */
+/***
+ * Write data to the UART0 TX buffer (non-blocking ISR mode).
+ *
+ * @param[in]   data        Pointer to the data array to be written
+ * @param[in]   len         Number of bytes to be written
+ * @return      OK in case of successful
+ ***/
 int8_t uart0_write(uint8_t* data, uint16_t len) {
     uint16_t i;
     /* Put the specified number of bytes in the TX buffer */
@@ -332,6 +417,15 @@ int8_t uart0_write(uint8_t* data, uint16_t len) {
     /* Return success */
     return UART_RET_OK;
 }
+
+
+/***
+ * Write data to the UART1 TX buffer (non-blocking ISR mode).
+ *
+ * @param[in]   data        Pointer to the data array to be written
+ * @param[in]   len         Number of bytes to be written
+ * @return      OK in case of successful
+ ***/
 int8_t uart1_write(uint8_t* data, uint16_t len) {
     uint16_t i;
     /* Put the specified number of bytes in the TX buffer */
@@ -350,9 +444,13 @@ int8_t uart1_write(uint8_t* data, uint16_t len) {
 }
 
 
-/*
- * Read from the UART in non-blocking mode (ISR)
- */
+/***
+ * Read data from the UART0 RX buffer (non-blocking ISR mode).
+ *
+ * @param[out]  data        Pointer to the data array to be read
+ * @param[in]   len         Maximum number of bytes to be read
+ * @return      OK in case of successful
+ ***/
 uint16_t uart0_read(uint8_t* data, uint16_t len) {
     uint16_t i=0;
     /* Get bytes from the RX buffer */
@@ -372,6 +470,15 @@ uint16_t uart0_read(uint8_t* data, uint16_t len) {
     /* Return success */
     return i;
 }
+
+
+/***
+ * Read data from the UART1 RX buffer (non-blocking ISR mode).
+ *
+ * @param[out]  data        Pointer to the data array to be read
+ * @param[in]   len         Maximum number of bytes to be read
+ * @return      OK in case of successful
+ ***/
 uint16_t uart1_read(uint8_t* data, uint16_t len) {
     uint16_t i=0;
     /* Get bytes from the RX buffer */
@@ -393,63 +500,94 @@ uint16_t uart1_read(uint8_t* data, uint16_t len) {
 }
 
 
-/*
- * Get the amount of byte currently in the RX buffer
- */
+/***
+ * Get the amount of byte currently in the UART0 RX buffer.
+ *
+ * @return      Number of bytes in the UART0 RX buffer
+ ***/
 uint16_t uart0_rx_buffer_cnt(void) {
     /* Return number of bytes in RX buffer */
     return uart0_cb_rx.cnt;
 }
+
+
+/***
+ * Get the amount of byte currently in the UART1 RX buffer.
+ *
+ * @return      Number of bytes in the UART1 RX buffer
+ ***/
 uint16_t uart1_rx_buffer_cnt(void) {
     /* Return number of bytes in RX buffer */
     return uart1_cb_rx.cnt;
 }
 
 
-/*
- * Get the amount of byte currently in the TX buffer
- */
+/***
+ * Get the amount of byte currently in the UART0 TX buffer.
+ *
+ * @return      Number of bytes in the UART0 TX buffer
+ ***/
 uint16_t uart0_tx_buffer_cnt(void) {
     /* Return number of bytes in TX buffer */
     return uart0_cb_tx.cnt;
 }
+
+
+/***
+ * Get the amount of byte currently in the UART1 TX buffer.
+ *
+ * @return      Number of bytes in the UART1 TX buffer
+ ***/
 uint16_t uart1_tx_buffer_cnt(void) {
     /* Return number of bytes in TX buffer */
     return uart1_cb_tx.cnt;
 }
 
 
-/*
- * Flush the UART RX buffer
- */
+/***
+ * Flush the UART0 RX buffer
+ ***/
 void uart0_rx_flush(void) {
     /* Flush the CB */
     cbuf_flush(&uart0_cb_rx);
 }
+
+
+/***
+ * Flush the UART1 RX buffer
+ ***/
 void uart1_rx_flush(void) {
     /* Flush the CB */
     cbuf_flush(&uart1_cb_rx);
 }
 
 
-/*
- * Flush the UART RX buffer
- */
+/***
+ * Flush the UART0 TX buffer
+ ***/
 void uart0_tx_flush(void) {
     /* Flush the CB */
     cbuf_flush(&uart0_cb_tx);
 }
+
+
+/***
+ * Flush the UART1 TX buffer
+ ***/
 void uart1_tx_flush(void) {
     /* Flush the CB */
     cbuf_flush(&uart1_cb_tx);
 }
 
 
-/***** INTERRUPT SERVICE ROUTINES (ISR) *******************************/
-/*
- * RX Complete Interrupt
- */
+/***
+ * UART0 RX complete interrupt
+ ***/
+#if defined(__DOXYGEN__)
+void USART0_RX_vect(void) {
+#else
 ISR(USART0_RX_vect) {
+#endif
     /* Push received byte in RX buffer */
     cbuf_push(&uart0_cb_rx,UDR0);
     /* Check if a callback function was defined */
@@ -458,7 +596,16 @@ ISR(USART0_RX_vect) {
         uart0_isr.f_rx();
     }
 }
+
+
+/***
+ * UART1 RX complete interrupt
+ ***/
+#if defined(__DOXYGEN__)
+void USART1_RX_vect(void) {
+#else
 ISR(USART1_RX_vect) {
+#endif
     /* Push received byte in RX buffer */
     cbuf_push(&uart1_cb_rx,UDR1);
     /* Check if a callback function was defined */
@@ -469,17 +616,30 @@ ISR(USART1_RX_vect) {
 }
 
 
-/*
- * TX Complete Interrupt
- */
+/***
+ * UART0 TX complete interrupt
+ ***/
+#if defined(__DOXYGEN__)
+void USART0_TX_vect(void) {
+#else
 ISR(USART0_TX_vect) {
+#endif
     /* Check if a callback function was defined */
     if(uart0_isr.f_tx != NULL) {
         /* Call function */
         uart0_isr.f_tx();
     }
 }
+
+
+/***
+ * UART0 TX complete interrupt
+ ***/
+#if defined(__DOXYGEN__)
+void USART1_TX_vect(void) {
+#else
 ISR(USART1_TX_vect) {
+#endif
     /* Check if a callback function was defined */
     if(uart1_isr.f_tx != NULL) {
         /* Call function */
@@ -488,10 +648,14 @@ ISR(USART1_TX_vect) {
 }
 
 
-/*
- * USART Data Register Empty Interrupt
- */
+/***
+ * UART0 data register empty interrupt
+ ***/
+#if defined(__DOXYGEN__)
+void USART0_UDRE_vect(void) {
+#else
 ISR(USART0_UDRE_vect) {
+#endif
     uint8_t tmp;
     int8_t ret;
     /* Try to pop one byte from the CB */
@@ -510,7 +674,16 @@ ISR(USART0_UDRE_vect) {
         }
     }
 }
+
+
+/***
+ * UART1 data register empty interrupt
+ ***/
+#if defined(__DOXYGEN__)
+void USART0_UDRE_vect(void) {
+#else
 ISR(USART1_UDRE_vect) {
+#endif
     uint8_t tmp;
     int8_t ret;
     /* Try to pop one byte from the CB */

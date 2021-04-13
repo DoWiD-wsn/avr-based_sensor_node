@@ -1,18 +1,28 @@
-/**
- *  Source file for PRINTF functionality.
- * 
- *  Taken from https://github.com/mpaland/printf
- */
+/*****
+ * @brief   ASN(x) printf library
+ *
+ * Library to enable printf functionality.
+ *
+ * @file    /_asnx_lib_/util/printf.c
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/13 $
+ *
+ * @see     https://github.com/mpaland/printf
+ *****/
 
-/***** INCLUDES ***************************************************************/
+
+/***** INCLUDES *******************************************************/
+#include "printf.h"
+/*** STD ***/
 #include <stdbool.h>
 #include <stdint.h>
 #include <float.h>
+/*** ASNX LIB ***/
 #include "uart/uart.h"
-#include "printf.h"
 
 
-/***** STRUCTURES *************************************************************/
+/***** STRUCTURES *****************************************************/
 /* Output function type */
 typedef void (*out_fct_type)(char character, void* buffer, size_t idx, size_t maxlen);
 
@@ -23,7 +33,9 @@ typedef struct {
 } out_fct_wrap_type;
 
 
-/***** GLOBAL VARIABLES *******************************************************/
+/***** GLOBAL VARIABLES ***********************************************/
+/* UART structures for function callbacks */
+void (*_printf_putc)(char c) = NULL;
 
 
 /***** LOCAL FUNCTION PROTOTYPES **********************************************/
@@ -48,8 +60,11 @@ static inline void _out_null(char character, void* buffer, size_t idx, size_t ma
 static inline void _out_char(char character, void* buffer, size_t idx, size_t maxlen) {
     (void)buffer; (void)idx; (void)maxlen;
     if (character) {
-        // Call UART put_character function */
-        uart1_putc(character);
+        /* Check if putc callback function is already set */
+        if (_printf_putc != NULL) {
+            // Call putc function */
+            _printf_putc(character);
+        }
     }
 }
 
@@ -78,6 +93,15 @@ static inline bool _is_digit(char ch) {
 
 
 /***** FUNCTIONS **************************************************************/
+/***
+ * Initialize the printf function (set putc function).
+ ***/
+void printf_init(void (*callback)(char c)) {
+    /* Set the putc function */
+    _printf_putc = callback;
+}
+
+
 // internal ASCII string to unsigned int conversion
 static unsigned int _atoi(const char** str) {
     unsigned int i = 0U;

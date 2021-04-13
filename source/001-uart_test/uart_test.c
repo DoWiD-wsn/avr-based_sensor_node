@@ -51,6 +51,7 @@ int main(void) {
     /*** Initialize the hardware ***/
     /* PRINT/UART */
     uart1_init();                       // Initialize the UART0
+    printf_init(uart1_putc);            // Initialize the printf function
     
     uart1_putc('H');
     uart1_putc('e');
