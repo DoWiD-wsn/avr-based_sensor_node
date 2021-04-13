@@ -29,6 +29,11 @@ OBJCP         	 = avr-objcopy
 OBJDMP       	 = avr-objdump
 SIZE        	 = avr-size
 
+# Default fuses
+LFUSE			 = 0xE2
+HFUSE			 = 0xD9
+EFUSE			 = 0xFF
+
 
 ################################################################################
 # below only edit with care
@@ -74,6 +79,10 @@ CFLAGS        	+= -Wextra
 ### Programmer ###
 DUDE_ISP     = avrdude -p $(MCU) -c avrispv2 -P $(PORT) -v
 DUDE_FLASH   = -U flash:w:
+DUDE_LFUSE   = -U lfuse:w:
+DUDE_HFUSE   = -U hfuse:w:
+DUDE_EFUSE   = -U efuse:w:
+DUDE_FUSE_T  = :m
 DUDE_ERASE   = -e
 
 
@@ -108,6 +117,9 @@ size: $(BUILDDIR)/$(TARGET).elf
 flash: $(BUILDDIR)/$(TARGET).hex
 	$(DUDE_ISP) $(DUDE_FLASH)$(BUILDDIR)/$(TARGET).hex
 
+defaultfuses:
+	$(DUDE_ISP) $(DUDE_LFUSE)$(LFUSE)$(DUDE_FUSE_T) $(DUDE_HFUSE)$(HFUSE)$(DUDE_FUSE_T) $(DUDE_EFUSE)$(EFUSE)$(DUDE_FUSE_T)
+
 erase:
 	$(DUDE_ISP) $(DUDE_ERASE)
 
@@ -116,5 +128,5 @@ clean:
 
 ###
 .DEFAULT_GOAL := all
-.PHONY: all elf hex size flash erase clean
+.PHONY: all elf hex size flash defaultfuses erase clean
 .SUFFIXES:
