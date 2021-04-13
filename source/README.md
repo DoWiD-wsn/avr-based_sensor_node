@@ -28,9 +28,13 @@ That's basically it :)
 Flashing the MCU and setting its fuses is done with [AVRDUDE](https://www.nongnu.org/avrdude/).
 The basic commands are:
 * **Flashing**:  
-  `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U flash:w:BINARY.hex`
+  `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U flash:w:BINARY.hex`  
+  The same can be achieved via the makefile by executing:  
+  `make flash`
 * **Erasing**:  
-  `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -e`
+  `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -e`  
+  The same can be achieved via the makefile by executing:  
+  `make erase`
 * **Write fuses**:
     * *Low fuses*:  
       `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U lfuse:w:0xXX:m`
@@ -38,10 +42,10 @@ The basic commands are:
       `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U hfuse:w:0xXX:m`
     * *Extended fuses*:  
       `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U efuse:w:0xXX:m`
-* The default fuse setings for the ASN(x) are:  
-  `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U lfuse:w:0xDD:m -U hfuse:w:0xD9:m -U efuse:w:0xFF:m`  
-  The same can be achieved via the makefile by executing:  
-  `make defaultfuses`
+    * The default fuse setings for the ASN(x) are:  
+      `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U lfuse:w:0xDD:m -U hfuse:w:0xD9:m -U efuse:w:0xFF:m`  
+      The same can be achieved via the makefile by executing:  
+      `make defaultfuses`
 
 
 ## Xbee3 Zigbee ##
