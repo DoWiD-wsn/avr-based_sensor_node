@@ -10,7 +10,6 @@
 #include <avr/interrupt.h>
 /* OWN */
 #include "timer.h"
-#include "util/fuses.h"
 
 
 /***** GLOBAL VARIABLES *******************************************************/
@@ -83,23 +82,23 @@ uint8_t timer0_get_ticks_from_us(uint16_t us, uint8_t prescaler) {
     switch(prescaler) {
         case TIMER0_PRESCALER_1:
             /* Using prescaler 1 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/1.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/1.0));
             break;
         case TIMER0_PRESCALER_8:
             /* Using prescaler 8 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/8.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/8.0));
             break;
         case TIMER0_PRESCALER_64:
             /* Using prescaler 64 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/64.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/64.0));
             break;
         case TIMER0_PRESCALER_256:
             /* Using prescaler 256 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/256.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/256.0));
             break;
         case TIMER0_PRESCALER_1024:
             /* Using prescaler 1024 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/1024.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/1024.0));
             break;
         default:
             /* No timer operation */
@@ -125,23 +124,23 @@ uint8_t timer0_get_ticks_from_ms(uint16_t ms, uint8_t prescaler) {
     switch(prescaler) {
         case TIMER0_PRESCALER_1:
             /* Using prescaler 1 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/1.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/1.0));
             break;
         case TIMER0_PRESCALER_8:
             /* Using prescaler 8 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/8.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/8.0));
             break;
         case TIMER0_PRESCALER_64:
             /* Using prescaler 64 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/64.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/64.0));
             break;
         case TIMER0_PRESCALER_256:
             /* Using prescaler 256 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/256.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/256.0));
             break;
         case TIMER0_PRESCALER_1024:
             /* Using prescaler 1024 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/1024.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/1024.0));
             break;
         default:
             /* No timer operation */
@@ -167,31 +166,31 @@ uint8_t timer2_get_ticks_from_us(uint16_t us, uint8_t prescaler) {
     switch(prescaler) {
         case TIMER2_PRESCALER_1:
             /* Using prescaler 1 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/1.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/1.0));
             break;
         case TIMER2_PRESCALER_8:
             /* Using prescaler 8 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/8.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/8.0));
             break;
         case TIMER2_PRESCALER_32:
             /* Using prescaler 32 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/32.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/32.0));
             break;
         case TIMER2_PRESCALER_64:
             /* Using prescaler 64 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/64.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/64.0));
             break;
         case TIMER2_PRESCALER_128:
             /* Using prescaler 128 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/128.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/128.0));
             break;
         case TIMER2_PRESCALER_256:
             /* Using prescaler 256 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/256.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/256.0));
             break;
         case TIMER2_PRESCALER_1024:
             /* Using prescaler 1024 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/1024.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/1024.0));
             break;
         default:
             /* No timer operation */
@@ -217,31 +216,31 @@ uint8_t timer2_get_ticks_from_ms(uint16_t ms, uint8_t prescaler) {
     switch(prescaler) {
         case TIMER2_PRESCALER_1:
             /* Using prescaler 1 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/1.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/1.0));
             break;
         case TIMER2_PRESCALER_8:
             /* Using prescaler 8 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/8.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/8.0));
             break;
         case TIMER2_PRESCALER_32:
             /* Using prescaler 32 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/32.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/32.0));
             break;
         case TIMER2_PRESCALER_64:
             /* Using prescaler 64 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/64.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/64.0));
             break;
         case TIMER2_PRESCALER_128:
             /* Using prescaler 128 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/128.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/128.0));
             break;
         case TIMER2_PRESCALER_256:
             /* Using prescaler 256 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/256.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/256.0));
             break;
         case TIMER2_PRESCALER_1024:
             /* Using prescaler 1024 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/1024.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/1024.0));
             break;
         default:
             /* No timer operation */
@@ -267,23 +266,23 @@ uint16_t timer1_get_ticks_from_us(uint16_t us, uint8_t prescaler) {
     switch(prescaler) {
         case TIMER1_PRESCALER_1:
             /* Using prescaler 1 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/1.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/1.0));
             break;
         case TIMER1_PRESCALER_8:
             /* Using prescaler 8 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/8.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/8.0));
             break;
         case TIMER1_PRESCALER_64:
             /* Using prescaler 64 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/64.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/64.0));
             break;
         case TIMER1_PRESCALER_256:
             /* Using prescaler 256 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/256.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/256.0));
             break;
         case TIMER1_PRESCALER_1024:
             /* Using prescaler 1024 */
-            tcnt = (uint32_t)(((double)us*0.000001) * ((double)fuses_get_fcpu()/1024.0));
+            tcnt = (uint32_t)(((double)us*0.000001) * (F_CPU/1024.0));
             break;
         default:
             /* No timer operation */
@@ -309,23 +308,23 @@ uint16_t timer1_get_ticks_from_ms(uint16_t ms, uint8_t prescaler) {
     switch(prescaler) {
         case TIMER1_PRESCALER_1:
             /* Using prescaler 1 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/1.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/1.0));
             break;
         case TIMER1_PRESCALER_8:
             /* Using prescaler 8 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/8.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/8.0));
             break;
         case TIMER1_PRESCALER_64:
             /* Using prescaler 64 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/64.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/64.0));
             break;
         case TIMER1_PRESCALER_256:
             /* Using prescaler 256 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/256.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/256.0));
             break;
         case TIMER1_PRESCALER_1024:
             /* Using prescaler 1024 */
-            tcnt = (uint32_t)(((double)ms*0.001) * ((double)fuses_get_fcpu()/1024.0));
+            tcnt = (uint32_t)(((double)ms*0.001) * (F_CPU/1024.0));
             break;
         default:
             /* No timer operation */

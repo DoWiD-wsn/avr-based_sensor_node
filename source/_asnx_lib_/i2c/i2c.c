@@ -8,7 +8,6 @@
 #include <util/twi.h>
 /* OWN */
 #include "i2c.h"
-#include "util/fuses.h"
 
 
 /***** ENUMERATION ************************************************************/
@@ -48,7 +47,7 @@ void i2c_init(void) {
     /* no prescaler */
     TWSR = 0;
     /* >10 for stable operation */
-    TWBR = (uint8_t)(((fuses_get_fcpu()/I2C_SCL_CLK)-16.0)/2.0);
+    TWBR = (uint8_t)(((F_CPU/I2C_SCL_CLK)-16.0)/2.0);
 }
 
 

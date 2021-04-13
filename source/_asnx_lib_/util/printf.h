@@ -4,8 +4,8 @@
  *  Adapted taken from Marco Paland (info@paland.com)
  */
 
-#ifndef _AVR_PRINTF_H_
-#define _AVR_PRINTF_H_
+#ifndef _ASNX_PRINTF_H_
+#define _ASNX_PRINTF_H_
 
 /***** INCLUDES ***************************************************************/
 #include <stdint.h>
@@ -64,4 +64,4 @@ int fctprintf(void (*out)(char character, void* arg), void* arg, const char* for
 
 
 
-#endif // _AVR_PRINTF_H_
+#endif // _ASNX_PRINTF_H_

@@ -1,9 +1,9 @@
 /**
- *  Header file for AVR UART functionality.
+ *  Header file for ASN(x) UART functionality.
  */
 
-#ifndef _AVR_UART_H_
-#define _AVR_UART_H_
+#ifndef _ASNX_UART_H_
+#define _ASNX_UART_H_
 
 /***** INCLUDES ***************************************************************/
 #include <stdint.h>
@@ -12,11 +12,11 @@
 /***** MACROS *****************************************************************/
 /*** BASIC CPU FREQUENCY ***/
 #ifndef F_CPU
-# warning "F_CPU not defined for \"timer.h\""
-# define F_CPU 16000000UL
+# warning "F_CPU not defined for \"uart.h\""
+# define F_CPU 4000000UL
 #endif
 /*** UART SPECIFIC ***/
-/* Use 2X mode for higher baud rate (default) */
+/* Use 2X mode for higher baud rate */
 #define UART_USE_2X                 (0)
 /* Function return values */
 #define UART_RET_OK                 (0)
@@ -42,30 +42,48 @@ typedef struct {
 
 /***** FUNCTION PROTOTYPES ****************************************************/
 /*** GENERAL ***/
-void uart_init(void);
-void uart_set_baudrate(uint32_t baudrate);
+void uart0_init(void);
+void uart1_init(void);
+void uart0_set_baudrate(uint32_t baudrate);
+void uart1_set_baudrate(uint32_t baudrate);
 /* ISR-specific */
-void uart_interrupt_enable(void);
-void uart_interrupt_disable(void);
-void uart_set_callback_rx(void (*callback)());
-void uart_set_callback_tx(void (*callback)());
-void uart_set_callback_empty(void (*callback)());
+void uart0_interrupt_enable(void);
+void uart1_interrupt_enable(void);
+void uart0_interrupt_disable(void);
+void uart1_interrupt_disable(void);
+void uart0_set_callback_rx(void (*callback)());
+void uart1_set_callback_rx(void (*callback)());
+void uart0_set_callback_tx(void (*callback)());
+void uart1_set_callback_tx(void (*callback)());
+void uart0_set_callback_empty(void (*callback)());
+void uart1_set_callback_empty(void (*callback)());
 /*** BLOCKING ***/
-void uart_putc(char c);
-void uart_puts(char* s);
-int8_t uart_write_blocking(uint8_t* data, uint16_t len);
-uint8_t uart_getc(void);
-int8_t uart_gets(uint8_t* s, uint16_t len);
+void uart0_putc(char c);
+void uart1_putc(char c);
+void uart0_puts(char* s);
+void uart1_puts(char* s);
+int8_t uart0_write_blocking(uint8_t* data, uint16_t len);
+int8_t uart1_write_blocking(uint8_t* data, uint16_t len);
+uint8_t uart0_getc(void);
+uint8_t uart1_getc(void);
+int8_t uart0_gets(uint8_t* s, uint16_t len);
+int8_t uart1_gets(uint8_t* s, uint16_t len);
 /*** NON-BLOCKING ***/
-int8_t uart_write(uint8_t* data, uint16_t len);
-uint16_t uart_read(uint8_t* data, uint16_t len);
-uint16_t uart_rx_buffer_cnt(void);
-uint16_t uart_tx_buffer_cnt(void);
-void uart_rx_flush(void);
-void uart_tx_flush(void);
+int8_t uart0_write(uint8_t* data, uint16_t len);
+int8_t uart1_write(uint8_t* data, uint16_t len);
+uint16_t uart0_read(uint8_t* data, uint16_t len);
+uint16_t uart1_read(uint8_t* data, uint16_t len);
+uint16_t uart0_rx_buffer_cnt(void);
+uint16_t uart1_rx_buffer_cnt(void);
+uint16_t uart0_tx_buffer_cnt(void);
+uint16_t uart1_tx_buffer_cnt(void);
+void uart0_rx_flush(void);
+void uart1_rx_flush(void);
+void uart0_tx_flush(void);
+void uart1_tx_flush(void);
 
 
 /***** INLINE FUNCTIONS *******************************************************/
 
 
-#endif // _AVR_UART_H_
+#endif // _ASNX_UART_H_

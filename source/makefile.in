@@ -30,7 +30,7 @@ OBJDMP       	 = avr-objdump
 SIZE        	 = avr-size
 
 # Default fuses
-LFUSE			 = 0xE2
+LFUSE			 = 0xDD
 HFUSE			 = 0xD9
 EFUSE			 = 0xFF
 

@@ -5,11 +5,11 @@
  */
 
 /***** INCLUDES ***************************************************************/
-#include "printf.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <float.h>
 #include "uart/uart.h"
+#include "printf.h"
 
 
 /***** STRUCTURES *************************************************************/
@@ -49,7 +49,7 @@ static inline void _out_char(char character, void* buffer, size_t idx, size_t ma
     (void)buffer; (void)idx; (void)maxlen;
     if (character) {
         // Call UART put_character function */
-        uart_putc(character);
+        uart1_putc(character);
     }
 }
 

@@ -2,8 +2,8 @@
  *  Header file for Circular Buffer functionality.
  */
 
-#ifndef _C_BUF_H_
-#define _C_BUF_H_
+#ifndef _ASNX_CBUF_H_
+#define _ASNX_CBUF_H_
 
 /***** INCLUDES ***************************************************************/
 #include <stdint.h>
@@ -58,4 +58,4 @@ int8_t cbuf_isfull(cbuf_t* cb);
 /***** INLINE FUNCTIONS *******************************************************/
 
 
-#endif // _C_BUF_H_
+#endif // _ASNX_CBUF_H_
