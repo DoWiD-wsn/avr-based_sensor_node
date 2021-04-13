@@ -16,7 +16,8 @@ That's basically it :)
 
 ```
 .
-├── _common_                           : Library files and other common stuff
+├── _asnx_lib_                         : Library files and other common stuff
+├── makefile.in                        : Superior makefile to be included
 ├── 000-blinky_demo                    : Initial blinky demo to check the toolchain
 ├── 001-adc_uart_demo                  : ADC to UART output demo
 ├── xyz                                : Further applications
