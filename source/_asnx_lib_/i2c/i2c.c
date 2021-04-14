@@ -1,62 +1,69 @@
-/**
- *  Source file for AVR I2C functionality.
- */
+/*****
+ * @brief   ASN(x) I2C/TWI library
+ *
+ * Library to support the use of the I2C/TWI module.
+ * Adapted taken from Peter Fleury (i2cmaster.h,v 1.10 2005/03/06).
+ *
+ * @file    /_asnx_lib_/i2c/i2c.c
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/14 $
+ * @see     www.peterfleury.epizy.com/avr-software.html
+ *****/
 
-/***** INCLUDES ***************************************************************/
-/* AVR */
+
+/***** INCLUDES *******************************************************/
+#include "i2c.h"
+/*** AVR ***/
 #include <util/delay.h>
 #include <util/twi.h>
-/* OWN */
-#include "i2c.h"
 
 
-/***** ENUMERATION ************************************************************/
-/* Endianess */
+
+/***** ENUMERATION ****************************************************/
+/* Enumeration for the endianess of data words */
 typedef enum {
-                I2C_ENDIAN_BIG = 1,
-                I2C_ENDIAN_LITTLE = 0
-             } i2c_endian_t;
+    I2C_ENDIAN_BIG = 1,
+    I2C_ENDIAN_LITTLE = 0
+} I2C_ENDIAN_t;
 
 
-/***** LOCAL FUNCTION PROTOTYPES **********************************************/
+/***** LOCAL FUNCTION PROTOTYPES **************************************/
 /*** Basic I2C functionality ***/
-i2c_ret_t _i2c_stop(void);
-i2c_ret_t _i2c_start(uint8_t addr, i2c_dir_t dir);
-i2c_ret_t _i2c_start_wait(uint8_t addr, i2c_dir_t dir);
-i2c_ret_t _i2c_put(uint8_t data);
-i2c_ret_t _i2c_get_ack(uint8_t* data);
-i2c_ret_t _i2c_get_nack(uint8_t* data);
+I2C_RET_t _i2c_stop(void);
+I2C_RET_t _i2c_start(uint8_t addr, I2C_DIR_t dir);
+I2C_RET_t _i2c_start_wait(uint8_t addr, I2C_DIR_t dir);
+I2C_RET_t _i2c_put(uint8_t data);
+I2C_RET_t _i2c_get_ack(uint8_t* data);
+I2C_RET_t _i2c_get_nack(uint8_t* data);
+
 /*** Read with endianess ***/
 /* 8-bit register addresses */
-i2c_ret_t _i2c_read_U16(uint8_t addr, uint8_t reg, uint16_t* value, i2c_endian_t endian);
-i2c_ret_t _i2c_read_S16(uint8_t addr, uint8_t reg, int16_t* value, i2c_endian_t endian);
+I2C_RET_t _i2c_read_U16(uint8_t addr, uint8_t reg, uint16_t* value, I2C_ENDIAN_t endian);
+I2C_RET_t _i2c_read_S16(uint8_t addr, uint8_t reg, int16_t* value, I2C_ENDIAN_t endian);
 /* 16-bit register addresses */
-i2c_ret_t _i2c_read16_U16(uint8_t addr, uint16_t reg, uint16_t* value, i2c_endian_t endian);
-i2c_ret_t _i2c_read16_S16(uint8_t addr, uint16_t reg, int16_t* value, i2c_endian_t endian);
+I2C_RET_t _i2c_read16_U16(uint8_t addr, uint16_t reg, uint16_t* value, I2C_ENDIAN_t endian);
+I2C_RET_t _i2c_read16_S16(uint8_t addr, uint16_t reg, int16_t* value, I2C_ENDIAN_t endian);
 
 
-/***** FUNCTIONS **************************************************************/
-
-/***** GENERAL *****/
-
-/*
- * Initialization of the I2C master interface.
- */
+/***** FUNCTIONS ******************************************************/
+/***
+ * Initialize the I2C interface as master.
+ ***/
 void i2c_init(void) {
-    /*** Initialize TWI clock ***/
-    /* no prescaler */
+    /* Initialize TWI clock with no prescaler */
     TWSR = 0;
-    /* >10 for stable operation */
+    /* TWBR should be >10 for stable operation */
     TWBR = (uint8_t)(((F_CPU/I2C_SCL_CLK)-16.0)/2.0);
 }
 
 
-/***** BASIC *****/
-
-/*
+/***
  * Stop I2C data transfer and release I2C bus.
- */
-i2c_ret_t _i2c_stop(void) {
+ *
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t _i2c_stop(void) {
     /* Timeout counter */
     uint8_t timeout = 0;
     /* Send STOP condition */
@@ -75,14 +82,14 @@ i2c_ret_t _i2c_stop(void) {
 }
 
 
-/*
+/***
  * Send I2C start condition, address and transfer direction.
- * 
- * uint8_t addr         address of I2C device
- * i2c_dir_t dir        transfer direction
- * return               I2C_RET_OK if device is accessible; I2C_RET_ERROR otherwise
- */
-i2c_ret_t _i2c_start(uint8_t addr, i2c_dir_t dir) {
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   dir         Transfer direction (R/W)
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t _i2c_start(uint8_t addr, I2C_DIR_t dir) {
     /* Variable to temporary store status register value */
     uint8_t status_tmp;
     /* Timeout counter */
@@ -128,15 +135,15 @@ i2c_ret_t _i2c_start(uint8_t addr, i2c_dir_t dir) {
 }
 
 
-/*
+/***
  * Send I2C repeated start condition, address and transfer direction.
  * If device is busy, use ack polling to wait until device ready.
- * 
- * uint8_t addr         address of I2C device
- * i2c_dir_t dir        transfer direction
- * return               I2C_RET_OK if device is accessible; I2C_RET_ERROR otherwise
- */
-i2c_ret_t _i2c_start_wait(uint8_t addr, i2c_dir_t dir) {
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   dir         Transfer direction (R/W)
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t _i2c_start_wait(uint8_t addr, I2C_DIR_t dir) {
     /* Variable to temporary store status register value */
     uint8_t status_tmp;
     /* Try counter */
@@ -195,13 +202,13 @@ i2c_ret_t _i2c_start_wait(uint8_t addr, i2c_dir_t dir) {
 }
 
 
-/*
+/***
  * Write one byte to I2C device.
- * 
- * uint8_t data         byte to be transfered
- * return               I2C_RET_OK if write was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t _i2c_put(uint8_t data) {
+ *
+ * @param[in]   data        Data byte to be transferred
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t _i2c_put(uint8_t data) {
     /* Timeout counter */
     uint8_t timeout = 0;
     /* Variable to temporary store status register value */
@@ -229,13 +236,13 @@ i2c_ret_t _i2c_put(uint8_t data) {
 }
 
 
-/*
- * Read one byte from the I2C device, request more data from device
- * 
- * uint8_t* data        address of byte to read the data to
- * return               I2C_RET_OK if read was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t _i2c_get_ack(uint8_t* data) {
+/***
+ * Read one byte from the I2C device with ACK (request more data from device).
+ *
+ * @param[out]  data        Data byte memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t _i2c_get_ack(uint8_t* data) {
     /* Timeout counter */
     uint8_t timeout = 0;
     /* Send a read request with acknowledgement (ack) */
@@ -256,13 +263,13 @@ i2c_ret_t _i2c_get_ack(uint8_t* data) {
 }
 
 
-/*
- * Read one byte from the I2C device, read is followed by a stop condition
- * 
- * uint8_t* data        address of byte to read the data to
- * return               I2C_RET_OK if read was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t _i2c_get_nack(uint8_t* data) {
+/***
+ * Read one byte from the I2C device with NACK (read is followed by a stop condition).
+ *
+ * @param[out]  data        Data byte memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t _i2c_get_nack(uint8_t* data) {
     /* Timeout counter */
     uint8_t timeout = 0;
     /* Send a read request without acknowledgement (nack) */
@@ -283,16 +290,14 @@ i2c_ret_t _i2c_get_nack(uint8_t* data) {
 }
 
 
-/***** RAW WRITE/READ *****/
-
-/*
- * Write 8-bit to a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t value        byte value to be written
- * return               I2C_RET_OK if writing was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_write_raw(uint8_t addr, uint8_t value) {
+/***
+ * Write 8-bit data to a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   value       Data byte to be written
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_write_raw(uint8_t addr, uint8_t value) {
     /* Start in writing mode */
     if(_i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
         /* Start failed */
@@ -313,14 +318,14 @@ i2c_ret_t i2c_write_raw(uint8_t addr, uint8_t value) {
 }
 
 
-/*
- * Read 8-bit from a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t* value       address to write the byte to
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read_raw(uint8_t addr, uint8_t* value) {
+/***
+ * Read 8-bit data from a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[out]  value       Data byte memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read_raw(uint8_t addr, uint8_t* value) {
     /* Start in reading mode */
     if(_i2c_start_wait(addr, I2C_READ) != I2C_RET_OK) {
         /* Start failed */
@@ -346,20 +351,16 @@ i2c_ret_t i2c_read_raw(uint8_t addr, uint8_t* value) {
 }
 
 
-/***** 8-BIT REGISTER ADDRESSES *****/
-
-/*** WRITE ***/
-
-/*
- * Write a defined number of bytes to a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * uint8_t* value       address of first data byte
- * uint8_t len          number of bytes to be written
- * return               I2C_RET_OK if writing was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_write_block(uint8_t addr, uint8_t reg, uint8_t* value, uint8_t len) {
+/***
+ * Write a defined number of data bytes to a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[in]   value       Data bytes to be written
+ * @param[in]   len         Number of bytes to be written
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_write_block(uint8_t addr, uint8_t reg, uint8_t* value, uint8_t len) {
     /* Start in writing mode */
     if(_i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
         /* Start failed */
@@ -389,15 +390,15 @@ i2c_ret_t i2c_write_block(uint8_t addr, uint8_t reg, uint8_t* value, uint8_t len
 }
 
 
-/*
- * Write 8-bit to a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * uint8_t value        8-bit value to be written
- * return               I2C_RET_OK if writing was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_write_8(uint8_t addr, uint8_t reg, uint8_t value) {
+/***
+ * Write 8-bit data to a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[in]   value       8-bit data to be written
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_write_8(uint8_t addr, uint8_t reg, uint8_t value) {
     /* Start in writing mode */
     if(_i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
         /* Start failed */
@@ -423,15 +424,15 @@ i2c_ret_t i2c_write_8(uint8_t addr, uint8_t reg, uint8_t value) {
 }
 
 
-/*
- * Write 16-bit to a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * uint16_t value       16-bit value to be written
- * return               I2C_RET_OK if writing was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_write_16(uint8_t addr, uint8_t reg, uint16_t value) {
+/***
+ * Write 16-bit data to a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[in]   value       16-bit data to be written
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_write_16(uint8_t addr, uint8_t reg, uint16_t value) {
     /* Start in writing mode */
     if(_i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
         /* Start failed */
@@ -462,18 +463,16 @@ i2c_ret_t i2c_write_16(uint8_t addr, uint8_t reg, uint16_t value) {
 }
 
 
-/*** READ ***/
-
-/*
- * Read a defined number of bytes from a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * uint8_t* value       address of first read byte
- * uint8_t len          number of bytes to be written
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read_block(uint8_t addr, uint8_t reg, uint8_t* value, uint8_t len) {
+/***
+ * Read a defined number of data bytes from a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[out]  value       Data bytes memory location
+ * @param[in]   len         Number of bytes to be read
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read_block(uint8_t addr, uint8_t reg, uint8_t* value, uint8_t len) {
     /* Start in writing mode */
     if(_i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
         /* Start failed */
@@ -532,15 +531,15 @@ i2c_ret_t i2c_read_block(uint8_t addr, uint8_t reg, uint8_t* value, uint8_t len)
 }
 
 
-/*
- * Read 8-bit (unsigned) from a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * uint8_t* value       address of 8-bit value to be read to
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read_U8(uint8_t addr, uint8_t reg, uint8_t* value) {
+/***
+ * Read 8-bit data (unsigned) from a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[out]  value       8-bit data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read_U8(uint8_t addr, uint8_t reg, uint8_t* value) {
 /* Start in writing mode */
     if(_i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
         /* Start failed */
@@ -585,15 +584,15 @@ i2c_ret_t i2c_read_U8(uint8_t addr, uint8_t reg, uint8_t* value) {
 }
 
 
-/*
- * Read 8-bit (signed) from a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * int8_t* value        address of 8-bit value to be read to
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read_S8(uint8_t addr, uint8_t reg, int8_t* value) {
+/***
+ * Read signed 8-bit data from a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[out]  value       Signed 8-bit data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read_S8(uint8_t addr, uint8_t reg, int8_t* value) {
     uint8_t tmp;
     /* Read 8-bit unsigned */
     if(i2c_read_U8(addr, reg, &tmp) != I2C_RET_OK) {
@@ -613,16 +612,16 @@ i2c_ret_t i2c_read_S8(uint8_t addr, uint8_t reg, int8_t* value) {
 }
 
 
-/*
- * Read 16-bit (unsigned) from a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * uint16_t* value      address of 16-bit value to be read to
- * i2c_endian_t endian  endianess of the value
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t _i2c_read_U16(uint8_t addr, uint8_t reg, uint16_t* value, i2c_endian_t endian) {
+/***
+ * Read 16-bit data (unsigned) with a given endianess from a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[out]  value       16-bit data memory location
+ * @param[in]   endian      Endianess of the data bytes
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t _i2c_read_U16(uint8_t addr, uint8_t reg, uint16_t* value, I2C_ENDIAN_t endian) {
     uint8_t tmp[2];
     /* Read two byte */
     if(i2c_read_block(addr, reg, tmp, 2) != I2C_RET_OK) {
@@ -642,16 +641,16 @@ i2c_ret_t _i2c_read_U16(uint8_t addr, uint8_t reg, uint16_t* value, i2c_endian_t
 }
 
 
-/*
- * Read 16-bit (signed) from a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * int16_t* value       address of 16-bit value to be read to
- * i2c_endian_t endian  endianess of the value
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t _i2c_read_S16(uint8_t addr, uint8_t reg, int16_t* value, i2c_endian_t endian) {
+/***
+ * Read signed 16-bit data with a given endianess from a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[out]  value       Signed 16-bit data memory location
+ * @param[in]   endian      Endianess of the data bytes
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t _i2c_read_S16(uint8_t addr, uint8_t reg, int16_t* value, I2C_ENDIAN_t endian) {
     uint16_t tmp;
     /* Read 16-bit unsigned */
     if(_i2c_read_U16(addr, reg, &tmp, endian) != I2C_RET_OK) {
@@ -671,15 +670,15 @@ i2c_ret_t _i2c_read_S16(uint8_t addr, uint8_t reg, int16_t* value, i2c_endian_t 
 }
 
 
-/*
- * Read 16-bit (unsigned; little endian) from a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * uint16_t* value      address of 16-bit value to be read to
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read_U16LE(uint8_t addr, uint8_t reg, uint16_t* value) {
+/***
+ * Read 16-bit little endian data (unsigned) from a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[out]  value       16-bit LE data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read_U16LE(uint8_t addr, uint8_t reg, uint16_t* value) {
     uint16_t tmp;
     /* Read 16-bit unsigned */
     if(_i2c_read_U16(addr, reg, &tmp, I2C_ENDIAN_LITTLE) != I2C_RET_OK) {
@@ -693,15 +692,15 @@ i2c_ret_t i2c_read_U16LE(uint8_t addr, uint8_t reg, uint16_t* value) {
 }
 
 
-/*
- * Read 16-bit (unsigned; big endian) from a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * uint16_t* value      address of 16-bit value to be read to
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read_U16BE(uint8_t addr, uint8_t reg, uint16_t* value) {
+/***
+ * Read 16-bit big endian data (unsigned) from a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[out]  value       16-bit BE data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read_U16BE(uint8_t addr, uint8_t reg, uint16_t* value) {
     uint16_t tmp;
     /* Read 16-bit unsigned */
     if(_i2c_read_U16(addr, reg, &tmp, I2C_ENDIAN_BIG) != I2C_RET_OK) {
@@ -715,16 +714,15 @@ i2c_ret_t i2c_read_U16BE(uint8_t addr, uint8_t reg, uint16_t* value) {
 }
 
 
-/*
- * Read 16-bit (signed; little endian) from a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * int16_t* value       address of 16-bit value to be read to
- * i2c_endian_t endian  endianess of the value
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read_S16LE(uint8_t addr, uint8_t reg, int16_t* value) {
+/***
+ * Read signed 16-bit little endian data from a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[out]  value       Signed 16-bit LE data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read_S16LE(uint8_t addr, uint8_t reg, int16_t* value) {
     int16_t tmp;
     /* Read 16-bit signed */
     if(_i2c_read_S16(addr, reg, &tmp, I2C_ENDIAN_LITTLE) != I2C_RET_OK) {
@@ -738,16 +736,15 @@ i2c_ret_t i2c_read_S16LE(uint8_t addr, uint8_t reg, int16_t* value) {
 }
 
 
-/*
- * Read 16-bit (signed; big endian) from a register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint8_t reg          register address
- * int16_t* value       address of 16-bit value to be read to
- * i2c_endian_t endian  endianess of the value
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read_S16BE(uint8_t addr, uint8_t reg, int16_t* value) {
+/***
+ * Read signed 16-bit big endian data from a register of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         Device register address
+ * @param[out]  value       Signed 16-bit BE data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read_S16BE(uint8_t addr, uint8_t reg, int16_t* value) {
     int16_t tmp;
     /* Read 16-bit signed */
     if(_i2c_read_S16(addr, reg, &tmp, I2C_ENDIAN_BIG) != I2C_RET_OK) {
@@ -761,20 +758,16 @@ i2c_ret_t i2c_read_S16BE(uint8_t addr, uint8_t reg, int16_t* value) {
 }
 
 
-/***** 16-BIT REGISTER ADDRESSES *****/
-
-/*** WRITE ***/
-
-/*
- * Write a defined number of bytes to a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg         register address
- * uint8_t* value       address of first data byte
- * uint8_t len          number of bytes to be written
- * return               I2C_RET_OK if writing was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_write16_block(uint8_t addr, uint16_t reg, uint8_t* value, uint8_t len) {
+/***
+ * Write a defined number of data bytes to a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[in]   value       Data bytes to be written
+ * @param[in]   len         Number of bytes to be written
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_write16_block(uint8_t addr, uint16_t reg, uint8_t* value, uint8_t len) {
     /* Start in writing mode */
     if(_i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
         /* Start failed */
@@ -809,15 +802,15 @@ i2c_ret_t i2c_write16_block(uint8_t addr, uint16_t reg, uint8_t* value, uint8_t 
 }
 
 
-/*
- * Write 8-bit to a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg         register address
- * uint8_t value        8-bit value to be written
- * return               I2C_RET_OK if writing was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_write16_8(uint8_t addr, uint16_t reg, uint8_t value) {
+/***
+ * Write 8-bit data to a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[in]   value       8-bit data to be written
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_write16_8(uint8_t addr, uint16_t reg, uint8_t value) {
     /* Start in writing mode */
     if(_i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
         /* Start failed */
@@ -848,15 +841,15 @@ i2c_ret_t i2c_write16_8(uint8_t addr, uint16_t reg, uint8_t value) {
 }
 
 
-/*
- * Write 16-bit to a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg          register address
- * uint16_t value       16-bit value to be written
- * return               I2C_RET_OK if writing was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_write16_16(uint8_t addr, uint16_t reg, uint16_t value) {
+/***
+ * Write 16-bit data to a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[in]   value       16-bit data to be written
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_write16_16(uint8_t addr, uint16_t reg, uint16_t value) {
     /* Start in writing mode */
     if(_i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
         /* Start failed */
@@ -892,18 +885,16 @@ i2c_ret_t i2c_write16_16(uint8_t addr, uint16_t reg, uint16_t value) {
 }
 
 
-/*** WRITE ***/
-
-/*
- * Read a defined number of bytes from a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg         register address
- * uint8_t* value       address of first read byte
- * uint8_t len          number of bytes to be written
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read16_block(uint8_t addr, uint16_t reg, uint8_t* value, uint8_t len) {
+/***
+ * Read a defined number of data bytes from a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[out]  value       Data bytes memory location
+ * @param[in]   len         Number of bytes to be read
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read16_block(uint8_t addr, uint16_t reg, uint8_t* value, uint8_t len) {
     /* Start in writing mode */
     if(_i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
         /* Start failed */
@@ -967,15 +958,15 @@ i2c_ret_t i2c_read16_block(uint8_t addr, uint16_t reg, uint8_t* value, uint8_t l
 }
 
 
-/*
- * Read 8-bit (unsigned) from a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg         register address
- * uint8_t* value       address of 8-bit value to be read to
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read16_U8(uint8_t addr, uint16_t reg, uint8_t* value) {
+/***
+ * Read 8-bit data (unsigned) from a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[out]  value       8-bit data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read16_U8(uint8_t addr, uint16_t reg, uint8_t* value) {
 /* Start in writing mode */
     if(_i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
         /* Start failed */
@@ -1025,15 +1016,15 @@ i2c_ret_t i2c_read16_U8(uint8_t addr, uint16_t reg, uint8_t* value) {
 }
 
 
-/*
- * Read 8-bit (signed) from a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg         register address
- * int8_t* value        address of 8-bit value to be read to
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read16_S8(uint8_t addr, uint16_t reg, int8_t* value) {
+/***
+ * Read signed 8-bit data from a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[out]  value       Signed 8-bit data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read16_S8(uint8_t addr, uint16_t reg, int8_t* value) {
     uint8_t tmp;
     /* Read 8-bit unsigned */
     if(i2c_read16_U8(addr, reg, &tmp) != I2C_RET_OK) {
@@ -1053,16 +1044,16 @@ i2c_ret_t i2c_read16_S8(uint8_t addr, uint16_t reg, int8_t* value) {
 }
 
 
-/*
- * Read 16-bit (unsigned) from a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg         register address
- * uint16_t* value      address of 16-bit value to be read to
- * i2c_endian_t endian  endianess of the value
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t _i2c_read16_U16(uint8_t addr, uint16_t reg, uint16_t* value, i2c_endian_t endian) {
+/***
+ * Read 16-bit data (unsigned) with a given endianess from a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[out]  value       16-bit data memory location
+ * @param[in]   endian      Endianess of the data bytes
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t _i2c_read16_U16(uint8_t addr, uint16_t reg, uint16_t* value, I2C_ENDIAN_t endian) {
     uint8_t tmp[2];
     /* Read two byte */
     if(i2c_read16_block(addr, reg, tmp, 2) != I2C_RET_OK) {
@@ -1082,16 +1073,16 @@ i2c_ret_t _i2c_read16_U16(uint8_t addr, uint16_t reg, uint16_t* value, i2c_endia
 }
 
 
-/*
- * Read 16-bit (signed) from a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg         register address
- * int16_t* value       address of 16-bit value to be read to
- * i2c_endian_t endian  endianess of the value
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t _i2c_read16_S16(uint8_t addr, uint16_t reg, int16_t* value, i2c_endian_t endian) {
+/***
+ * Read signed 16-bit data with a given endianess from a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[out]  value       Signed 16-bit data memory location
+ * @param[in]   endian      Endianess of the data bytes
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t _i2c_read16_S16(uint8_t addr, uint16_t reg, int16_t* value, I2C_ENDIAN_t endian) {
     uint16_t tmp;
     /* Read 16-bit unsigned */
     if(_i2c_read16_U16(addr, reg, &tmp, endian) != I2C_RET_OK) {
@@ -1111,15 +1102,15 @@ i2c_ret_t _i2c_read16_S16(uint8_t addr, uint16_t reg, int16_t* value, i2c_endian
 }
 
 
-/*
- * Read 16-bit (unsigned; little endian) from a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg         register address
- * uint16_t* value      address of 16-bit value to be read to
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read16_U16LE(uint8_t addr, uint16_t reg, uint16_t* value) {
+/***
+ * Read 16-bit little endian data (unsigned) from a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[out]  value       16-bit LE data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read16_U16LE(uint8_t addr, uint16_t reg, uint16_t* value) {
     uint16_t tmp;
     /* Read 16-bit unsigned */
     if(_i2c_read16_U16(addr, reg, &tmp, I2C_ENDIAN_LITTLE) != I2C_RET_OK) {
@@ -1133,15 +1124,15 @@ i2c_ret_t i2c_read16_U16LE(uint8_t addr, uint16_t reg, uint16_t* value) {
 }
 
 
-/*
- * Read 16-bit (unsigned; big endian) from a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg         register address
- * uint16_t* value      address of 16-bit value to be read to
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read16_U16BE(uint8_t addr, uint16_t reg, uint16_t* value) {
+/***
+ * Read 16-bit big endian data (unsigned) from a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[out]  value       16-bit BE data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read16_U16BE(uint8_t addr, uint16_t reg, uint16_t* value) {
     uint16_t tmp;
     /* Read 16-bit unsigned */
     if(_i2c_read16_U16(addr, reg, &tmp, I2C_ENDIAN_BIG) != I2C_RET_OK) {
@@ -1155,16 +1146,15 @@ i2c_ret_t i2c_read16_U16BE(uint8_t addr, uint16_t reg, uint16_t* value) {
 }
 
 
-/*
- * Read 16-bit (signed; little endian) from a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg         register address
- * int16_t* value       address of 16-bit value to be read to
- * i2c_endian_t endian  endianess of the value
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read16_S16LE(uint8_t addr, uint16_t reg, int16_t* value) {
+/***
+ * Read signed 16-bit little endian data from a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[out]  value       Signed 16-bit LE data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read16_S16LE(uint8_t addr, uint16_t reg, int16_t* value) {
     int16_t tmp;
     /* Read 16-bit signed */
     if(_i2c_read16_S16(addr, reg, &tmp, I2C_ENDIAN_LITTLE) != I2C_RET_OK) {
@@ -1178,16 +1168,15 @@ i2c_ret_t i2c_read16_S16LE(uint8_t addr, uint16_t reg, int16_t* value) {
 }
 
 
-/*
- * Read 16-bit (signed; big endian) from a 16-bit register of a given I2C address
- * 
- * uint8_t addr         address of I2C device
- * uint16_t reg         register address
- * int16_t* value       address of 16-bit value to be read to
- * i2c_endian_t endian  endianess of the value
- * return               I2C_RET_OK if reading was successful; I2C_RET_ERROR otherwise
- */
-i2c_ret_t i2c_read16_S16BE(uint8_t addr, uint16_t reg, int16_t* value) {
+/***
+ * Read signed 16-bit big endian data from a 16-bit register address of a given I2C address.
+ *
+ * @param[in]   addr        Address of I2C device
+ * @param[in]   reg         16-bit device register address
+ * @param[out]  value       Signed 16-bit BE data memory location
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+I2C_RET_t i2c_read16_S16BE(uint8_t addr, uint16_t reg, int16_t* value) {
     int16_t tmp;
     /* Read 16-bit signed */
     if(_i2c_read16_S16(addr, reg, &tmp, I2C_ENDIAN_BIG) != I2C_RET_OK) {
