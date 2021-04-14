@@ -1,3 +1,3 @@
-TARGET = uart_test
+TARGET = adc_uart_demo
 
 include ../makefile.in
