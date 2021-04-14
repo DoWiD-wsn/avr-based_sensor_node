@@ -1,73 +1,80 @@
-/**
- *  Header file for DHT sensor functionality.
- * 
- *  Adapted taken from Arduino:
- *  -> https://github.com/adafruit/DHT-sensor-library
- *  -> https://github.com/adafruit/Adafruit_Sensor
- *  In combination with:
- *  -> https://www.electroschematics.com/arduino-dht22-am2302-tutorial-library/
- */
+/*****
+ * @brief   ASN(x) DHT temperature/humidity sensor library
+ *
+ * Library to support the DHT temperature/humidity sensor.
+ *
+ * @file    /_asnx_lib_/sensors/dht.h
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/14 $
+ * @see     https://github.com/adafruit/DHT-sensor-library
+ * @see     https://www.electroschematics.com/arduino-dht22-am2302-tutorial-library/
+ *****/
 
-#ifndef _SEN_DHT_H_
-#define _SEN_DHT_H_
+#ifndef _ASNX_DHT_H_
+#define _ASNX_DHT_H_
 
-/***** INCLUDES ***************************************************************/
+/***** INCLUDES *******************************************************/
+/*** STD ***/
 #include <stdio.h>
 #include <stdint.h>
-#include "owi/onewire.h"
+/*** ASNX LIB ***/
+#include "hw/hw.h"
 
 
-/***** MACROS *****************************************************************/
-/*** Timing-related ***/
+/***** DEFINES ********************************************************/
+/* Timing-related */
+#define DHT_TIMING_STARTUP              (1000)
 #define DHT_TIMING_MAX                  (85)
 #define DHT_TIMING_ROUND                (255)
 #define DHT_TIMING_TIMEOUT_1000         (16000UL)
 #define DHT_TIMING_MIN_INTERVAL         (2200UL)
-/*** Device types ***/
-#define DHT_DEV_NA                      (0)
-#define DHT_DEV_DHT11                   (11)
-#define DHT_DEV_DHT12                   (12)
-#define DHT_DEV_DHT21                   (21)
-#define DHT_DEV_DHT22                   (22)
-#define DHT_DEV_AM2301                  (DHT_DEV_DHT21)
-#define DHT_DEV_AM2302                  (DHT_DEV_DHT22)
-/*** Function return values ***/
-#define DHT_READ_FAIL                   (0)
-#define DHT_READ_SUCCESS                (1)
-#define DHT_READ_LAST_MEASUREMENT       (2)
-#define DHT_READ_TIMEOUT                (0xFFFFFFFF)
+/* Invalid result */
 #define DHT_READ_NAN                    (999.9)
-/*** Cycle Count Threshold ***/
+/* Cycle Count Threshold */
 #define DHT_CCT_USED                    (DHT_CCT_AVR)
 #define DHT_CCT_AVR                     (6)
 #define DHT_CCT_DUE                     (30)
-/*** Helper Makros ***/
-#define DHT_STATE_HIGH                  (1)
-#define DHT_STATE_LOW                   (0)
 
 
-/***** GLOBAL VARIABLES *******************************************************/
+/***** ENUMERATION ****************************************************/
+/* Enumeration for the DHT function return values */
+typedef enum {
+    DHT_READ_FAIL               = 0,
+    DHT_READ_SUCCESS            = 1,
+    DHT_READ_LAST_MEASUREMENT   = 2,
+    DHT_READ_TIMEOUT            = 3
+} DHT_RET_t;
+
+/* Enumeration for the DHT device types */
+typedef enum {
+    DHT_DEV_NA                  = 0,
+    DHT_DEV_DHT11               = 11,
+    DHT_DEV_DHT12               = 12,
+    DHT_DEV_DHT21               = 21,
+    DHT_DEV_DHT22               = 22
+} DHT_DEV_t;
+/* AM230x sensor use the DHT sensors */
+#define DHT_DEV_AM2301          (DHT_DEV_DHT21)
+#define DHT_DEV_AM2302          (DHT_DEV_DHT22)
 
 
-/***** ENUMERATION ************************************************************/
-
-
-/***** STRUCTURES *************************************************************/
+/***** STRUCTURES *****************************************************/
+/***
+ * A structure to store the DHT module properties.
+ ***/
 typedef struct {
-    onewire_t gpio;
-    uint8_t type;
-    uint8_t firstread;
-    uint8_t data[5];
+    hw_io_t gpio;       /**< OWI GPIO handle */
+    DHT_DEV_t type;     /**< Sensor type */
+    uint8_t firstread;  /**< Flag to indicate the first reading */
+    uint8_t data[5];    /**< Last data read from the sensor */
 } dht_t;
 
 
-/***** FUNCTION PROTOTYPES ****************************************************/
-void dht_init(dht_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, uint8_t type);
+/***** FUNCTION PROTOTYPES ********************************************/
+void dht_init(dht_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type);
 float dht_get_temperature(dht_t* dev);
 float dht_get_humidity(dht_t* dev);
 
 
-/***** INLINE FUNCTIONS *******************************************************/
-
-
-#endif // _SEN_DHT_H_
+#endif // _ASNX_DHT_H_

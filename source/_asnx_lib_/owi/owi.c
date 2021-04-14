@@ -1,16 +1,32 @@
-/**
- *  Source file for OneWire functionality.
- */
+/*****
+ * @brief   ASN(x) one-wire interface (OWI) library
+ *
+ * Library to support one-wire interface (OWI) modules.
+ * Globally deactivates interrupts during time-critical sections.
+ *
+ * @file    /_asnx_lib_/owi/owi.c
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/14 $
+ * @see     https://github.com/szszoke/atmega328p/blob/master/onewire/
+ * @see     https://hacksterio.s3.amazonaws.com/uploads/attachments/229743/OneWire.zip
+ *****/
 
-/***** INCLUDES ***************************************************************/
-#include "onewire.h"
+
+/***** INCLUDES *******************************************************/
+#include "owi.h"
+/*** AVR ***/
 #include <avr/interrupt.h>
-#include <avr/pgmspace.h>
+#if OWI_CRC
+#  if OWI_CRC8_TABLE
+#     include <avr/pgmspace.h>
+#  endif
+#endif
 #include <util/delay.h>
 
 
-/***** GLOBAL VARIABLES *******************************************************/
-#if ONEWIRE_SEARCH
+/***** GLOBAL VARIABLES ***********************************************/
+#if OWI_SEARCH
 /* Global search state */
 unsigned char ROM_NO[8];
 uint8_t last_discrepancy;
@@ -19,219 +35,210 @@ uint8_t last_device_flag;
 #endif
 
 
-/***** LOCAL FUNCTION PROTOTYPES **********************************************/
-
-
-/***** WRAPPER FUNCTIONS ******************************************************/
-
-
-/***** FUNCTIONS **************************************************************/
-/*
- * Setup the onewire data structure.
- * 
- * onewire_t* gpio      Pointer to the structure to be filled
- * uint8_t ddr          DDRx
- * uint8_t port         PORTx
- * uint8_t pin          PINx
- * uint8_t portpin      Portpin, e.g., PD2
- */
-void onewire_get(onewire_t* gpio, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
-    gpio->ddr = ddr;
-    gpio->port = port;
-    gpio->pin = pin;
-    gpio->portpin = portpin;
+/***** FUNCTIONS ******************************************************/
+/***
+ * Get a HW structure with the register values of a given GPIO.
+ *
+ * @param[out]  gpio    Pointer to the structure to be filled
+ * @param[in]   ddr     Pointer to the GPIO's DDRx register
+ * @param[in]   port    Pointer to the GPIO's PORTx register
+ * @param[in]   pin     Pointer to the GPIO's PINx register
+ * @param[in]   portpin Index of the GPIO pin
+ ***/
+void owi_get(hw_io_t* gpio, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
+    /* Call the respective HW function */
+    hw_get_io(gpio, ddr, port, pin, portpin);
 }
 
 
-/*
- * Perform the onewire reset function.
- * 
- * We will wait up to 250us for the bus to come high, if it doesn't then it
+/***
+ * Perform a OWI reset.
+ * Wait up to 250us for the bus to come high, if it doesn't, then it
  * is broken or shorted and we return a 0;
- * 
- * AVR318: DetectPresence()
- * 
- * onewire_t* gpio      Pointer to the data structure
- * return               1 if device is accessible; 0 otherwise
- */
-uint8_t onewire_reset(onewire_t* gpio) {
+ *
+ * @param[in]   gpio    Pointer to the GPIO structure
+ * @return      State of the OWI GPIO pin after reset
+ ***/
+uint8_t owi_reset(hw_io_t* gpio) {
     uint8_t ret = 0xFF;
-    uint8_t retries = ONEWIRE_TIMEOUT;
+    uint8_t retries = OWI_TIMEOUT;
 
     /* Disable interrupts */
     cli();
     
     /* Release bus */
-    ONEWIRE_GPIO_INPUT(gpio);
+    HW_GPIO_INPUT(gpio);
     /* Wait until the bus is high */
     do {
         /* Check if timeout has been reached */
         if(--retries == 0) return 0;
         /* Wait for some time */
         _delay_ms(2);
-    } while(!ONEWIRE_GPIO_READ(gpio));
+    } while(!HW_GPIO_READ(gpio));
     /* Drive bus low */
-    ONEWIRE_GPIO_LOW(gpio);
-    ONEWIRE_GPIO_OUTPUT(gpio);
+    HW_GPIO_LOW(gpio);
+    HW_GPIO_OUTPUT(gpio);
     /* Delay H */
-    _delay_us(ONEWIRE_DELAY_H);
+    _delay_us(OWI_DELAY_H);
     /* Release bus */
-    ONEWIRE_GPIO_INPUT(gpio);
+    HW_GPIO_INPUT(gpio);
     /* Delay I */
-    _delay_us(ONEWIRE_DELAY_I);
+    _delay_us(OWI_DELAY_I);
     /* Only one delay does not work */
-    _delay_us(ONEWIRE_DELAY_I);
+    _delay_us(OWI_DELAY_I);
     /* Read bus state */
-    ret = ONEWIRE_GPIO_READ(gpio) ? 0 : 1;
+    ret = HW_GPIO_READ(gpio) ? 0 : 1;
     /* Delay J */
-    _delay_us(ONEWIRE_DELAY_J);
+    _delay_us(OWI_DELAY_J);
+    
     /* Restore interrupts */
     sei();
+    
     /* Return result */
     return ret;
 }
 
 
-/*
- * Stop forcing power onto the bus.
- * 
+/***
+ * Stop forcing power onto the OWI line.
  * Only needed if the 'power' flag to write is used.
- * 
- * onewire_t* gpio      Pointer to the data structure
- */
-void onewire_depower(onewire_t* gpio) {
+ *
+ * @param[in]   gpio    Pointer to the GPIO structure
+ ***/
+void owi_depower(hw_io_t* gpio) {
     /* Release bus */
-    ONEWIRE_GPIO_INPUT(gpio);
+    HW_GPIO_INPUT(gpio);
 }
 
 
-/*
- * Write a bit on the onewire interface
- * 
- * AVR318: WriteBitx()
- * 
- * onewire_t* gpio      Pointer to the data structure
- * uint8_t value        value to be written (1|0)
- */
-void onewire_write_bit(onewire_t* gpio, uint8_t value) {
+/***
+ * Write a bit on the OWI line.
+ *
+ * @param[in]   gpio    Pointer to the GPIO structure
+ * @param[in]   value   Bit value to be written (0 or 1)
+ ***/
+void owi_write_bit(hw_io_t* gpio, uint8_t value) {
     /* Disable interrupts */
     cli();
+    
     /* Drive bus low */
-    ONEWIRE_GPIO_LOW(gpio);
-    ONEWIRE_GPIO_OUTPUT(gpio);
+    HW_GPIO_LOW(gpio);
+    HW_GPIO_OUTPUT(gpio);
     /* Delay A */
-    _delay_us(ONEWIRE_DELAY_A);
+    _delay_us(OWI_DELAY_A);
     /* When we want to write 1, we release the line */
     if(value) {
         /* Release bus */
-        ONEWIRE_GPIO_INPUT(gpio);
+        HW_GPIO_INPUT(gpio);
     }
     /* Delay B */
-    _delay_us(ONEWIRE_DELAY_B);
+    _delay_us(OWI_DELAY_B);
     /* Release bus */
-    ONEWIRE_GPIO_INPUT(gpio);
+    HW_GPIO_INPUT(gpio);
+    
     /* Restore interrupts */
     sei();
 }
 
 
-/*
- * Read a bit from the onewire interface
- * 
- * AVR318: ReadBit()
- * 
- * onewire_t* gpio      Pointer to the data structure
- * return               value read (1|0)
- */
-uint8_t onewire_read_bit(onewire_t* gpio) {
+/***
+ * Read a bit from the OWI line.
+ *
+ * @param[in]   gpio    Pointer to the GPIO structure
+ * @return      Bit value read from the line
+ ***/
+uint8_t owi_read_bit(hw_io_t* gpio) {
     uint8_t ret = 0;
 
     /* Disable interrupts */
     cli();
+    
     /* Drive bus low */
-    ONEWIRE_GPIO_LOW(gpio);
-    ONEWIRE_GPIO_OUTPUT(gpio);
+    HW_GPIO_LOW(gpio);
+    HW_GPIO_OUTPUT(gpio);
     /* Delay A */
-    _delay_us(ONEWIRE_DELAY_A);
+    _delay_us(OWI_DELAY_A);
     /* Release bus */
-    ONEWIRE_GPIO_INPUT(gpio);
+    HW_GPIO_INPUT(gpio);
     /* Delay E */
-    _delay_us(ONEWIRE_DELAY_E);
+    _delay_us(OWI_DELAY_E);
     /* Read bus state */
-    ret = ONEWIRE_GPIO_READ(gpio) ? 1 : 0;
+    ret = HW_GPIO_READ(gpio) ? 1 : 0;
     /* Delay F */
-    _delay_us(ONEWIRE_DELAY_F);
+    _delay_us(OWI_DELAY_F);
+    
     /* Restore interrupts */
     sei();
+    
     /* Return result */
     return ret;
 }
 
 
-/*
- * Write a byte on the onewire interface
- * 
- * onewire_t* gpio      Pointer to the data structure
- * uint8_t byte         byte to be written
- * uint8_t power        parasite power mode (1 on | 0 off)
- */
-void onewire_write_byte(onewire_t* gpio, uint8_t byte, uint8_t power) {
+/***
+ * Write a data byte on the OWI line.
+ *
+ * @param[in]   gpio    Pointer to the GPIO structure
+ * @param[in]   data    Data byte to be written (0 or 1)
+ * @param[in]   power   Parasite power enable (0 or 1)
+ ***/
+void owi_write_byte(hw_io_t* gpio, uint8_t data, OWI_POWER_t power) {
     uint8_t offset;
     
-    /* Write all bits of the byte via onewire */
+    /* Write all bits of the byte via OWI */
     for(offset = 0; offset<8; offset++) {
         /* Check if corresponding bit is set and write it */
-        onewire_write_bit(gpio,(byte & _BV(offset)) ? 1 : 0);
+        owi_write_bit(gpio,(data & _BV(offset)) ? 1 : 0);
     }
     /* Check if parasite power mode is deactivated */
     if(!power) {
         /* Set portpin back to input */
-        ONEWIRE_GPIO_INPUT(gpio);
+        HW_GPIO_INPUT(gpio);
         /* Set portpin port value to low */
-        ONEWIRE_GPIO_LOW(gpio);
+        HW_GPIO_LOW(gpio);
     }
 }
 
 
-/*
- * Write several bytes on the onewire interface
- * 
- * onewire_t* gpio      Pointer to the data structure
- * uint8_t *bytes       pointer to the byte array
- * uint16_t count       number of bytes to be written
- * uint8_t power        parasite power mode (1 on | 0 off)
- */
-void onewire_write(onewire_t* gpio, const uint8_t *bytes, uint16_t count, uint8_t power) {
+/***
+ * Write several data bytes on the OWI line.
+ *
+ * @param[in]   gpio    Pointer to the GPIO structure
+ * @param[in]   data    Data byte to be written (0 or 1)
+ * @param[in]   len     Number of data bytes to be written
+ * @param[in]   power   Parasite power enable (0 or 1)
+ ***/
+void owi_write(hw_io_t* gpio, const uint8_t *data, uint16_t len, OWI_POWER_t power) {
     uint16_t i;
     /* Write the given amount of bytes */
-    for(i=0; i<count; i++) {
+    for(i=0; i<len; i++) {
         /* Write current byte */
-        onewire_write_byte(gpio, bytes[i],power);
+        owi_write_byte(gpio, data[i],power);
     }
     /* Check if parasite power mode is deactivated */
     if (!power) {
         /* Set portpin back to input */
-        ONEWIRE_GPIO_INPUT(gpio);
+        HW_GPIO_INPUT(gpio);
         /* Set portpin port value to low */
-        ONEWIRE_GPIO_LOW(gpio);
+        HW_GPIO_LOW(gpio);
     }
 }
 
 
-/*
- * Read a byte from the onewire interface
- * 
- * onewire_t* gpio      Pointer to the data structure
- * return               byte read
- */
-uint8_t onewire_read_byte(onewire_t* gpio) {
+/***
+ * Read a data byte from the OWI line.
+ *
+ * @param[in]   gpio    Pointer to the GPIO structure
+ * @return      Data byte value read from the line
+ ***/
+uint8_t owi_read_byte(hw_io_t* gpio) {
     uint8_t offset;
     uint8_t ret = 0;
     
-    /* Write all bits of the byte via onewire */
+    /* Write all bits of the byte via OWI */
     for (offset = 0; offset<8; offset++) {
         /* Check if read bit is set */
-        if(onewire_read_bit(gpio)) {
+        if(owi_read_bit(gpio)) {
             /* Set corresponding bit in return value */
             ret |= _BV(offset);
         }
@@ -241,66 +248,64 @@ uint8_t onewire_read_byte(onewire_t* gpio) {
 }
 
 
-/*
- * Read several byte from the onewire interface
- * 
- * onewire_t* gpio      Pointer to the data structure
- * uint8_t *bytes       pointer to the byte array
- * uint16_t count       number of bytes to be written
- */
-void onewire_read(onewire_t* gpio, uint8_t *bytes, uint16_t count) {
+/***
+ * Read several data bytes from the OWI line.
+ *
+ * @param[in]   gpio    Pointer to the GPIO structure
+ * @param[out]  data    Data byte memory location
+ * @param[in]   len     Number of data bytes to be read
+ ***/
+void owi_read(hw_io_t* gpio, uint8_t *data, uint16_t len) {
     uint16_t i;
     /* Read the given amount of bytes */
-    for(i=0; i<count; i++) {
+    for(i=0; i<len; i++) {
         /* Read current byte */
-        bytes[i] = onewire_read_byte(gpio);
+        data[i] = owi_read_byte(gpio);
     }
 }
 
 
-/*
- * Issue a onewire ROM select command
- * 
- * onewire_t* gpio      Pointer to the data structure
- * uint8_t rom          pointer to the rom array
- */
-void onewire_select(onewire_t* gpio, const uint8_t rom[8]) {
+/***
+ * Issue a OWI ROM select command.
+ *
+ * @param[in]   gpio    Pointer to the GPIO structure
+ * @param[in]   rom     ROM data bytes
+ ***/
+void owi_select(hw_io_t* gpio, const uint8_t rom[8]) {
     uint8_t i;
     /* Write the "select" ROM address */
-    onewire_write_byte(gpio, ONEWIRE_ROM_SELECT, ONEWIRE_PARASITE_ON);
+    owi_write_byte(gpio, OWI_ROM_SELECT, OWI_PARASITE_ON);
     /* Write the eight ROM bytes */
     for(i=0; i<8; i++) {
         /* Write current byte */
-        onewire_write_byte(gpio, rom[i], ONEWIRE_PARASITE_ON);
+        owi_write_byte(gpio, rom[i], OWI_PARASITE_ON);
     }
 }
 
 
-/*
- * Issue a onewire ROM skip command
- * 
- * onewire_t* gpio      Pointer to the data structure
- */
-void onewire_skip(onewire_t* gpio) {
-    /* Write the "select" ROM address */
-    onewire_write_byte(gpio, ONEWIRE_ROM_SKIP, ONEWIRE_PARASITE_ON);
+/***
+ * Issue a OWI ROM skip command.
+ *
+ * @param[in]   gpio    Pointer to the GPIO structure
+ ***/
+void owi_skip(hw_io_t* gpio) {
+    /* Write the "skip" ROM address */
+    owi_write_byte(gpio, OWI_ROM_SKIP, OWI_PARASITE_ON);
 }
 
 
 
-/******************************************/
-/***** ***** ***** SEARCH ***** ***** *****/
-/******************************************/
-#if ONEWIRE_SEARCH
-/*
- * Clear the search state so that if will start from the beginning again.
- */
-void onewire_search_reset(void) {
+
+#if OWI_SEARCH
+/***
+ * Clear the search state so that it will start from the beginning again.
+ ***/
+void owi_search_reset(void) {
     uint8_t i;
     /* Reset the search state */
     last_discrepancy = 0;
     last_family_discrepancy = 0;
-    last_device_flag = ONEWIRE_SEARCH_NOT_FOUND;
+    last_device_flag = OWI_SEARCH_NOT_FOUND;
     /* Clear ROM table */
     for(i=0; i<8; i++) {
         /* Clear entry */
@@ -309,13 +314,12 @@ void onewire_search_reset(void) {
 }
 
 
-/*
- * Search to find the device type 'family_code' on the next call to
- * onewire_search(*addr) if it is present.
- * 
- * uint8_t family_code  Device family code to be found
- */
-void onewire_search_target(uint8_t family_code) {
+/***
+ * Search the device type 'family_code' on the next call to owi_search() if it is present.
+ *
+ * @param[in]   family_code     Device family code to be found
+ ***/
+void owi_search_target(uint8_t family_code) {
     uint8_t i;
     /* Set the search state to find devices with the given family code */
     ROM_NO[0] = family_code;
@@ -326,21 +330,18 @@ void onewire_search_target(uint8_t family_code) {
     }
     last_discrepancy = 64;
     last_family_discrepancy = 0;
-    last_device_flag = ONEWIRE_SEARCH_NOT_FOUND;
+    last_device_flag = OWI_SEARCH_NOT_FOUND;
 }
 
 
-/*
- * Perform a search.
- * 
- * onewire_t* gpio      Pointer to the data structure
- * uint8_t *addr        Address of a matching device (if found)
- * uint8_t family_code  Device family code to be found
- * 
- * return ONEWIRE_SEARCH_FOUND     -> device found, ROM number in ROM_NO buffer
- *        ONEWIRE_SEARCH_NOT_FOUND -> device not found, end of search
- */
-uint8_t onewire_search(onewire_t* gpio, uint8_t *addr) {
+/***
+ * Perform a search for devices on the OWI line.
+ *
+ * @param[in]   gpio    Pointer to the GPIO structure
+ * @param[out]  addr    Address of a matching device (if found)
+ * @return      FOUND in case of success; NOT_FOUND otherwise
+ ***/
+OWI_SEARCH_t owi_search(hw_io_t* gpio, uint8_t *addr) {
     uint8_t i;
     /* Temporary and intermediate variables */
     uint8_t id_bit_number = 1;
@@ -354,26 +355,26 @@ uint8_t onewire_search(onewire_t* gpio, uint8_t *addr) {
 
     /* Check if the last call was not the last one */
     if (!last_device_flag) {
-        /* Perform a onewire reset */
-        if(!onewire_reset(gpio)) {
+        /* Perform a OWI reset */
+        if(!owi_reset(gpio)) {
             /* Reset the search */
             last_discrepancy = 0;
             last_family_discrepancy = 0;
-            last_device_flag = ONEWIRE_SEARCH_NOT_FOUND;
+            last_device_flag = OWI_SEARCH_NOT_FOUND;
             /* Return no device found */
-            return ONEWIRE_SEARCH_NOT_FOUND;
+            return OWI_SEARCH_NOT_FOUND;
         }
 
         /* Write the "search" ROM address */
-        onewire_write_byte(gpio, ONEWIRE_ROM_SEARCH, ONEWIRE_PARASITE_ON);
+        owi_write_byte(gpio, OWI_ROM_SEARCH, OWI_PARASITE_ON);
 
         /* Loop over the search space */
         do {
             /* Read a bit and its complement */
-            id_bit = onewire_read_bit(gpio);
-            cmp_id_bit = onewire_read_bit(gpio);
+            id_bit = owi_read_bit(gpio);
+            cmp_id_bit = owi_read_bit(gpio);
 
-            /* Check for no devices on onewire */
+            /* Check for no devices on the OWI */
             if((id_bit == 1) && (cmp_id_bit == 1)) {
                 /* Stop searching */
                 break;
@@ -414,7 +415,7 @@ uint8_t onewire_search(onewire_t* gpio, uint8_t *addr) {
                 }
 
                 /* Serial number search direction write bit */
-                onewire_write_bit(gpio, search_direction);
+                owi_write_bit(gpio, search_direction);
 
                 /* Increment the byte counter  and shift the mask */
                 id_bit_number++;
@@ -436,9 +437,9 @@ uint8_t onewire_search(onewire_t* gpio, uint8_t *addr) {
             last_discrepancy = last_zero;
             /* ... and check for last device */
             if(last_discrepancy == 0) {
-                last_device_flag = ONEWIRE_SEARCH_FOUND;
+                last_device_flag = OWI_SEARCH_FOUND;
             }
-            search_result = ONEWIRE_SEARCH_FOUND;
+            search_result = OWI_SEARCH_FOUND;
         }
     }
 
@@ -447,8 +448,8 @@ uint8_t onewire_search(onewire_t* gpio, uint8_t *addr) {
         /* ... then reset counters so next 'search' will be like a first */
         last_discrepancy = 0;
         last_family_discrepancy = 0;
-        last_device_flag = ONEWIRE_SEARCH_NOT_FOUND;
-        search_result = ONEWIRE_SEARCH_NOT_FOUND;
+        last_device_flag = OWI_SEARCH_NOT_FOUND;
+        search_result = OWI_SEARCH_NOT_FOUND;
     }
     /* Copy the found addresses */
     for(i=0; i<8; i++) {
@@ -462,14 +463,10 @@ uint8_t onewire_search(onewire_t* gpio, uint8_t *addr) {
 
 
 
-/******************************************/
-/***** ***** *****  CRC   ***** ***** *****/
-/******************************************/
-#if ONEWIRE_CRC
-/* The onewire CRC scheme is described in Maxim Application Note 27:
+/* The OWI CRC scheme is described in Maxim Application Note 27:
  * "Understanding and Using Cyclic Redundancy Checks with Maxim iButton Products" */
-
-#if ONEWIRE_CRC8_TABLE
+#if OWI_CRC
+#if OWI_CRC8_TABLE
 /* This table comes from Dallas sample code where it is freely reusable,
  * though Copyright (C) 2000 Dallas Semiconductor Corporation */
 static const uint8_t PROGMEM dscrc_table[] = {
@@ -491,15 +488,14 @@ static const uint8_t PROGMEM dscrc_table[] = {
     116, 42,200,150, 21, 75,169,247,182,232, 10, 84,215,137,107, 53};
 
 
-/*
- * Get the 8-bit CRC from the lookup table
- * 
- * uint8_t *addr        Device family code to be found
- * uint8_t len          Device family code to be found
- * 
- * return               8-bit CRC
- */
-uint8_t onewire_crc8(const uint8_t *addr, uint8_t len) {
+/***
+ * Get the 8-bit CRC from the lookup table.
+ *
+ * @param[in]   addr    Device family code to be found
+ * @param[in]   len     Memory space size
+ * @return      8-bit CRC value from the LUT
+ ***/
+uint8_t owi_crc8(const uint8_t *addr, uint8_t len) {
     uint16_t i;
     /* Intermediate CRC value */
     uint8_t crc = 0;
@@ -511,23 +507,24 @@ uint8_t onewire_crc8(const uint8_t *addr, uint8_t len) {
     /* Return the calculated CRC */
     return crc;
 }
+
+
 #else
-/*
- * Compute the 8-bit CRC
- * 
- * uint8_t *addr        Device family code to be found
- * uint8_t len          Device family code to be found
- * 
- * return               8-bit CRC
- */
-uint8_t onewire_crc8(const uint8_t *addr, uint8_t len) {
+/***
+ * Calculate the 8-bit CRC.
+ *
+ * @param[in]   addr    Device family code to be found
+ * @param[in]   len     Memory space size
+ * @return      Calculated 8-bit CRC value
+ ***/
+uint8_t owi_crc8(const uint8_t *addr, uint8_t len) {
     uint16_t i;
     uint8_t j;
     /* Intermediate CRC value */
     uint8_t crc = 0;
     /* Go over all bytes */
     for(i=0; i<len ; i++) {
-        /* Compute CRC for the current byte */
+        /* Calculate CRC for the current byte */
         uint8_t inbyte = *addr++;
         for(j=8; j>0; j--) {
             uint8_t mix = (crc ^ inbyte) & 0x01;
@@ -542,25 +539,24 @@ uint8_t onewire_crc8(const uint8_t *addr, uint8_t len) {
 #endif
 
 
-#if ONEWIRE_CRC16
-/*
- * Compute the 16-bit CRC
- * 
- * uint8_t* input       Array of bytes to checksum.
- * uint8_t len          How many bytes to use.
- * uint8_t crc          The crc starting value (optional)
- * 
- * return               1 if successful, 0 otherwise
- */
-uint16_t onewire_crc16(const uint8_t* input, uint16_t len, uint16_t crc) {
+#if OWI_CRC16
+/***
+ * Calculate the 16-bit CRC.
+ *
+ * @param[in]   data    Array of bytes to checksum.
+ * @param[in]   len     Number of data bytes
+ * @param[in]   crc     The CRC starting value
+ * @return      Calculated 16-bit CRC value
+ ***/
+uint16_t owi_crc16(const uint8_t* data, uint16_t len, uint16_t crc) {
     uint16_t i;
     /* Odd parity bits lookup table */
     static const uint8_t oddparity[16] = {0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0};
     /* Go over all bytes */
     for(i=0; i<len ; i++) {
-        /* Even though we're just copying a byte from the input, we'll
+        /* Even though we're just copying a byte from the input data, we'll
          * be doing 16-bit computation with it. */
-        uint16_t cdata = input[i];
+        uint16_t cdata = data[i];
         cdata = (cdata ^ crc) & 0xff;
         crc >>= 8;
 
@@ -578,20 +574,18 @@ uint16_t onewire_crc16(const uint8_t* input, uint16_t len, uint16_t crc) {
 }
 
 
-/*
- * Check the 16-bit CRC
- * 
- * uint8_t* input       Array of bytes to checksum.
- * uint8_t len          How many bytes to use.
- * uint8_t* crc_i       The two CRC16 bytes in the received data.
- *                      This should just point into the received data, not at a 16-bit integer.
- * uint8_t crc          The crc starting value (optional)
- * 
- * return               1 if successful, 0 otherwise
- */
-uint8_t onewire_crc16_check(const uint8_t* input, uint16_t len, const uint8_t* crc_i, uint16_t crc) {
+/***
+ * Check a given 16-bit CRC.
+ *
+ * @param[in]   data    Array of bytes to checksum.
+ * @param[in]   len     Number of data bytes
+ * @param[in]   crc_i   The two CRC16 bytes in the received data.
+ * @param[in]   crc     The CRC starting value
+ * @return      1 if CRC matches; 0 otherwise
+ ***/
+uint8_t owi_crc16_check(const uint8_t* input, uint16_t len, const uint8_t* crc_i, uint16_t crc) {
     /* Get the inverted 16-bit CRC */
-    crc = ~onewire_crc16(input,len,crc);
+    crc = ~owi_crc16(input,len,crc);
     /* Check if the CRC matches */
     return (((crc&0xFF) == crc_i[0]) && ((crc>>8) == crc_i[1]));
 }
