@@ -1,7 +1,7 @@
 /*****
  * @brief   ASN(x) systick library
  *
- * Library to enable a systick timer based on the TCNT0 module.
+ * Library to enable a systick timer based on the TIMER0 module.
  *
  * @file    /_asnx_lib_/timer/systick.h
  * @author  $Author: Dominik Widhalm $

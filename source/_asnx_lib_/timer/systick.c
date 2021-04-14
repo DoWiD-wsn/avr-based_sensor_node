@@ -1,7 +1,7 @@
 /*****
  * @brief   ASN(x) systick library
  *
- * Library to enable a systick timer based on the TCNT0 module.
+ * Library to enable a systick timer based on the TIMER0 module.
  *
  * @file    /_asnx_lib_/timer/systick.c
  * @author  $Author: Dominik Widhalm $
@@ -15,7 +15,7 @@
 /*** STD ***/
 #include <stddef.h>
 /*** ASNX LIB ***/
-#include "tcnt/tcnt.h"
+#include "timer/timer.h"
 
 
 /***** GLOBAL VARIABLES ***********************************************/
@@ -36,8 +36,8 @@ void systick_tick(void);
  * Initialize the systick timer.
  ***/
 void systick_init(void) {
-    /* Init tcnt0 to call the callback every 1ms */
-    tcnt0_start_ms(1, TCNT0_PRESCALER_64, systick_tick);
+    /* Init timer0 to call the callback every 1ms */
+    timer0_start_ms(1, TIMER0_PRESCALER_64, systick_tick);
 }
 
 
@@ -45,8 +45,8 @@ void systick_init(void) {
  * Deinitialization of the systick timer.
  ***/
 void systick_deinit(void) {
-    /* Deinitialize (stop) tcnt0 */
-    tcnt0_stop();
+    /* Deinitialize (stop) timer0 */
+    timer0_stop();
 }
 
 
@@ -110,7 +110,7 @@ uint16_t systick_get_min(void) {
 
 
 /***
- * Systick timer callback function to be called by tcnt0 ISR.
+ * Systick timer callback function to be called by timer0 ISR.
  ***/
 void systick_tick(void) {
     /* Increment number of milli-seconds */
