@@ -1,32 +1,39 @@
-/**
- *  Header file for AVR SYSTICK functionality.
- * 
- *  The systick functionality uses the timer0 module!
- */
+/*****
+ * @brief   ASN(x) systick library
+ *
+ * Library to enable a systick timer based on the TCNT0 module.
+ *
+ * @file    /_asnx_lib_/timer/systick.h
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/14 $
+ *****/
 
-#ifndef _AVR_SYSTICK_H_
-#define _AVR_SYSTICK_H_
+#ifndef _ASNX_SYSTICK_H_
+#define _ASNX_SYSTICK_H_
 
-/***** INCLUDES ***************************************************************/
+/***** INCLUDES *******************************************************/
+/*** STD ***/
 #include <stdint.h>
 
 
-/***** MACROS *****************************************************************/
-
-
-/***** STRUCTURES *************************************************************/
+/***** STRUCTURES *****************************************************/
+/***
+ * A structure to store the elapsed time of the systick timer.
+ ***/
 typedef struct {
-    uint16_t msec;
-    uint8_t sec;
-    uint16_t min;
+    uint16_t msec;      /**< Elapsed milliseconds (ms) */
+    uint8_t sec;        /**< Elapsed seconds (sec) */
+    uint16_t min;       /**< Elapsed minutes (min) */
 } systick_t;
 
 
-/***** GLOBAL VARIABLES *******************************************************/
+/***** GLOBAL VARIABLES ***********************************************/
+/* Global struct for the elapsed time of the systick timer */
 extern systick_t systime;
 
 
-/***** FUNCTION PROTOTYPES ****************************************************/
+/***** FUNCTION PROTOTYPES ********************************************/
 /* General */
 void systick_init(void);
 void systick_deinit(void);
@@ -45,4 +52,4 @@ void systick_clear_callback_sec(void);
 void systick_clear_callback_min(void);
 
 
-#endif // _AVR_SYSTICK_H_
+#endif // _ASNX_SYSTICK_H_
