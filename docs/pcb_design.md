@@ -74,8 +74,6 @@ For the PCB design the following rules were used:
 
 An interactive BOM can be found in the `/kicad/bom/` directory (see [here](../kicad/bom/avr_sensor_node.html); created with [InteractiveHtmlBom](https://github.com/openscopeproject/InteractiveHtmlBom)).
 
-![InteractiveHtmlBom (/kicad/bom/avr_sensor_node.html)](../kicad/bom/avr_sensor_node.html)
-
 | Reference | Value | Symbol Library | Symbol | Footprint Library | Footprint |
 |-----------|-------|----------------|--------|-------------------|-----------|
 | C7-C8     | 18pF  | Device         | C      | Capacitor_SMD     | C_0603_1608Metric |
