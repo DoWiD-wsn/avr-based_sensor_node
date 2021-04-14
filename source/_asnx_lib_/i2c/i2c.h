@@ -8,7 +8,6 @@
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/14 $
- * @see     www.peterfleury.epizy.com/avr-software.html
  *****/
 
 #ifndef _ASNX_I2C_H_
