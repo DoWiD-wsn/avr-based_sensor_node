@@ -75,13 +75,13 @@ typedef struct {
     hw_io_t gpio;       /**< OWI GPIO handle */
     uint8_t addr[8];    /**< Sensors ROM address */
     DS18X20_DEV_t type; /**< Sensor type */
-} ds18x20_t;
+} DS18X20_t;
 
 
 /***** FUNCTION PROTOTYPES ********************************************/
-void ds18x20_init(ds18x20_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
-DS18X20_RET_t ds18x20_find(ds18x20_t* dev);
-float ds18x20_get_temperature(ds18x20_t* dev);
+void ds18x20_init(DS18X20_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
+DS18X20_RET_t ds18x20_find(DS18X20_t* dev);
+float ds18x20_get_temperature(DS18X20_t* dev);
 
 
 #endif // _ASNX_DS18X20_H_

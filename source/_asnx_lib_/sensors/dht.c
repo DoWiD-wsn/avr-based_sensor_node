@@ -22,8 +22,8 @@
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
-uint8_t _read(dht_t* dev);
-uint32_t _expect_pulse(dht_t* dev, uint8_t level);
+uint8_t _read(DHT_t* dev);
+uint32_t _expect_pulse(DHT_t* dev, uint8_t level);
 
 
 /***** FUNCTIONS **************************************************************/
@@ -37,7 +37,7 @@ uint32_t _expect_pulse(dht_t* dev, uint8_t level);
  * @param[in]   portpin Index of the GPIO pin
  * @param[in]   type    DHT sensor type
  ***/
-void dht_init(dht_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type) {
+void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type) {
     /* Fill the HW GPIO structure */
     dev->gpio.ddr = ddr;
     dev->gpio.port = port;
@@ -61,7 +61,7 @@ void dht_init(dht_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatil
  * @param[in]   dev     Pointer to the device structure to be filled
  * @return      SUCCESS in case of success; FAIL, LAST_MEASUREMENT, or TIMEOUT otherwise
  ***/
-uint8_t _read(dht_t* dev) {
+uint8_t _read(DHT_t* dev) {
     /* Get a pointer to the HW GPIO structure */
     hw_io_t* gpio = &(dev->gpio);
     /* Temporary variables */
@@ -122,10 +122,10 @@ uint8_t _read(dht_t* dev) {
     _delay_us(40);
 
     /* First expect a low signal for ~80us followed by a high signal for ~80us again */
-    if(_expect_pulse(dev,HW_STATE_LOW) == DHT_READ_TIMEOUT) {
+    if(_expect_pulse(dev,HW_STATE_LOW) >= DHT_READ_TIMEOUT) {
         return DHT_READ_FAIL;
     }
-    if(_expect_pulse(dev,HW_STATE_HIGH) == DHT_READ_TIMEOUT) {
+    if(_expect_pulse(dev,HW_STATE_HIGH) >= DHT_READ_TIMEOUT) {
         return DHT_READ_FAIL;
     }
 
@@ -185,7 +185,7 @@ uint8_t _read(dht_t* dev) {
  * @param[in]   level   Logic level of the expected pulse
  * @return      Number of cycles until the pulse arrived; TIMEOUT otherwise
  ***/
-uint32_t _expect_pulse(dht_t* dev, uint8_t level) {
+uint32_t _expect_pulse(DHT_t* dev, uint8_t level) {
     /* Get a pointer to the HW GPIO structure */
     hw_io_t* gpio = &(dev->gpio);
     /* Temporary variables */
@@ -209,7 +209,7 @@ uint32_t _expect_pulse(dht_t* dev, uint8_t level) {
  * @param[in]   dev     Pointer to the device structure to be filled
  * @return      Temperature reading in degree Celsius (°C)
  ***/
-float dht_get_temperature(dht_t* dev) {
+float dht_get_temperature(DHT_t* dev) {
     /* Intermediate temperature value */
     float temp = DHT_READ_NAN;
     int16_t inter = 0;
@@ -261,7 +261,7 @@ float dht_get_temperature(dht_t* dev) {
  * @param[in]   dev     Pointer to the device structure to be filled
  * @return      Relative humidity reading (%RH)
  ***/
-float dht_get_humidity(dht_t* dev) {
+float dht_get_humidity(DHT_t* dev) {
     /* Intermediate humidity value */
     float temp = DHT_READ_NAN;
     int16_t inter = 0;

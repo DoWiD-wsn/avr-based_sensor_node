@@ -31,10 +31,6 @@
 #define DHT_TIMING_MIN_INTERVAL         (2200UL)
 /* Invalid result */
 #define DHT_READ_NAN                    (999.9)
-/* Cycle Count Threshold */
-#define DHT_CCT_USED                    (DHT_CCT_AVR)
-#define DHT_CCT_AVR                     (6)
-#define DHT_CCT_DUE                     (30)
 
 
 /***** ENUMERATION ****************************************************/
@@ -68,13 +64,13 @@ typedef struct {
     DHT_DEV_t type;     /**< Sensor type */
     uint8_t firstread;  /**< Flag to indicate the first reading */
     uint8_t data[5];    /**< Last data read from the sensor */
-} dht_t;
+} DHT_t;
 
 
 /***** FUNCTION PROTOTYPES ********************************************/
-void dht_init(dht_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type);
-float dht_get_temperature(dht_t* dev);
-float dht_get_humidity(dht_t* dev);
+void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type);
+float dht_get_temperature(DHT_t* dev);
+float dht_get_humidity(DHT_t* dev);
 
 
 #endif // _ASNX_DHT_H_

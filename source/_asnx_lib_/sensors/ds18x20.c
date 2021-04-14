@@ -18,7 +18,7 @@
 
 
 /***** LOCAL FUNCTION PROTOTYPES **********************************************/
-int16_t _get_raw(ds18x20_t* dev);
+int16_t _get_raw(DS18X20_t* dev);
 float _raw2celsius(int16_t raw);
 
 
@@ -32,7 +32,7 @@ float _raw2celsius(int16_t raw);
  * @param[in]   pin     Pointer to the GPIO's PINx register
  * @param[in]   portpin Index of the GPIO pin
  ***/
-void ds18x20_init(ds18x20_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
+void ds18x20_init(DS18X20_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
     uint8_t i;
     /* Fill the HW GPIO structure */
     dev->gpio.ddr = ddr;
@@ -54,7 +54,7 @@ void ds18x20_init(ds18x20_t* dev, volatile uint8_t* ddr, volatile uint8_t* port,
  * @param[in]   dev     Pointer to the device structure to be filled
  * @return      0 if device was found; !=0 otherwise (see DS18X20_RET_t)
  ***/
-DS18X20_RET_t ds18x20_find(ds18x20_t* dev) {
+DS18X20_RET_t ds18x20_find(DS18X20_t* dev) {
     /* Search for a onewire device */
     if(!owi_search(&(dev->gpio),dev->addr)) {
         /* Reset search state */
@@ -94,7 +94,7 @@ DS18X20_RET_t ds18x20_find(ds18x20_t* dev) {
  * @param[in]   dev     Pointer to the device structure to be filled
  * @return      Raw temperature reading
  ***/
-int16_t _get_raw(ds18x20_t* dev) {
+int16_t _get_raw(DS18X20_t* dev) {
     uint8_t i;
     /* Temporary results */
     uint8_t data[9]={0};
@@ -171,7 +171,7 @@ float _raw2celsius(int16_t raw) {
  * @param[in]   dev     Pointer to the device structure to be filled
  * @return      Temperature reading in degree Celsius (°C)
  ***/
-float ds18x20_get_temperature(ds18x20_t* dev) {
+float ds18x20_get_temperature(DS18X20_t* dev) {
     /* Return the converted raw reading */
     return _raw2celsius(_get_raw(dev));
 }

@@ -22,7 +22,7 @@
  * @param[in]   adc_value   ADC conversion result
  * @return      Temperature in degree Celsius (°C)
  ***/
-float JT103_get_temperature(uint16_t adc_value) {
+float jt103_get_temperature(uint16_t adc_value) {
     /* Calculate the thermistor's resistance */
     float R_thermistor = (float)JT103_R_BALANCE / (((float)JT103_ADC_MAX / (float)adc_value) - 1.0);
     /* Use the beta equation to get the temperature */
