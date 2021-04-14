@@ -98,7 +98,7 @@ void adc_set_reference(ADC_AREF_t reference);
 uint16_t adc_read(void);
 uint16_t adc_read_input(ADC_INPUT_t input);
 /* Special functions */
-float adc_read_vss(void);
+float adc_read_vcc(void);
 
 
 #endif // _ASNX_ADC_H_

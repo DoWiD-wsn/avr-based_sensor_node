@@ -145,14 +145,18 @@ void adc_dummy_conversion(void) {
 
 /***
  * Measure the MCU's supply voltage internally.
+ * Set the reference voltage to Vcc and read the VBG (1.1V) input.
+ * The voltage is then calculated with:
+ * Vcc = VBG * (ADC_MAX / ADC_VALUE) = 1.1V * (1023 / ADC_VALUE)
+ * @see http://ww1.microchip.com/downloads/en/Appnotes/00002447A.pdf
  *
  * @return      Supply voltage in volts (V)
  ***/
-float adc_read_vss(void) {
+float adc_read_vcc(void) {
     /* Save the current ADMUX configuration */
     uint8_t reg = ADMUX;
     /* Set the register accordingly */
-    ADMUX  = 0x4E;
+    ADMUX  = 0x5E;
     /* Give the reference some time to settle */
     _delay_ms(ADC_DELAY_CHANGE_REFERENCE);
     /* Perform a dummy conversion */
@@ -161,6 +165,8 @@ float adc_read_vss(void) {
     float result = (1.1 * (1023.0/(float)adc_read()));
     /* Restore the ADMUX configuration */
     ADMUX = reg;
+    /* Give the reference some time to settle */
+    _delay_ms(ADC_DELAY_CHANGE_REFERENCE);
     /* Return the result */
     return result;
 }
