@@ -1,27 +1,41 @@
-/**
- *  Source file for STEMMA SOIL sensor.
- */
+/*****
+ * @brief   ASN(x) STEMMA SOIL sensor library
+ *
+ * Library to support the STEMMA SOIL sensor.
+ *
+ * @file    /_asnx_lib_/sensors/stemma_soil.h
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/14 $
+ * @see     https://learn.adafruit.com/adafruit-stemma-soil-sensor-i2c-capacitive-moisture-sensor/
+ * @see     https://github.com/adafruit/Adafruit_Seesaw
+ *****/
 
-/***** INCLUDES ***************************************************************/
+
+/***** INCLUDES *******************************************************/
 #include "stemma_soil.h"
+/*** AVR ***/
 #include <util/delay.h>
 
 
-/***** FUNCTIONS **************************************************************/
-/*
- * Initialization of the STEMMA SOIL sensor
- */
+/***** FUNCTIONS ******************************************************/
+/***
+ * Initialization of the STEMMA SOIL sensor.
+ ***/
 void stemma_init(void) {
     /* Initialize I2C master interface */
    i2c_init();
 }
 
 
-/*
+/***
  * Read the version code of the STEMMA SOIL sensor.
  * Bits [31:16] will be a date code, [15:0] will be the product id.
- */
-stemma_ret_t stemma_get_version(uint32_t* version) {
+ * 
+ * @param[out]  version         Version code read from the sensor
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+STEMMA_RET_t stemma_get_version(uint32_t* version) {
     /* Variable for the read result */
     uint8_t res[4] = {0};
     /* Read in 4 bytes */
@@ -36,11 +50,13 @@ stemma_ret_t stemma_get_version(uint32_t* version) {
 }
 
 
-/*
- * Read the temperature of the STEMMA SOIL sensor.
- * Temperature in degrees Celsius as a floating point value.
- */
-stemma_ret_t stemma_get_temperature(float* temperature) {
+/***
+ * Read the temperature of the sensor in degrees Celsius (°C).
+ * 
+ * @param[out]  temperature      Sensor temperature in degrees Celsius (°C)
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+STEMMA_RET_t stemma_get_temperature(float* temperature) {
     /* Variable for the read result */
     uint8_t res[4] = {0};
     /* Read in 4 bytes */
@@ -57,11 +73,13 @@ stemma_ret_t stemma_get_temperature(float* temperature) {
 }
 
 
-/*
- * Read the capacity of the STEMMA SOIL sensor.
- * This is an integer between 0 and 1023.
- */
-stemma_ret_t stemma_get_capacity(uint16_t* capacity) {
+/***
+ * Read the capacity of the sensor represented as integer between 0 and 1023.
+ * 
+ * @param[out]  capacity        Sensor capacity (between 0 and 1023)
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+STEMMA_RET_t stemma_get_capacity(uint16_t* capacity) {
     /* Variable for the read result */
     uint16_t ret = STEMMA_TOUCH_WORKING;
     /* Capacitance measurement can take some time */

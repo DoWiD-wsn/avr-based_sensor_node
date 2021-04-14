@@ -1,51 +1,41 @@
-/**
- *  Header file for BME280 sensor.
- * 
- *  https://github.com/rm-hull/bme280
- *  https://github.com/bitbank2/bme280
- *  https://github.com/BoschSensortec/BME280_driver
- */
+/*****
+ * @brief   ASN(x) BME280 environmental sensor library
+ *
+ * Library to support the BME280 environmental sensor.
+ *
+ * @file    /_asnx_lib_/sensors/ds18x20.h
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/14 $
+ * @see     https://github.com/rm-hull/bme280
+ * @see     https://github.com/bitbank2/bme280
+ * @see     https://github.com/BoschSensortec/BME280_driver
+ *****/
 
-#ifndef _SENS_BME280_H_
-#define _SENS_BME280_H_
+#ifndef _ASNX_BME280_H_
+#define _ASNX_BME280_H_
 
-/***** INCLUDES ***************************************************************/
+/***** INCLUDES *******************************************************/
+/*** STD ***/
 #include <stdio.h>
 #include <stdint.h>
 
 
-/***** MACROS *****************************************************************/
-/*** I2C specific ***/
-#define BME280_I2C_ADD_BASE             (0x76)
-/*** Misc ***/
+/***** DEFINES ********************************************************/
+/* I2C address */
+#define BME280_I2C_ADDRESS              (0x76)
+/* Timeour for sensor readings [ms] */
 #define BME280_READ_TIMEOUT             (500)
-/*** Reset value ***/
+/* Configuration register reset value */
 #define BME280_RESET_VALUE              (0xB6)
-/*** Register Values ***/
-/* REGISTER ADDRESSES */
-#define BME280_REG_CHIPID               (0xD0)
-#define BME280_REG_RESET                (0xE0)
-#define BME280_REG_CTRL_HUM             (0xF2)
-#define BME280_REG_STATUS               (0xF3)
-#define BME280_REG_CTRL_MEAS            (0xF4)
-#define BME280_REG_CONFIG               (0xF5)
-#define BME280_REG_P_MSB                (0xF7)
-#define BME280_REG_P_LSB                (0xF8)
-#define BME280_REG_P_XLSB               (0xF9)
-#define BME280_REG_T_MSB                (0xFA)
-#define BME280_REG_T_LSB                (0xFB)
-#define BME280_REG_T_XLSB               (0xFC)
-#define BME280_REG_H_MSB                (0xFD)
-#define BME280_REG_H_LSB                (0xFE)
-
-/* STATUS BITS */
+/* Status codes */
 #define BME280_STATUS_MEASURING         (0x08)
 #define BME280_STATUS_UPDATING          (0x01)
-/* TEMPERATURE */
+/* Temperature compensation value addresses */
 #define BME280_REG_DIG_T1               (0x88)
 #define BME280_REG_DIG_T2               (0x8A)
 #define BME280_REG_DIG_T3               (0x8C)
-/* PRESSURE */
+/* Pressure compensation value addresses */
 #define BME280_REG_DIG_P1               (0x8E)
 #define BME280_REG_DIG_P2               (0x90)
 #define BME280_REG_DIG_P3               (0x92)
@@ -55,7 +45,7 @@
 #define BME280_REG_DIG_P7               (0x9A)
 #define BME280_REG_DIG_P8               (0x9C)
 #define BME280_REG_DIG_P9               (0x9E)
-/* HUMIDITY */
+/* Humidty compensation value addresses */
 #define BME280_REG_DIG_H1               (0xA1)
 #define BME280_REG_DIG_H2               (0xE1)
 #define BME280_REG_DIG_H3               (0xE3)
@@ -65,57 +55,80 @@
 #define BME280_REG_DIG_H7               (0xE7)
 
 
-/***** ENUMERATION ************************************************************/
-/*** GENERAL ***/
-/* Function return values */
+/***** ENUMERATION ****************************************************/
+/* Enumeration for the BME280 function return values */
 typedef enum {
-                BME280_RET_ERROR = -1,
-                BME280_RET_OK = 0
-             } bme280_ret_t;
-/*** SETTINGS ***/
-/* SAMPLING MODES */
+    BME280_RET_ERROR        = -1,
+    BME280_RET_OK           = 0
+} BME280_RET_t;
+
+/* Enumeration for the I2C register addresses */
 typedef enum {
-                BME280_SAMPLE_NONE  = 0,
-                BME280_SAMPLE_1     = 1,
-                BME280_SAMPLE_2     = 2,
-                BME280_SAMPLE_4     = 3,
-                BME280_SAMPLE_8     = 4,
-                BME280_SAMPLE_16    = 5
-             } bme280_sample_t;
-/* OPERATING MODES */
+    BME280_REG_CHIPID       = 0xD0,
+    BME280_REG_RESET        = 0xE0,
+    BME280_REG_CTRL_HUM     = 0xF2,
+    BME280_REG_STATUS       = 0xF3,
+    BME280_REG_CTRL_MEAS    = 0xF4,
+    BME280_REG_CONFIG       = 0xF5,
+    BME280_REG_P_MSB        = 0xF7,
+    BME280_REG_P_LSB        = 0xF8,
+    BME280_REG_P_XLSB       = 0xF9,
+    BME280_REG_T_MSB        = 0xFA,
+    BME280_REG_T_LSB        = 0xFB,
+    BME280_REG_T_XLSB       = 0xFC,
+    BME280_REG_H_MSB        = 0xFD,
+    BME280_REG_H_LSB        = 0xFE
+} BME280_REG_t;
+
+/* Enumeration for the BME280 sampling modes */
 typedef enum {
-                BME280_MODE_SLEEP   = 0,
-                BME280_MODE_FORCED  = 1,
-                BME280_MODE_NORMAL  = 2
-             } bme280_mode_t;
-/* STANDBY SETTINGS */
+    BME280_SAMPLE_NONE      = 0,
+    BME280_SAMPLE_1         = 1,
+    BME280_SAMPLE_2         = 2,
+    BME280_SAMPLE_4         = 3,
+    BME280_SAMPLE_8         = 4,
+    BME280_SAMPLE_16        = 5
+} BME280_SAMPLE_t;
+
+/* Enumeration for the BME280 operation modes */
 typedef enum {
-                BME280_STANDBY_0_5  = 0,
-                BME280_STANDBY_62_5 = 1,
-                BME280_STANDBY_125  = 2,
-                BME280_STANDBY_250  = 3,
-                BME280_STANDBY_500  = 4,
-                BME280_STANDBY_1000 = 5,
-                BME280_STANDBY_10   = 6,
-                BME280_STANDBY_20   = 7
-             } bme280_standby_t;
-/* FILTER SETTINGS */
+    BME280_MODE_SLEEP       = 0,
+    BME280_MODE_FORCED      = 1,
+    BME280_MODE_NORMAL      = 2
+} BME280_MODE_t;
+
+/* Enumeration for the BME280 standby settings */
 typedef enum {
-                BME280_FILTER_OFF   = 0,
-                BME280_FILTER_2     = 1,
-                BME280_FILTER_4     = 2,
-                BME280_FILTER_8     = 3,
-                BME280_FILTER_16    = 4
-             } bme280_filter_t;
-/* SPI SETTINGS */
+    BME280_STANDBY_0_5      = 0,
+    BME280_STANDBY_62_5     = 1,
+    BME280_STANDBY_125      = 2,
+    BME280_STANDBY_250      = 3,
+    BME280_STANDBY_500      = 4,
+    BME280_STANDBY_1000     = 5,
+    BME280_STANDBY_10       = 6,
+    BME280_STANDBY_20       = 7
+} BME280_STANDBY_t;
+
+/* Enumeration for the BME280 filter settings */
 typedef enum {
-                BME280_SPI_OFF      = 0,
-                BME280_SPI_ON       = 1
-             } bme280_spi_t;
+    BME280_FILTER_OFF       = 0,
+    BME280_FILTER_2         = 1,
+    BME280_FILTER_4         = 2,
+    BME280_FILTER_8         = 3,
+    BME280_FILTER_16        = 4
+} BME280_FILTER_t;
+
+/* Enumeration for the BME280 SPI settings */
+typedef enum {
+    BME280_SPI_OFF          = 0,
+    BME280_SPI_ON           = 1
+} BME280_SPI_t;
 
 
-/***** STRUCTURES *************************************************************/
-/* Sensor calibration structure */
+/***** STRUCTURES *****************************************************/
+/***
+ * A structure to store the BME280 calibration values.
+ ***/
 typedef struct {
     /* temperature */
     uint16_t dig_T1;
@@ -138,46 +151,48 @@ typedef struct {
     int16_t dig_H4;
     int16_t dig_H5;
     int8_t dig_H6;
-} bme280_calib_t;
+} BME280_CALIB_t;
 
-/* Sensor configuration structure */
+/***
+ * A structure to store the BME280 sensor configuration.
+ ***/
 typedef struct {
-    uint8_t address;        // I2C address
-    uint8_t mode;           // operating mode
-    uint8_t t_sample;       // temperature sampling mode
-    uint8_t p_sample;       // pressure sampling mode
-    uint8_t h_sample;       // humidity sampling mode
-    uint8_t standby;        // standby mode
-    uint8_t filter;         // filter mode
-    int32_t t_fine;         // temperature fine reading
-    bme280_calib_t calib;   // sensor calibration values
-} bme280_t;
+    uint8_t address;        /**< I2C address */
+    uint8_t mode;           /**< operating mode */
+    uint8_t t_sample;       /**< temperature sampling mode */
+    uint8_t p_sample;       /**< pressure sampling mode */
+    uint8_t h_sample;       /**< humidity sampling mode */
+    uint8_t standby;        /**< standby mode */
+    uint8_t filter;         /**< filter mode */
+    int32_t t_fine;         /**< temperature fine reading */
+    BME280_CALIB_t calib;   /**< sensor calibration values */
+} BME280_t;
 
 
-/***** FUNCTION PROTOTYPES ****************************************************/
+/***** FUNCTION PROTOTYPES ********************************************/
 /* General */
-bme280_ret_t bme280_init(bme280_t* bme);
+BME280_RET_t bme280_init(BME280_t* bme);
+BME280_RET_t bme280_reset(BME280_t* bme);
+BME280_RET_t bme280_spi_enable(BME280_t* bme);
+BME280_RET_t bme280_spi_disable(BME280_t* bme);
 /* Configuration - read */
-bme280_ret_t bme280_get_chipid(bme280_t* bme, uint8_t* value);
-bme280_ret_t bme280_get_ctrl_hum(bme280_t* bme, uint8_t* value);
-bme280_ret_t bme280_get_status(bme280_t* bme, uint8_t* value);
-bme280_ret_t bme280_get_ctrl_meas(bme280_t* bme, uint8_t* value);
-bme280_ret_t bme280_get_config(bme280_t* bme, uint8_t* value);
+BME280_RET_t bme280_get_chipid(BME280_t* bme, uint8_t* value);
+BME280_RET_t bme280_get_ctrl_hum(BME280_t* bme, uint8_t* value);
+BME280_RET_t bme280_get_status(BME280_t* bme, uint8_t* value);
+BME280_RET_t bme280_get_ctrl_meas(BME280_t* bme, uint8_t* value);
+BME280_RET_t bme280_get_config(BME280_t* bme, uint8_t* value);
 /* Configuration  - write */
-bme280_ret_t bme280_reset(bme280_t* bme);
-bme280_ret_t bme280_set_mode(bme280_t* bme, bme280_mode_t value);
-bme280_ret_t bme280_set_t_sample(bme280_t* bme, bme280_sample_t value);
-bme280_ret_t bme280_set_p_sample(bme280_t* bme, bme280_sample_t value);
-bme280_ret_t bme280_set_h_sample(bme280_t* bme, bme280_sample_t value);
-bme280_ret_t bme280_set_standby(bme280_t* bme, bme280_standby_t value);
-bme280_ret_t bme280_set_filter(bme280_t* bme, bme280_filter_t value);
-bme280_ret_t bme280_spi_enable(bme280_t* bme);
-bme280_ret_t bme280_spi_disable(bme280_t* bme);
+BME280_RET_t bme280_set_mode(BME280_t* bme, BME280_MODE_t value);
+BME280_RET_t bme280_set_t_sample(BME280_t* bme, BME280_SAMPLE_t value);
+BME280_RET_t bme280_set_p_sample(BME280_t* bme, BME280_SAMPLE_t value);
+BME280_RET_t bme280_set_h_sample(BME280_t* bme, BME280_SAMPLE_t value);
+BME280_RET_t bme280_set_standby(BME280_t* bme, BME280_STANDBY_t value);
+BME280_RET_t bme280_set_filter(BME280_t* bme, BME280_FILTER_t value);
 /* Sensor readings */
-bme280_ret_t bme280_get_temperature(bme280_t* bme, float* value);
-bme280_ret_t bme280_get_pressure(bme280_t* bme, float* value);
-bme280_ret_t bme280_get_humidity(bme280_t* bme, float* value);
-bme280_ret_t bme280_get_dewpoint(bme280_t* bme, float* value);
+BME280_RET_t bme280_get_temperature(BME280_t* bme, float* value);
+BME280_RET_t bme280_get_pressure(BME280_t* bme, float* value);
+BME280_RET_t bme280_get_humidity(BME280_t* bme, float* value);
+BME280_RET_t bme280_get_dewpoint(BME280_t* bme, float* value);
 
 
-#endif // _SENS_BME280_H_
+#endif // _ASNX_BME280_H_

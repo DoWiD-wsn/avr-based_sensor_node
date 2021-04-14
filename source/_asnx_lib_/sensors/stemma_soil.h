@@ -1,21 +1,29 @@
-/**
- *  Header file for STEMMA SOIL sensor.
- * 
- *  https://learn.adafruit.com/adafruit-stemma-soil-sensor-i2c-capacitive-moisture-sensor/
- *  https://github.com/adafruit/Adafruit_Seesaw
- */
+/*****
+ * @brief   ASN(x) STEMMA SOIL sensor library
+ *
+ * Library to support the STEMMA SOIL sensor.
+ *
+ * @file    /_asnx_lib_/sensors/stemma_soil.h
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/14 $
+ * @see     https://learn.adafruit.com/adafruit-stemma-soil-sensor-i2c-capacitive-moisture-sensor/
+ * @see     https://github.com/adafruit/Adafruit_Seesaw
+ *****/
 
-#ifndef _SENS_STEMMA_H_
-#define _SENS_STEMMA_H_
+#ifndef _ASNX_STEMMA_H_
+#define _ASNX_STEMMA_H_
 
-/***** INCLUDES ***************************************************************/
+/***** INCLUDES *******************************************************/
+/*** STD ***/
 #include <stdio.h>
 #include <stdint.h>
+/*** ASNX LIB ***/
 #include "i2c/i2c.h"
 
 
-/***** MACROS *****************************************************************/
-/* I2C specific */
+/***** DEFINES ********************************************************/
+/* I2C address */
 #define STEMMA_I2C_ADDRESS              (0x36)
 /* I2C register addresses */
 #define STEMMA_STATUS_BASE              (0x00)
@@ -31,19 +39,19 @@
 #define STEMMA_TOUCH_WORKING            (65535)
 
 
-/***** ENUMERATION ************************************************************/
-/* Function return values */
+/***** ENUMERATION ****************************************************/
+/* Enumeration for the STEMMA function return values */
 typedef enum {
-                STEMMA_RET_ERROR = -1,
-                STEMMA_RET_OK = 0
-             } stemma_ret_t;
+    STEMMA_RET_ERROR = -1,
+    STEMMA_RET_OK = 0
+} STEMMA_RET_t;
 
 
 /***** FUNCTION PROTOTYPES ****************************************************/
 void stemma_init(void);
-stemma_ret_t stemma_get_version(uint32_t* version);
-stemma_ret_t stemma_get_temperature(float* temperature);
-stemma_ret_t stemma_get_capacity(uint16_t* capacity);
+STEMMA_RET_t stemma_get_version(uint32_t* version);
+STEMMA_RET_t stemma_get_temperature(float* temperature);
+STEMMA_RET_t stemma_get_capacity(uint16_t* capacity);
 
 
-#endif // _SENS_STEMMA_H_
+#endif // _ASNX_STEMMA_H_
