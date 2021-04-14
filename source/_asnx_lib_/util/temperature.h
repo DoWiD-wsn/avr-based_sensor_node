@@ -1,26 +1,21 @@
-/**
- *  Header file for temperature helper functions.
+/*****
+ * @brief   ASN(x) temperature helper library
+ *
+ * Library to support working with temperature values and their conversion.
+ *
+ * @file    /_asnx_lib_/util/temperature.h
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/14 $
+ *****/
+
+#ifndef _ASNX_TEMP_H_
+#define _ASNX_TEMP_H_
+
+/***** DEFINES ********************************************************/
+/* HI formula coefficients
+ * @see https://en.wikipedia.org/wiki/Heat_index#Formula
  */
-
-#ifndef _HELP_TEMP_H_
-#define _HELP_TEMP_H_
-
-/***** INCLUDES ***************************************************************/
-#include <stdint.h>
-
-
-/***** MACROS *****************************************************************/
-/* 103JT thermistor (10k@25°C) */
-#define JT103_BETA                      (3435)
-#define JT103_R_ROOM                    (10000UL)
-/* Resistor Network & ADC */
-#define MAX_ADC                         (1023)
-#define BALANCE_RESISTOR                (10000UL)
-/* Temperature Conversion & Room Temperature */
-#define TEMP_K2C                    (273.15)
-#define TEMP_ROOM                   (TEMP_K2C + 25)
-
-/* HI formula coefficients https://en.wikipedia.org/wiki/Heat_index#Formula */
 #define TEMP_HI_C1                      (-8.78469475556)
 #define TEMP_HI_C2                      (1.61139411)
 #define TEMP_HI_C3                      (2.33854883889)
@@ -32,25 +27,12 @@
 #define TEMP_HI_C9                      (-0.000003582)
 
 
-/***** GLOBAL VARIABLES *******************************************************/
-
-
-/***** ENUMERATION ************************************************************/
-
-
-/***** STRUCTURES *************************************************************/
-
-
-/***** FUNCTION PROTOTYPES ****************************************************/
-/* Thermistor */
-float JT103_get_temperature(uint16_t adc_value);
+/***** FUNCTION PROTOTYPES ********************************************/
 /* Temperature conversion */
 float temp_C2F(float temp);
 float temp_F2C(float temp);
+/* Calculate the heat index (°C) */
 float temp_get_heatindex(float T, float R);
 
 
-/***** INLINE FUNCTIONS *******************************************************/
-
-
-#endif // _HELP_TEMP_H_
+#endif // _ASNX_TEMP_H_

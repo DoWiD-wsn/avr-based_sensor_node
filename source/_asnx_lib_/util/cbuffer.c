@@ -3,7 +3,7 @@
  *
  * Library to enable circular buffer functionality.
  *
- * @file    /_asnx_lib_/util/cbufffer.h
+ * @file    /_asnx_lib_/util/cbufffer.c
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/13 $

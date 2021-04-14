@@ -3,7 +3,7 @@
  *
  * Library to support the use of the ADC.
  *
- * @file    /_asnx_lib_/adc/adc.h
+ * @file    /_asnx_lib_/adc/adc.c
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/13 $

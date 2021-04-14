@@ -545,7 +545,7 @@ uint16_t uart1_tx_buffer_cnt(void) {
 
 
 /***
- * Flush the UART0 RX buffer
+ * Flush the UART0 RX buffer.
  ***/
 void uart0_rx_flush(void) {
     /* Flush the CB */
@@ -554,7 +554,7 @@ void uart0_rx_flush(void) {
 
 
 /***
- * Flush the UART1 RX buffer
+ * Flush the UART1 RX buffer.
  ***/
 void uart1_rx_flush(void) {
     /* Flush the CB */
@@ -563,7 +563,7 @@ void uart1_rx_flush(void) {
 
 
 /***
- * Flush the UART0 TX buffer
+ * Flush the UART0 TX buffer.
  ***/
 void uart0_tx_flush(void) {
     /* Flush the CB */
@@ -572,7 +572,7 @@ void uart0_tx_flush(void) {
 
 
 /***
- * Flush the UART1 TX buffer
+ * Flush the UART1 TX buffer.
  ***/
 void uart1_tx_flush(void) {
     /* Flush the CB */
@@ -581,7 +581,7 @@ void uart1_tx_flush(void) {
 
 
 /***
- * UART0 RX complete interrupt
+ * UART0 RX complete interrupt.
  ***/
 #if defined(__DOXYGEN__)
 void USART0_RX_vect(void) {
@@ -599,7 +599,7 @@ ISR(USART0_RX_vect) {
 
 
 /***
- * UART1 RX complete interrupt
+ * UART1 RX complete interrupt.
  ***/
 #if defined(__DOXYGEN__)
 void USART1_RX_vect(void) {
@@ -617,7 +617,7 @@ ISR(USART1_RX_vect) {
 
 
 /***
- * UART0 TX complete interrupt
+ * UART0 TX complete interrupt.
  ***/
 #if defined(__DOXYGEN__)
 void USART0_TX_vect(void) {
@@ -633,7 +633,7 @@ ISR(USART0_TX_vect) {
 
 
 /***
- * UART0 TX complete interrupt
+ * UART0 TX complete interrupt.
  ***/
 #if defined(__DOXYGEN__)
 void USART1_TX_vect(void) {
@@ -649,7 +649,7 @@ ISR(USART1_TX_vect) {
 
 
 /***
- * UART0 data register empty interrupt
+ * UART0 data register empty interrupt.
  ***/
 #if defined(__DOXYGEN__)
 void USART0_UDRE_vect(void) {
@@ -677,7 +677,7 @@ ISR(USART0_UDRE_vect) {
 
 
 /***
- * UART1 data register empty interrupt
+ * UART1 data register empty interrupt.
  ***/
 #if defined(__DOXYGEN__)
 void USART0_UDRE_vect(void) {
