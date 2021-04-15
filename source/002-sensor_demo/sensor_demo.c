@@ -18,6 +18,8 @@
 /***** INCLUDES *******************************************************/
 /*** AVR ***/
 #include <avr/io.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
 /*** ASNX LIB ***/
 #include "adc/adc.h"
 #include "hw/led.h"
@@ -55,8 +57,8 @@ void read_and_print(void) {
     printf("=> DS18B20\n");
     printf("...Temperature: %2.2f C\n",ds18x20_get_temperature(&ds18b20));
     printf("=> AM2302\n");
-    printf("...Humidity: %2.2f %%\n",dht_get_humidity(&am2302));
     printf("...Temperature: %2.2f C\n",dht_get_temperature(&am2302));
+    printf("...Humidity: %2.2f %%\n",dht_get_humidity(&am2302));
     printf("=> LM75\n");
     lm75_get_temperature(&tmp);
     printf("...Temperature: %2.2f C\n",tmp);
@@ -108,6 +110,9 @@ int main(void) {
     
     /* Set a systick callback function to be called every second */
     systick_set_callback_sec(update);
+    
+    /* Enable interrupts globally */
+    sei();
     
     printf("=== STARTING UP ... ===\n");
     

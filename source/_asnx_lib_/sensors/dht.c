@@ -45,6 +45,8 @@ void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatil
     dev->gpio.portpin = portpin;
     /* Set the sensor type */
     dev->type = type;
+    /* No reading has happened yet */
+    dev->firstread = 0;
     /* Get a pointer to the HW GPIO structure */
     hw_io_t* gpio = &(dev->gpio);
     /* Setup the hardware (pin) */
@@ -56,7 +58,7 @@ void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatil
 
 
 /***
- * Perform a raw reading from the sensor.
+ * Perform a low-level reading from the sensor.
  * 
  * @param[in]   dev     Pointer to the device structure to be filled
  * @return      SUCCESS in case of success; FAIL, LAST_MEASUREMENT, or TIMEOUT otherwise
@@ -73,8 +75,8 @@ uint8_t _read(DHT_t* dev) {
     /* Read in the current tick count (ms) */
     uint32_t currenttime = systick_get_ticks();
     /* Check if there was already a previous reading */
-    if(lasttime != 0) {
-        /* Check if at least 2 seconds (2000ms) have elapsed) */
+    if((lasttime != 0) || (dev->firstread == 0)) {
+        /* Check if at least 2 seconds have elapsed) */
         if((currenttime - lasttime) < DHT_TIMING_MIN_INTERVAL) {
             /* Too less time, use old measurement result */
             return DHT_READ_LAST_MEASUREMENT;
@@ -111,7 +113,7 @@ uint8_t _read(DHT_t* dev) {
             _delay_ms(20);
             break;
     }
-
+    
     /*** Start timing-critical section ***/
     /* Disable interrupts */
     cli();
@@ -122,10 +124,10 @@ uint8_t _read(DHT_t* dev) {
     _delay_us(40);
 
     /* First expect a low signal for ~80us followed by a high signal for ~80us again */
-    if(_expect_pulse(dev,HW_STATE_LOW) >= DHT_READ_TIMEOUT) {
+    if(_expect_pulse(dev,HW_STATE_LOW) == DHT_READ_TIMEOUT) {
         return DHT_READ_FAIL;
     }
-    if(_expect_pulse(dev,HW_STATE_HIGH) >= DHT_READ_TIMEOUT) {
+    if(_expect_pulse(dev,HW_STATE_HIGH) == DHT_READ_TIMEOUT) {
         return DHT_READ_FAIL;
     }
 
@@ -146,7 +148,7 @@ uint8_t _read(DHT_t* dev) {
     /*** Timing-critical section finished ***/
     /* Restore interrupts */
     sei();
-
+    
     /* Inspect pulses and determine which ones are 0 or 1 */
     for(i=0; i<40; ++i) {
         uint32_t low_cycles = cycles[2*i];
@@ -166,10 +168,11 @@ uint8_t _read(DHT_t* dev) {
          * cycle count so this must be a zero.  Nothing needs to be changed in the
          * stored data. */
     }
-
+    
     /* Check if we read 40 bits and that the checksum matches */
     if(dev->data[4] == ((dev->data[0] + dev->data[1] + dev->data[2] + dev->data[3]) & 0xFF)) {
         /* Reading was successful */
+        dev->firstread = 1;
         return DHT_READ_SUCCESS;
     } else {
         /* Reading failed */
@@ -190,6 +193,7 @@ uint32_t _expect_pulse(DHT_t* dev, uint8_t level) {
     hw_io_t* gpio = &(dev->gpio);
     /* Temporary variables */
     uint32_t count = 0;
+    
     /* Wait for a level change */
     while((HW_GPIO_READ(gpio) ? HW_STATE_HIGH : HW_STATE_LOW) == level) {
         /* Check if timeout was reached */
@@ -198,6 +202,7 @@ uint32_t _expect_pulse(DHT_t* dev, uint8_t level) {
             return DHT_READ_TIMEOUT;
         }
     }
+    
     /* Return the count of cycles */
     return count;
 }
@@ -213,8 +218,9 @@ float dht_get_temperature(DHT_t* dev) {
     /* Intermediate temperature value */
     float temp = DHT_READ_NAN;
     int16_t inter = 0;
+    uint8_t ret = _read(dev);
     /* Read current value from the sensor */
-    if(_read(dev) >= DHT_READ_SUCCESS) {
+    if((ret == DHT_READ_SUCCESS) || (ret == DHT_READ_LAST_MEASUREMENT )) {
         /* Reading format depends on sensor type */
         switch(dev->type) {
             case DHT_DEV_DHT11:
@@ -250,6 +256,7 @@ float dht_get_temperature(DHT_t* dev) {
         /* Reading the sensor failed */
         temp = DHT_READ_NAN;
     }
+    
     /* Return the acquired temperature (or NAN) */
     return temp;
 }
@@ -265,8 +272,9 @@ float dht_get_humidity(DHT_t* dev) {
     /* Intermediate humidity value */
     float temp = DHT_READ_NAN;
     int16_t inter = 0;
+    uint8_t ret = _read(dev);
     /* Read current value from the sensor */
-    if(_read(dev) >= DHT_READ_SUCCESS) {
+    if((ret == DHT_READ_SUCCESS) || (ret == DHT_READ_LAST_MEASUREMENT)) {
         /* Reading format depends on sensor type */
         switch(dev->type) {
             case DHT_DEV_DHT11:

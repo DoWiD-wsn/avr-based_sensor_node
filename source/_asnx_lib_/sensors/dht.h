@@ -29,19 +29,16 @@
 #define DHT_TIMING_ROUND                (255)
 #define DHT_TIMING_TIMEOUT_1000         (16000UL)
 #define DHT_TIMING_MIN_INTERVAL         (2200UL)
+/* Function return values */
+#define DHT_READ_FAIL                   (0)
+#define DHT_READ_SUCCESS                (1)
+#define DHT_READ_LAST_MEASUREMENT       (2)
+#define DHT_READ_TIMEOUT                (0xFFFFFFFF)
+#define DHT_READ_NAN                    (999.9)
 /* Invalid result */
 #define DHT_READ_NAN                    (999.9)
 
-
 /***** ENUMERATION ****************************************************/
-/* Enumeration for the DHT function return values */
-typedef enum {
-    DHT_READ_FAIL               = 0,
-    DHT_READ_SUCCESS            = 1,
-    DHT_READ_LAST_MEASUREMENT   = 2,
-    DHT_READ_TIMEOUT            = 3
-} DHT_RET_t;
-
 /* Enumeration for the DHT device types */
 typedef enum {
     DHT_DEV_NA                  = 0,
@@ -61,7 +58,7 @@ typedef enum {
  ***/
 typedef struct {
     hw_io_t gpio;       /**< OWI GPIO handle */
-    DHT_DEV_t type;     /**< Sensor type */
+    uint8_t type;       /**< Sensor type */
     uint8_t firstread;  /**< Flag to indicate the first reading */
     uint8_t data[5];    /**< Last data read from the sensor */
 } DHT_t;
