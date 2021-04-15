@@ -7,6 +7,8 @@
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/14 $
+ *
+ * @todo    Add more functionality (i.e., configuration)
  *****/
 
 #ifndef _ASNX_LM75_H_
@@ -20,7 +22,11 @@
 
 /***** DEFINES ********************************************************/
 /* I2C address */
-#define LM75_I2C_ADDRESS                (0x48)
+#define LM75_I2C_ADDRESS_BASE           (0x48)
+#define LM75_I2C_ADDRESS_A0             (0)
+#define LM75_I2C_ADDRESS_A1             (0)
+#define LM75_I2C_ADDRESS_A2             (0)
+#define LM75_I2C_ADDRESS                (LM75_I2C_ADDRESS_BASE | (LM75_I2C_ADDRESS_A2<<2) | (LM75_I2C_ADDRESS_A1<<1) | (LM75_I2C_ADDRESS_A0<<0))
 /* Shutdown configuration */
 #define LM75_CONF_SHUTDOWN              (0)
 /* Comparator/interrupt configuration */
@@ -65,4 +71,4 @@ LM75_RET_t lm75_get_hyst(float *temp);
 LM75_RET_t lm75_get_os(float *temp);
 
 
-#endif // _SENS_LM75_H_
+#endif // _ASNX_LM75_H_

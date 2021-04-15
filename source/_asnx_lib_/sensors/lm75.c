@@ -7,6 +7,8 @@
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/14 $
+ *
+ * @todo    Add more functionality (i.e., configuration)
  *****/
 
 
@@ -19,8 +21,8 @@
 /***** LOCAL FUNCTION PROTOTYPE ***************************************/
 float _reg2float(uint16_t value);
 uint16_t _float2reg(float value);
-LM75_RET_t _set_temp_value(float temp, uint8_t reg);
-LM75_RET_t _get_temp_value(float *temp, uint8_t reg);
+LM75_RET_t lm75_set_temp_value(float temp, uint8_t reg);
+LM75_RET_t lm75_get_temp_value(float *temp, uint8_t reg);
 
 
 /***** FUNCTIONS ******************************************************/
@@ -58,7 +60,7 @@ LM75_RET_t lm75_set_config(uint8_t value) {
  * @param[in]   reg         Configuration register address
  * @return      OK in case of success; ERROR otherwise
  ***/
-LM75_RET_t _set_temp_value(float temp, uint8_t reg) {
+LM75_RET_t lm75_set_temp_value(float temp, uint8_t reg) {
     /* Convert float to word */
     uint16_t word = temp;           // TODO: needs to be fixed
     /* Swap bytes */
@@ -82,7 +84,7 @@ LM75_RET_t _set_temp_value(float temp, uint8_t reg) {
  ***/
 LM75_RET_t lm75_set_hyst(float temp) {
     /* Write the temperature value */
-    return _set_temp_value(temp,LM75_REG_HYST);
+    return lm75_set_temp_value(temp,LM75_REG_HYST);
 }
 
 
@@ -94,7 +96,7 @@ LM75_RET_t lm75_set_hyst(float temp) {
  ***/
 LM75_RET_t lm75_set_os(float temp) {
     /* Write the temperature value */
-    return _set_temp_value(temp,LM75_REG_OS);
+    return lm75_set_temp_value(temp,LM75_REG_OS);
 }
 
 
@@ -123,7 +125,7 @@ LM75_RET_t lm75_get_config(uint8_t *value) {
  * @param[in]   reg         Configuration register address
  * @return      OK in case of success; ERROR otherwise
  ***/
-LM75_RET_t _get_temp_value(float *temp, uint8_t reg) {
+LM75_RET_t lm75_get_temp_value(float *temp, uint8_t reg) {
     int16_t raw;
     /* Read the temperature register */
     if(i2c_read_S16BE(LM75_I2C_ADDRESS, reg, &raw) != I2C_RET_OK) {
@@ -145,7 +147,7 @@ LM75_RET_t _get_temp_value(float *temp, uint8_t reg) {
  ***/
 LM75_RET_t lm75_get_temperature(float *temp) {
     /* Get the temperature value */
-    return _get_temp_value(temp, LM75_REG_TEMP);
+    return lm75_get_temp_value(temp, LM75_REG_TEMP);
 }
 
 
@@ -157,7 +159,7 @@ LM75_RET_t lm75_get_temperature(float *temp) {
  ***/
 LM75_RET_t lm75_get_hyst(float *temp) {
     /* Get the temperature value */
-    return _get_temp_value(temp, LM75_REG_HYST);
+    return lm75_get_temp_value(temp, LM75_REG_HYST);
 }
 
 
@@ -169,5 +171,5 @@ LM75_RET_t lm75_get_hyst(float *temp) {
  ***/
 LM75_RET_t lm75_get_os(float *temp) {
     /* Get the temperature value */
-    return _get_temp_value(temp, LM75_REG_OS);
+    return lm75_get_temp_value(temp, LM75_REG_OS);
 }
