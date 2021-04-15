@@ -21,6 +21,10 @@
 #include "timer/systick.h"
 
 
+#include "uart/uart.h"
+#include "util/printf.h"
+
+
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
 uint8_t _read(DHT_t* dev);
 uint32_t _expect_pulse(DHT_t* dev, uint8_t level);
@@ -75,7 +79,7 @@ uint8_t _read(DHT_t* dev) {
     /* Read in the current tick count (ms) */
     uint32_t currenttime = systick_get_ticks();
     /* Check if there was already a previous reading */
-    if((lasttime != 0) || (dev->firstread == 0)) {
+    if((lasttime != 0) && (dev->firstread != 0)) {
         /* Check if at least 2 seconds have elapsed) */
         if((currenttime - lasttime) < DHT_TIMING_MIN_INTERVAL) {
             /* Too less time, use old measurement result */
@@ -91,8 +95,9 @@ uint8_t _read(DHT_t* dev) {
     }
 
     /*** Send start signal ***/
-    /* Release bus */
+    /* Go into high impedence state to let pull-up raise data line level */
     HW_GPIO_INPUT(gpio);
+    HW_GPIO_LOW(gpio);
     /* Wait for 1ms */
     _delay_ms(1);
 
@@ -103,8 +108,8 @@ uint8_t _read(DHT_t* dev) {
     switch(dev->type) {
         case DHT_DEV_DHT21:
         case DHT_DEV_DHT22:
-            /* Datasheet says "at least 1ms", 2ms just to be safe */
-            _delay_ms(2);
+            /* Datasheet says "at least 1ms", 1.1ms just to be safe */
+            _delay_us(1100);
             break;
         case DHT_DEV_DHT11:
         case DHT_DEV_DHT12:
@@ -120,8 +125,9 @@ uint8_t _read(DHT_t* dev) {
     
     /* Release bus */
     HW_GPIO_INPUT(gpio);
-    /* Wait for 40us */
-    _delay_us(40);
+    HW_GPIO_LOW(gpio);
+    /* Wait for 55us */
+    _delay_us(55);
 
     /* First expect a low signal for ~80us followed by a high signal for ~80us again */
     if(_expect_pulse(dev,HW_STATE_LOW) == DHT_READ_TIMEOUT) {
@@ -192,7 +198,7 @@ uint32_t _expect_pulse(DHT_t* dev, uint8_t level) {
     /* Get a pointer to the HW GPIO structure */
     hw_io_t* gpio = &(dev->gpio);
     /* Temporary variables */
-    uint32_t count = 0;
+    uint16_t count = 0;
     
     /* Wait for a level change */
     while((HW_GPIO_READ(gpio) ? HW_STATE_HIGH : HW_STATE_LOW) == level) {
@@ -217,7 +223,6 @@ uint32_t _expect_pulse(DHT_t* dev, uint8_t level) {
 float dht_get_temperature(DHT_t* dev) {
     /* Intermediate temperature value */
     float temp = DHT_READ_NAN;
-    int16_t inter = 0;
     uint8_t ret = _read(dev);
     /* Read current value from the sensor */
     if((ret == DHT_READ_SUCCESS) || (ret == DHT_READ_LAST_MEASUREMENT )) {
@@ -228,21 +233,19 @@ float dht_get_temperature(DHT_t* dev) {
                 if (dev->data[3] & 0x80) {
                     temp = -1 - temp;
                 }
-                temp += (dev->data[3] & 0x0F);
-                temp /= 10.0;
+                temp += (dev->data[3] & 0x0F) * 0.1;
                 break;
             case DHT_DEV_DHT12:
                 temp = dev->data[2];
-                temp += (dev->data[3] & 0x0F);
-                temp /= 10.0;
+                temp += (dev->data[3] & 0x0F) * 0.1;
                 if (dev->data[2] & 0x80) {
                     temp *= -1;
                 }
                 break;
             case DHT_DEV_DHT21:
             case DHT_DEV_DHT22:
-                inter = ((int16_t)(dev->data[2] & 0x7F) << 8) | (int16_t)(dev->data[3]);
-                temp = (float)(inter) / 10.0;
+                temp = ((int16_t)(dev->data[2] & 0x7F) << 8) | dev->data[3];
+                temp *= 0.1;
                 if (dev->data[2] & 0x80) {
                     temp *= -1;
                 }
@@ -271,7 +274,6 @@ float dht_get_temperature(DHT_t* dev) {
 float dht_get_humidity(DHT_t* dev) {
     /* Intermediate humidity value */
     float temp = DHT_READ_NAN;
-    int16_t inter = 0;
     uint8_t ret = _read(dev);
     /* Read current value from the sensor */
     if((ret == DHT_READ_SUCCESS) || (ret == DHT_READ_LAST_MEASUREMENT)) {
@@ -283,8 +285,8 @@ float dht_get_humidity(DHT_t* dev) {
                 break;
             case DHT_DEV_DHT21:
             case DHT_DEV_DHT22:
-                inter = ((int16_t)(dev->data[0]) << 8) | (int16_t)(dev->data[1]);
-                temp = (float)(inter) / 10.0;
+                temp = ((int16_t)(dev->data[0]) << 8) | dev->data[1];
+                temp *= 0.1;
                 break;
             default:
                 /* Unsupported/unknown sensor device */

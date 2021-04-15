@@ -28,6 +28,7 @@
 #include "sensors/jt103.h"
 #include "sensors/lm75.h"
 #include "sensors/stemma_soil.h"
+#include "sensors/tmp275.h"
 #include "timer/systick.h"
 #include "uart/uart.h"
 #include "util/printf.h"
@@ -59,6 +60,9 @@ void read_and_print(void) {
     printf("=> AM2302\n");
     printf("...Temperature: %2.2f C\n",dht_get_temperature(&am2302));
     printf("...Humidity: %2.2f %%\n",dht_get_humidity(&am2302));
+    printf("=> TMP275\n");
+    tmp275_get_temperature(&tmp);
+    printf("...Temperature: %2.2f C\n",tmp);
     printf("=> LM75\n");
     lm75_get_temperature(&tmp);
     printf("...Temperature: %2.2f C\n",tmp);
@@ -100,6 +104,7 @@ int main(void) {
     led2_high();                        // Initially, set LED2 to high
     adc_init(ADC_ADPS_16,ADC_REFS_VCC); // Initialize the ADC
     lm75_init();                        // Initialize the LM75 sensor
+    tmp275_init();                      // Initialize the LM75 sensor
     stemma_init();                      // Initialize the STEMMA SOIL sensor
     ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6); // Initialize the DS18B20 sensor
     ds18x20_find(&ds18b20);             // Find the DS18B20 sensor
