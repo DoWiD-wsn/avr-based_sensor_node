@@ -39,6 +39,11 @@ Depending on the supplier and quantities ordered, the costs may vary.
 ![Main Schematic (/media/schematic/avr_sensor_node-main.svg)](../media/schematic/avr_sensor_node-main.svg)
 
 
+## Header Pinout
+ 
+![PCB header pinout (/media/pcb/avr_sensor_node-pinout.svg)](../media/pcb/avr_sensor_node-pinout.svg)
+
+
 ## PCB Design
 
 Front:  
