@@ -42,12 +42,11 @@
 /***** ENUMERATION ****************************************************/
 /* Enumeration for the DS18x20 function return values */
 typedef enum {
-    DS18X20_RET_OK              = 0,
-    DS18X20_RET_FAIL            = 1,
-    DS18X20_RET_NO_DEV          = 10,
-    DS18X20_RET_WRONG_DEV       = 11,
-    DS18X20_RET_WRONG_CRC       = 12,
-    DS18X20_RET_CANNOT_READ     = -390
+    DS18X20_RET_ERROR_CRC       = -4,   /**< CRC check failed */
+    DS18X20_RET_ERROR_DEV       = -3,   /**< Unsupported device */
+    DS18X20_RET_ERROR_NODEV     = -2,   /**< No device found */
+    DS18X20_RET_ERROR_READ      = -1,   /**< Reading failed */
+    DS18X20_RET_OK              = 0     /**< Successful */
 } DS18X20_RET_t;
 
 /* Enumeration for the DS18x20 device types */
@@ -79,9 +78,8 @@ typedef struct {
 
 
 /***** FUNCTION PROTOTYPES ********************************************/
-void ds18x20_init(DS18X20_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
-DS18X20_RET_t ds18x20_find(DS18X20_t* dev);
-float ds18x20_get_temperature(DS18X20_t* dev);
+DS18X20_RET_t ds18x20_init(DS18X20_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
+DS18X20_RET_t ds18x20_get_temperature(DS18X20_t* dev, float* temperature);
 
 
 #endif // _ASNX_DS18X20_H_

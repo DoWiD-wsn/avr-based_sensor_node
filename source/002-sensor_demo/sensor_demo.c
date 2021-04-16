@@ -6,10 +6,12 @@
  * and STEMMA SOIL via TWI) and print the values every 15 seconds
  * (controlled via the systick handler) via UART.
  *
+ * @todo    Check 103JT readings ... always reports 25.05°C !?
+ *
  * @file    /002-sensor_demo/sensor_demo.c
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/15 $
+ * @date    $Date: 2021/04/16 $
  *****/
 
 
@@ -60,7 +62,12 @@ void read_and_print(void) {
     
     /*** DS18B20 ***/
     printf("=> DS18B20\n");
-    printf("...Temperature: %2.2f C\n",ds18x20_get_temperature(&ds18b20));
+    printf("...Temperature: ");
+    if(ds18x20_get_temperature(&ds18b20, &f_tmp) == DS18X20_RET_OK) {
+        printf("%2.2f C\n",f_tmp);
+    } else {
+        printf("ERROR\n");
+    }
     
     /*** AM2302 ***/
     printf("=> AM2302\n");
@@ -130,26 +137,38 @@ void update(void) {
 /***** MAIN ***********************************************************/
 int main(void) {
     /*** Initialize the hardware ***/
-    led_init();                         // Initialize the user LEDs
-    led1_low();                         // Initially, set LED1 to low
-    led2_high();                        // Initially, set LED2 to high
-    adc_init(ADC_ADPS_16,ADC_REFS_VCC); // Initialize the ADC
-    lm75_init();                        // Initialize the LM75 sensor
-    tmp275_init();                      // Initialize the LM75 sensor
-    stemma_init();                      // Initialize the STEMMA SOIL sensor
-    ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6); // Initialize the DS18B20 sensor
-    ds18x20_find(&ds18b20);             // Find the DS18B20 sensor
-    dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302); // Initialize the AMS2302 sensor
-    uart1_init();                       // Initialize the UART0
-    printf_init(uart1_putc);            // Initialize the printf function
-    systick_init();                     // Initialize the systick timer
-    
+    /* Initialize the user LEDs (LED1 to low and LED2 to high) */
+    led_init();
+    led1_low();
+    led2_high();
+    /* Initialize the ADC */
+    adc_init(ADC_ADPS_16,ADC_REFS_VCC);
+    /* Initialize the LM75 sensor */
+    lm75_init();
+    /* Initialize the LM75 sensor */
+    tmp275_init();
+    /* Initialize the STEMMA SOIL sensor */
+    stemma_init();
+    /* Initialize the DS18B20 sensor */
+    if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) != DS18X20_RET_OK) {
+        printf("Couldn't initialize DS18B20 ... aborting!\n");
+        while(1);
+    }
+    /* Initialize the AMS2302 sensor */
+    dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
+    /* Initialize the UART0 */
+    uart1_init();
+    /* Initialize the printf function to use the uart1_putc() function for output */
+    printf_init(uart1_putc);
+    /* Initialize the systick timer */
+    systick_init();
     /* Set a systick callback function to be called every second */
     systick_set_callback_sec(update);
     
-    /* Enable interrupts globally */
+    /*** Enable interrupts globally ***/
     sei();
     
+    /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
     
     /* Main routine actually does nothing ...
