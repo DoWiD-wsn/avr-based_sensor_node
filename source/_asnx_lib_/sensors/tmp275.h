@@ -21,12 +21,8 @@
 
 
 /***** DEFINES ********************************************************/
-/* I2C address */
-#define TMP275_I2C_ADDRESS_BASE         (0x48)
-#define TMP275_I2C_ADDRESS_A0           (0)
-#define TMP275_I2C_ADDRESS_A1           (0)
-#define TMP275_I2C_ADDRESS_A2           (0)
-#define TMP275_I2C_ADDRESS              (TMP275_I2C_ADDRESS_BASE | (TMP275_I2C_ADDRESS_A2<<2) | (TMP275_I2C_ADDRESS_A1<<1) | (TMP275_I2C_ADDRESS_A0<<0))
+/* Default I2C address */
+#define TMP275_I2C_ADDRESS              0x48
 /* Shutdown mode (SD) */
 #define TMP275_CONF_SD_OFFSET           0
 #define TMP275_CONF_SD_MASK             0x01
@@ -50,6 +46,7 @@
 /***** ENUMERATION ****************************************************/
 /* Enumeration for the LM75 function return values */
 typedef enum {
+    TMP275_RET_ERROR_NODEV  = -2,
     TMP275_RET_ERROR        = -1,
     TMP275_RET_OK           = 0
 } TMP275_RET_t;
@@ -79,17 +76,27 @@ typedef enum {
 } TMP275_CONF_RX_t;
 
 
+/***** STRUCTURES *****************************************************/
+/***
+ * A structure to store the TMP275 module properties.
+ ***/
+typedef struct {
+    uint8_t address;    /**< Sensors I2C address */
+    uint8_t config;     /**< Sensor configuration (TODO: to be added) */
+} TMP275_t;
+
+
 /***** FUNCTION PROTOTYPES ********************************************/
-void tmp275_init(void);
+TMP275_RET_t tmp275_init(TMP275_t* dev, uint8_t address);
 /* Set */
-TMP275_RET_t tmp275_set_config(uint8_t value);
-TMP275_RET_t tmp275_set_t_low(float temp);
-TMP275_RET_t tmp275_set_t_high(float temp);
+TMP275_RET_t tmp275_set_config(TMP275_t* dev, uint8_t value);
+TMP275_RET_t tmp275_set_t_low(TMP275_t* dev, float temp);
+TMP275_RET_t tmp275_set_t_high(TMP275_t* dev, float temp);
 /* Get */
-TMP275_RET_t tmp275_get_config(uint8_t *value);
-TMP275_RET_t tmp275_get_temperature(float *temp);
-TMP275_RET_t tmp275_get_t_low(float *temp);
-TMP275_RET_t tmp275_get_t_high(float *temp);
+TMP275_RET_t tmp275_get_config(TMP275_t* dev, uint8_t *value);
+TMP275_RET_t tmp275_get_temperature(TMP275_t* dev, float *temp);
+TMP275_RET_t tmp275_get_t_low(TMP275_t* dev, float *temp);
+TMP275_RET_t tmp275_get_t_high(TMP275_t* dev, float *temp);
 
 
 #endif // _ASNX_TMP275_H_

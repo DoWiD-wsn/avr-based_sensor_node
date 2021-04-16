@@ -19,31 +19,75 @@
 
 
 /***** LOCAL FUNCTION PROTOTYPE ***************************************/
-float _reg2float(uint16_t value);
-uint16_t _float2reg(float value);
-LM75_RET_t lm75_set_temp_value(float temp, uint8_t reg);
-LM75_RET_t lm75_get_temp_value(float *temp, uint8_t reg);
+static float _reg2float(uint16_t value);
+static uint16_t _float2reg(float value);
+static LM75_RET_t _set_temp_value(LM75_t* dev, float temp, uint8_t reg);
+static LM75_RET_t _get_temp_value(LM75_t* dev, float *temp, uint8_t reg);
 
 
 /***** FUNCTIONS ******************************************************/
 /***
  * Initialization of the LM75 sensor.
+ *
+ * @param[out]  dev         Pointer to the device structure to be filled
+ * @param[in]   address     Device I2C address
+ * @return      OK in case of success; ERROR otherwise
  ***/
-void lm75_init(void) {
+LM75_RET_t lm75_init(LM75_t* dev, uint8_t address) {
     /* Initialize I2C master interface */
    i2c_init();
+   /* Check if the device is available */
+   if(i2c_is_available(address) == I2C_RET_OK) {
+        /* Device is available ... store address in device structure */
+        dev->address = address;
+        /* Initially, set config to default value */
+        dev->config = 0x00;
+        /* Return OK */
+        return LM75_RET_OK;
+   } else {
+        /* Return ERROR */
+        return LM75_RET_ERROR_NODEV;
+   }
 }
 
 
 /***
+ * Convert a signed 16-bit word to float.
+ *
+ * @param[in]   value       signed 16-bit value
+ * @return      Corresponding float value
+ ***/
+static float _reg2float(uint16_t value) {
+    uint8_t hi = (uint8_t)((value&0xFF00)>>8);
+    uint8_t lo = (uint8_t)(value&0x00FF);
+    int16_t temp = ((hi << 4) | (lo >> 4));
+	return (float)(temp/16.0);
+}
+
+
+/***
+ * Convert a float to signed 16-bit word.
+ *
+ * @param[in]   value       float value
+ * @return      Corresponding signed 16-bit value
+ ***/
+static uint16_t _float2reg(float value) {
+    int16_t temp = (int16_t)(value * 16.0);
+    uint8_t hi = (uint8_t)((temp&0x000F)<<4);
+    uint8_t lo = (uint8_t)((temp&0x0FF0)>>4);
+    return ((hi<<8) | lo);
+}
+
+/***
  * Set the configuration register.
  * 
+ * @param[in]   dev         Pointer to the device structure
  * @param[in]   value       Configuration register value
  * @return      OK in case of success; ERROR otherwise
  ***/
-LM75_RET_t lm75_set_config(uint8_t value) {
+LM75_RET_t lm75_set_config(LM75_t* dev, uint8_t value) {
     /* Write the given value to the register */
-    if(i2c_write_8(LM75_I2C_ADDRESS, LM75_REG_CONF, value) == I2C_RET_OK) {
+    if(i2c_write_8(dev->address, LM75_REG_CONF, value) == I2C_RET_OK) {
         /* Writing was successful */
         return LM75_RET_OK;
     } else {
@@ -56,17 +100,18 @@ LM75_RET_t lm75_set_config(uint8_t value) {
 /***
  * Set the a temperature value to a given register.
  * 
+ * @param[in]   dev         Pointer to the device structure
  * @param[in]   temp        Temperature value in degree Celsius (°C)
  * @param[in]   reg         Configuration register address
  * @return      OK in case of success; ERROR otherwise
  ***/
-LM75_RET_t lm75_set_temp_value(float temp, uint8_t reg) {
+LM75_RET_t _set_temp_value(LM75_t* dev, float temp, uint8_t reg) {
     /* Convert float to word */
-    uint16_t word = temp;           // TODO: needs to be fixed
+    uint16_t word = _float2reg(temp);
     /* Swap bytes */
     word = ((word&0x00FF)<<8) | ((word&0xFF00)>>8);
     /* Write the given value to the register */
-    if(i2c_write_16(LM75_I2C_ADDRESS, reg, word) == I2C_RET_OK) {
+    if(i2c_write_16(dev->address, reg, word) == I2C_RET_OK) {
         /* Writing was successful */
         return LM75_RET_OK;
     } else {
@@ -79,36 +124,39 @@ LM75_RET_t lm75_set_temp_value(float temp, uint8_t reg) {
 /***
  * Set the hysteresis temperature.
  * 
+ * @param[in]   dev         Pointer to the device structure
  * @param[in]   temp        Hysteresis temperature value in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
-LM75_RET_t lm75_set_hyst(float temp) {
+LM75_RET_t lm75_set_hyst(LM75_t* dev, float temp) {
     /* Write the temperature value */
-    return lm75_set_temp_value(temp,LM75_REG_HYST);
+    return _set_temp_value(dev, temp, LM75_REG_HYST);
 }
 
 
 /***
  * Set the overtemperature shutdown temperature.
  * 
+ * @param[in]   dev         Pointer to the device structure
  * @param[in]   temp        Overtemperature shutdown temperature value in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
-LM75_RET_t lm75_set_os(float temp) {
+LM75_RET_t lm75_set_os(LM75_t* dev, float temp) {
     /* Write the temperature value */
-    return lm75_set_temp_value(temp,LM75_REG_OS);
+    return _set_temp_value(dev, temp, LM75_REG_OS);
 }
 
 
 /***
  * Read the configuration register.
  * 
+ * @param[in]   dev         Pointer to the device structure
  * @param[out]  value       Data value memory location
  * @return      OK in case of success; ERROR otherwise
  ***/
-LM75_RET_t lm75_get_config(uint8_t *value) {
+LM75_RET_t lm75_get_config(LM75_t* dev, uint8_t *value) {
     /* Read the config register */
-    if(i2c_read_U8(LM75_I2C_ADDRESS, LM75_REG_CONF, value) == I2C_RET_OK) {
+    if(i2c_read_U8(dev->address, LM75_REG_CONF, value) == I2C_RET_OK) {
         /* Reading was successful */
         return LM75_RET_OK;
     } else {
@@ -121,19 +169,20 @@ LM75_RET_t lm75_get_config(uint8_t *value) {
 /***
  * Get a temperature value from a given register.
  * 
+ * @param[in]   dev         Pointer to the device structure
  * @param[out]  temp        Read temperature value in degree Celsius (°C)
  * @param[in]   reg         Configuration register address
  * @return      OK in case of success; ERROR otherwise
  ***/
-LM75_RET_t lm75_get_temp_value(float *temp, uint8_t reg) {
+LM75_RET_t _get_temp_value(LM75_t* dev, float *temp, uint8_t reg) {
     int16_t raw;
     /* Read the temperature register */
-    if(i2c_read_S16BE(LM75_I2C_ADDRESS, reg, &raw) != I2C_RET_OK) {
+    if(i2c_read_S16BE(dev->address, reg, &raw) != I2C_RET_OK) {
         /* Reading failed */
         return LM75_RET_ERROR;
     }
     /* Convert temperature */
-    *temp = ((float)raw / 32.0) / 8.0;
+    *temp = _reg2float(raw);
     /* Reading was successful */
     return LM75_RET_OK;
 }
@@ -142,34 +191,37 @@ LM75_RET_t lm75_get_temp_value(float *temp, uint8_t reg) {
 /***
  * Read the current sensor temperature.
  * 
+ * @param[in]   dev         Pointer to the device structure
  * @param[out]  temp        Current sensor temperature in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
-LM75_RET_t lm75_get_temperature(float *temp) {
+LM75_RET_t lm75_get_temperature(LM75_t* dev, float *temp) {
     /* Get the temperature value */
-    return lm75_get_temp_value(temp, LM75_REG_TEMP);
+    return _get_temp_value(dev, temp, LM75_REG_TEMP);
 }
 
 
 /***
  * Read the hysteresis temperature.
  * 
+ * @param[in]   dev         Pointer to the device structure
  * @param[out]  temp        Hysteresis temperature in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
-LM75_RET_t lm75_get_hyst(float *temp) {
+LM75_RET_t lm75_get_hyst(LM75_t* dev, float *temp) {
     /* Get the temperature value */
-    return lm75_get_temp_value(temp, LM75_REG_HYST);
+    return _get_temp_value(dev, temp, LM75_REG_HYST);
 }
 
 
 /***
  * Read the overtemperature shutdown temperature.
  * 
+ * @param[in]   dev         Pointer to the device structure
  * @param[out]  temp        Overtemperature shutdown temperature in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
-LM75_RET_t lm75_get_os(float *temp) {
+LM75_RET_t lm75_get_os(LM75_t* dev, float *temp) {
     /* Get the temperature value */
-    return lm75_get_temp_value(temp, LM75_REG_OS);
+    return _get_temp_value(dev, temp, LM75_REG_OS);
 }

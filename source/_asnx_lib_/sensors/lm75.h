@@ -22,29 +22,26 @@
 
 /***** DEFINES ********************************************************/
 /* I2C address */
-#define LM75_I2C_ADDRESS_BASE           (0x48)
-#define LM75_I2C_ADDRESS_A0             (0)
-#define LM75_I2C_ADDRESS_A1             (0)
-#define LM75_I2C_ADDRESS_A2             (0)
-#define LM75_I2C_ADDRESS                (LM75_I2C_ADDRESS_BASE | (LM75_I2C_ADDRESS_A2<<2) | (LM75_I2C_ADDRESS_A1<<1) | (LM75_I2C_ADDRESS_A0<<0))
+#define LM75_I2C_ADDRESS                0x48
 /* Shutdown configuration */
-#define LM75_CONF_SHUTDOWN              (0)
+#define LM75_CONF_SHUTDOWN              0
 /* Comparator/interrupt configuration */
-#define LM75_CONF_COMP                  (1)
+#define LM75_CONF_COMP                  1
 /* OS polarity configuration */
-#define LM75_CONF_POL                   (2)
+#define LM75_CONF_POL                   2
 /* Fault queue configuration */
-#define LM75_CONF_QUEUE                 (3)
-#define LM75_CONF_QUEUE_MASK            (0x18)
-#define LM75_CONF_QUEUE_1               (0x00)
-#define LM75_CONF_QUEUE_2               (0x01)
-#define LM75_CONF_QUEUE_4               (0x02)
-#define LM75_CONF_QUEUE_6               (0x03)
+#define LM75_CONF_QUEUE                 3
+#define LM75_CONF_QUEUE_MASK            0x18
+#define LM75_CONF_QUEUE_1               0x00
+#define LM75_CONF_QUEUE_2               0x01
+#define LM75_CONF_QUEUE_4               0x02
+#define LM75_CONF_QUEUE_6               0x03
 
 
 /***** ENUMERATION ****************************************************/
 /* Enumeration for the LM75 function return values */
 typedef enum {
+    LM75_RET_ERROR_NODEV    = -2,
     LM75_RET_ERROR          = -1,
     LM75_RET_OK             = 0
 } LM75_RET_t;
@@ -58,17 +55,27 @@ typedef enum {
 } LM75_REG_t;
 
 
+/***** STRUCTURES *****************************************************/
+/***
+ * A structure to store the LM75 module properties.
+ ***/
+typedef struct {
+    uint8_t address;    /**< Sensors I2C address */
+    uint8_t config;     /**< Sensor configuration (TODO: to be added) */
+} LM75_t;
+
+
 /***** FUNCTION PROTOTYPES ********************************************/
-void lm75_init(void);
+LM75_RET_t lm75_init(LM75_t* dev, uint8_t address);
 /* Set */
-LM75_RET_t lm75_set_config(uint8_t value);
-LM75_RET_t lm75_set_hyst(float temp);
-LM75_RET_t lm75_set_os(float temp);
+LM75_RET_t lm75_set_config(LM75_t* dev, uint8_t value);
+LM75_RET_t lm75_set_hyst(LM75_t* dev, float temp);
+LM75_RET_t lm75_set_os(LM75_t* dev, float temp);
 /* Get */
-LM75_RET_t lm75_get_config(uint8_t *value);
-LM75_RET_t lm75_get_temperature(float *temp);
-LM75_RET_t lm75_get_hyst(float *temp);
-LM75_RET_t lm75_get_os(float *temp);
+LM75_RET_t lm75_get_config(LM75_t* dev, uint8_t *value);
+LM75_RET_t lm75_get_temperature(LM75_t* dev, float *temp);
+LM75_RET_t lm75_get_hyst(LM75_t* dev, float *temp);
+LM75_RET_t lm75_get_os(LM75_t* dev, float *temp);
 
 
 #endif // _ASNX_LM75_H_

@@ -19,19 +19,35 @@
 
 
 /***** LOCAL FUNCTION PROTOTYPE ***************************************/
-float _reg2float(uint16_t value);
-uint16_t _float2reg(float value);
-TMP275_RET_t tmp275_set_temp_value(float temp, uint8_t reg);
-TMP275_RET_t tmp275_get_temp_value(float *temp, uint8_t reg);
+static float _reg2float(uint16_t value);
+static uint16_t _float2reg(float value);
+static TMP275_RET_t _set_temp_value(TMP275_t* dev, float temp, uint8_t reg);
+static TMP275_RET_t _get_temp_value(TMP275_t* dev, float *temp, uint8_t reg);
 
 
 /***** FUNCTIONS ******************************************************/
 /***
  * Initialization of the TMP275 sensor.
+ *
+ * @param[out]  dev         Pointer to the device structure to be filled
+ * @param[in]   address     Device I2C address
+ * @return      OK in case of success; ERROR otherwise
  ***/
-void tmp275_init(void) {
+TMP275_RET_t tmp275_init(TMP275_t* dev, uint8_t address) {
     /* Initialize I2C master interface */
    i2c_init();
+   /* Check if the device is available */
+   if(i2c_is_available(address) == I2C_RET_OK) {
+        /* Device is available ... store address in device structure */
+        dev->address = address;
+        /* Initially, set config to default value */
+        dev->config = 0x00;
+        /* Return OK */
+        return TMP275_RET_OK;
+   } else {
+        /* Return ERROR */
+        return TMP275_RET_ERROR_NODEV;
+   }
 }
 
 
@@ -41,12 +57,11 @@ void tmp275_init(void) {
  * @param[in]   value       signed 16-bit value
  * @return      Corresponding float value
  ***/
-float _reg2float(uint16_t value) {
+static float _reg2float(uint16_t value) {
     uint8_t hi = (uint8_t)((value&0xFF00)>>8);
     uint8_t lo = (uint8_t)(value&0x00FF);
     int16_t temp = ((hi << 4) | (lo >> 4));
 	return (float)(temp/16.0);
-    //return 0.0625 * ((int16_t)value >> 4);
 }
 
 
@@ -56,7 +71,7 @@ float _reg2float(uint16_t value) {
  * @param[in]   value       float value
  * @return      Corresponding signed 16-bit value
  ***/
-uint16_t _float2reg(float value) {
+static uint16_t _float2reg(float value) {
     int16_t temp = (int16_t)(value * 16.0);
     uint8_t hi = (uint8_t)((temp&0x000F)<<4);
     uint8_t lo = (uint8_t)((temp&0x0FF0)>>4);
@@ -67,12 +82,13 @@ uint16_t _float2reg(float value) {
 /***
  * Set the configuration register.
  * 
+ * @param[in]   dev         Pointer to the device structure
  * @param[in]   value       Configuration register value
  * @return      OK in case of success; ERROR otherwise
  ***/
-TMP275_RET_t tmp275_set_config(uint8_t value) {
+TMP275_RET_t tmp275_set_config(TMP275_t* dev, uint8_t value) {
     /* Write the given value to the register */
-    if(i2c_write_8(TMP275_I2C_ADDRESS, TMP275_REG_CONF, value) == I2C_RET_OK) {
+    if(i2c_write_8(dev->address, TMP275_REG_CONF, value) == I2C_RET_OK) {
         /* Writing was successful */
         return TMP275_RET_OK;
     } else {
@@ -85,17 +101,18 @@ TMP275_RET_t tmp275_set_config(uint8_t value) {
 /***
  * Set the a temperature value to a given register.
  * 
+ * @param[in]   dev         Pointer to the device structure
  * @param[in]   temp        Temperature value in degree Celsius (°C)
  * @param[in]   reg         Configuration register address
  * @return      OK in case of success; ERROR otherwise
  ***/
-TMP275_RET_t tmp275_set_temp_value(float temp, uint8_t reg) {
+TMP275_RET_t _set_temp_value(TMP275_t* dev, float temp, uint8_t reg) {
     /* Convert float to word */
     uint16_t word = _float2reg(temp);
     /* Swap bytes */
     word = ((word&0x00FF)<<8) | ((word&0xFF00)>>8);
     /* Write the given value to the register */
-    if(i2c_write_16(TMP275_I2C_ADDRESS, reg, word) == I2C_RET_OK) {
+    if(i2c_write_16(dev->address, reg, word) == I2C_RET_OK) {
         /* Writing was successful */
         return TMP275_RET_OK;
     } else {
@@ -111,9 +128,9 @@ TMP275_RET_t tmp275_set_temp_value(float temp, uint8_t reg) {
  * @param[in]   temp        Low limit temperature value in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
-TMP275_RET_t tmp275_set_t_low(float temp) {
+TMP275_RET_t tmp275_set_t_low(TMP275_t* dev, float temp) {
     /* Write the temperature value */
-    return tmp275_set_temp_value(temp,TMP275_REG_TLOW);
+    return _set_temp_value(dev, temp, TMP275_REG_TLOW);
 }
 
 
@@ -123,9 +140,9 @@ TMP275_RET_t tmp275_set_t_low(float temp) {
  * @param[in]   temp        High limit temperature value in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
-TMP275_RET_t tmp275_set_t_high(float temp) {
+TMP275_RET_t tmp275_set_t_high(TMP275_t* dev, float temp) {
     /* Write the temperature value */
-    return tmp275_set_temp_value(temp,TMP275_REG_THIGH);
+    return _set_temp_value(dev, temp, TMP275_REG_THIGH);
 }
 
 
@@ -135,9 +152,9 @@ TMP275_RET_t tmp275_set_t_high(float temp) {
  * @param[out]  value       Data value memory location
  * @return      OK in case of success; ERROR otherwise
  ***/
-TMP275_RET_t tmp275_get_config(uint8_t *value) {
+TMP275_RET_t tmp275_get_config(TMP275_t* dev, uint8_t *value) {
     /* Read the config register */
-    if(i2c_read_U8(TMP275_I2C_ADDRESS, TMP275_REG_CONF, value) == I2C_RET_OK) {
+    if(i2c_read_U8(dev->address, TMP275_REG_CONF, value) == I2C_RET_OK) {
         /* Reading was successful */
         return TMP275_RET_OK;
     } else {
@@ -154,10 +171,10 @@ TMP275_RET_t tmp275_get_config(uint8_t *value) {
  * @param[in]   reg         Configuration register address
  * @return      OK in case of success; ERROR otherwise
  ***/
-TMP275_RET_t tmp275_get_temp_value(float *temp, uint8_t reg) {
+TMP275_RET_t _get_temp_value(TMP275_t* dev, float *temp, uint8_t reg) {
     int16_t raw;
     /* Read the temperature register */
-    if(i2c_read_S16BE(TMP275_I2C_ADDRESS, reg, &raw) != I2C_RET_OK) {
+    if(i2c_read_S16BE(dev->address, reg, &raw) != I2C_RET_OK) {
         /* Reading failed */
         return TMP275_RET_ERROR;
     }
@@ -174,9 +191,9 @@ TMP275_RET_t tmp275_get_temp_value(float *temp, uint8_t reg) {
  * @param[out]  temp        Current sensor temperature in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
-TMP275_RET_t tmp275_get_temperature(float *temp) {
+TMP275_RET_t tmp275_get_temperature(TMP275_t* dev, float *temp) {
     /* Get the temperature value */
-    return tmp275_get_temp_value(temp, TMP275_REG_TEMP);
+    return _get_temp_value(dev, temp, TMP275_REG_TEMP);
 }
 
 
@@ -186,9 +203,9 @@ TMP275_RET_t tmp275_get_temperature(float *temp) {
  * @param[out]  temp        Low limit temperature in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
-TMP275_RET_t tmp275_get_t_low(float *temp) {
+TMP275_RET_t tmp275_get_t_low(TMP275_t* dev, float *temp) {
     /* Get the temperature value */
-    return tmp275_get_temp_value(temp, TMP275_REG_TLOW);
+    return _get_temp_value(dev, temp, TMP275_REG_TLOW);
 }
 
 
@@ -198,7 +215,7 @@ TMP275_RET_t tmp275_get_t_low(float *temp) {
  * @param[out]  temp        High limit temperature in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
-TMP275_RET_t tmp275_get_t_high(float *temp) {
+TMP275_RET_t tmp275_get_t_high(TMP275_t* dev, float *temp) {
     /* Get the temperature value */
-    return tmp275_get_temp_value(temp, TMP275_REG_THIGH);
+    return _get_temp_value(dev, temp, TMP275_REG_THIGH);
 }

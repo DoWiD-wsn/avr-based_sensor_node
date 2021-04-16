@@ -55,6 +55,16 @@ void i2c_init(void) {
     TWBR = (uint8_t)(((F_CPU/I2C_SCL_CLK)-16.0)/2.0);
 }
 
+/***
+ * Check if a device is available at the given address.
+ *
+ * @param[in]   addr        The device I2C address
+ * @return      OK if device is available; ERROR otherwise
+ ***/
+I2C_RET_t i2c_is_available(uint8_t addr) {
+    return i2c_write_raw(addr, 0x00);
+}
+
 
 /***
  * Stop I2C data transfer and release I2C bus.
