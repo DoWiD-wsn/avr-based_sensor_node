@@ -6,12 +6,10 @@
  * and STEMMA SOIL via TWI) and print the values every 15 seconds
  * (controlled via the systick handler) via UART.
  *
- * @todo    AM2302 not working
- *
  * @file    /002-sensor_demo/sensor_demo.c
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/14 $
+ * @date    $Date: 2021/04/15 $
  *****/
 
 
@@ -49,28 +47,61 @@ DHT_t am2302;
  * and print them via UART.
  ***/
 void read_and_print(void) {
-    float tmp;
-    uint16_t cap;
+    float f_tmp;
+    uint16_t u_tmp;
+    
+    /*** internal ADC ***/
     printf("=> Internal ADC\n");
     printf("...Supply voltage: %1.2f V\n",adc_read_vcc());
+    
+    /*** 103JT thermistor (via ADC) ***/
     printf("=> 103JT thermistor\n");
     printf("...Temperature: %2.2f C\n",jt103_get_temperature(adc_read()));
+    
+    /*** DS18B20 ***/
     printf("=> DS18B20\n");
     printf("...Temperature: %2.2f C\n",ds18x20_get_temperature(&ds18b20));
+    
+    /*** AM2302 ***/
     printf("=> AM2302\n");
-    printf("...Temperature: %2.2f C\n",dht_get_temperature(&am2302));
-    printf("...Humidity: %2.2f %%\n",dht_get_humidity(&am2302));
+    printf("...Temperature: ");
+    if(dht_get_temperature(&am2302, &f_tmp) == DHT_RET_OK) {
+        printf("%2.2f C\n",f_tmp);
+    } else {
+        printf("ERROR\n");
+    }
+    printf("...Humidity: ");
+    if(dht_get_humidity(&am2302, &f_tmp) == DHT_RET_OK) {
+        printf("%2.2f %%\n",f_tmp);
+    } else {
+        printf("ERROR\n");
+    }
+    
+    /*** TMP275 ***/
     printf("=> TMP275\n");
-    tmp275_get_temperature(&tmp);
-    printf("...Temperature: %2.2f C\n",tmp);
+    tmp275_get_temperature(&f_tmp);
+    printf("...Temperature: %2.2f C\n",f_tmp);
+    
+    /*** LM75 ***/
     printf("=> LM75\n");
-    lm75_get_temperature(&tmp);
-    printf("...Temperature: %2.2f C\n",tmp);
+    lm75_get_temperature(&f_tmp);
+    printf("...Temperature: %2.2f C\n",f_tmp);
+    
+    /*** STEMMA SOIL ***/
     printf("=> STEMMA SOIL\n");
-    stemma_get_temperature(&tmp);
-    printf("...Temperature: %2.2f C\n",tmp);
-    stemma_get_capacity(&cap);
-    printf("...Capacity: %4d\n",cap);
+    printf("...Temperature: ");
+    if(stemma_get_temperature(&f_tmp) == STEMMA_RET_OK) {
+        printf("%2.2f C\n",f_tmp);
+    } else {
+        printf("ERROR\n");
+    }
+    printf("...Capacity: ");
+    if(stemma_get_capacity(&u_tmp) == STEMMA_RET_OK) {
+        printf("%4d\n",u_tmp);
+    } else {
+        printf("ERROR\n");
+    }
+    
     printf("\n");
 }
 
