@@ -23,6 +23,9 @@
 /***** DEFINES ********************************************************/
 /* I2C address */
 #define LM75_I2C_ADDRESS                0x48
+#define LM75_I2C_ADDRESS_A0             (1<<0)
+#define LM75_I2C_ADDRESS_A1             (1<<1)
+#define LM75_I2C_ADDRESS_A2             (1<<2)
 /* Shutdown configuration */
 #define LM75_CONF_SHUTDOWN              0
 /* Comparator/interrupt configuration */

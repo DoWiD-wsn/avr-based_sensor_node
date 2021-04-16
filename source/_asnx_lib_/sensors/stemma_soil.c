@@ -22,9 +22,21 @@
 /***
  * Initialization of the STEMMA SOIL sensor.
  ***/
-void stemma_init(void) {
+STEMMA_RET_t stemma_init(STEMMA_t* dev, uint8_t address) {
     /* Initialize I2C master interface */
    i2c_init();
+   /* Check if the device is available */
+   if(i2c_is_available(address) == I2C_RET_OK) {
+        /* Device is available ... store address in device structure */
+        dev->address = address;
+        /* Initially, set config to default value */
+        dev->config = 0x00;
+        /* Return OK */
+        return STEMMA_RET_OK;
+   } else {
+        /* Return ERROR */
+        return STEMMA_RET_ERROR_NODEV;
+   }
 }
 
 
@@ -35,11 +47,11 @@ void stemma_init(void) {
  * @param[out]  version         Version code read from the sensor
  * @return      OK in case of success; ERROR otherwise
  ***/
-STEMMA_RET_t stemma_get_version(uint32_t* version) {
+STEMMA_RET_t stemma_get_version(STEMMA_t* dev, uint32_t* version) {
     /* Variable for the read result */
     uint8_t res[4] = {0};
     /* Read in 4 bytes */
-    if(i2c_read16_block(STEMMA_I2C_ADDRESS, (STEMMA_STATUS_BASE | (STEMMA_STATUS_VERSION<<8)), res, 4) != I2C_RET_OK) {
+    if(i2c_read16_block(dev->address, (STEMMA_STATUS_BASE | (STEMMA_STATUS_VERSION<<8)), res, 4) != I2C_RET_OK) {
         /* Reading failed */
         return STEMMA_RET_ERROR;
     }
@@ -56,11 +68,11 @@ STEMMA_RET_t stemma_get_version(uint32_t* version) {
  * @param[out]  temperature      Sensor temperature in degrees Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
-STEMMA_RET_t stemma_get_temperature(float* temperature) {
+STEMMA_RET_t stemma_get_temperature(STEMMA_t* dev, float* temperature) {
     /* Variable for the read result */
     uint8_t res[4] = {0};
     /* Read in 4 bytes */
-    if(i2c_read16_block(STEMMA_I2C_ADDRESS, (STEMMA_STATUS_BASE | (STEMMA_STATUS_TEMP<<8)), res, 4) != I2C_RET_OK) {
+    if(i2c_read16_block(dev->address, (STEMMA_STATUS_BASE | (STEMMA_STATUS_TEMP<<8)), res, 4) != I2C_RET_OK) {
         /* Reading failed */
         return STEMMA_RET_ERROR;
     }
@@ -79,13 +91,13 @@ STEMMA_RET_t stemma_get_temperature(float* temperature) {
  * @param[out]  capacity        Sensor capacity (between 0 and 1023)
  * @return      OK in case of success; ERROR otherwise
  ***/
-STEMMA_RET_t stemma_get_capacity(uint16_t* capacity) {
+STEMMA_RET_t stemma_get_capacity(STEMMA_t* dev, uint16_t* capacity) {
     /* Variable for the read result */
     uint16_t ret = STEMMA_TOUCH_WORKING;
     /* Capacitance measurement can take some time */
     do {
         /* Read in 2 bytes */
-        if(i2c_read16_U16BE(STEMMA_I2C_ADDRESS, (STEMMA_TOUCH_BASE | (STEMMA_TOUCH_CH0<<8)), &ret) != I2C_RET_OK) {
+        if(i2c_read16_U16BE(dev->address, (STEMMA_TOUCH_BASE | (STEMMA_TOUCH_CH0<<8)), &ret) != I2C_RET_OK) {
             /* Reading failed */
             return STEMMA_RET_ERROR;
         }

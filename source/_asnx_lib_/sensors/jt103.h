@@ -7,6 +7,8 @@
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/14 $
+ *
+ * @todo    Check implementation again: always reports the same stable temperature
  *****/
 
 #ifndef _ASNX_JT103_H_

@@ -23,6 +23,9 @@
 /***** DEFINES ********************************************************/
 /* Default I2C address */
 #define TMP275_I2C_ADDRESS              0x48
+#define TMP275_I2C_ADDRESS_A0           (1<<0)
+#define TMP275_I2C_ADDRESS_A1           (1<<1)
+#define TMP275_I2C_ADDRESS_A2           (1<<2)
 /* Shutdown mode (SD) */
 #define TMP275_CONF_SD_OFFSET           0
 #define TMP275_CONF_SD_MASK             0x01

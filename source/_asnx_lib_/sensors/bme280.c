@@ -3,11 +3,10 @@
  *
  * Library to support the BME280 environmental sensor.
  *
- * @file    /_asnx_lib_/sensors/ds18x20.c
+ * @file    /_asnx_lib_/sensors/bme280.c
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/14 $
- * @see     https://github.com/rm-hull/bme280
  * @see     https://github.com/bitbank2/bme280
  * @see     https://github.com/BoschSensortec/BME280_driver
  *****/
@@ -23,27 +22,34 @@
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
 /* Calibration */
-BME280_RET_t _load_calibration(BME280_t* bme);
+static BME280_RET_t _load_calibration(BME280_t* bme);
 /* Raw readings */
-BME280_RET_t _wait_for_ready(BME280_t* bme);
-BME280_RET_t _get_temperature_raw(BME280_t* bme, uint32_t* value);
-BME280_RET_t _get_pressure_raw(BME280_t* bme, uint32_t* value);
-BME280_RET_t _get_humidity_raw(BME280_t* bme, uint16_t* value);
+static BME280_RET_t _wait_for_ready(BME280_t* bme);
+static BME280_RET_t _get_temperature_raw(BME280_t* bme, uint32_t* value);
+static BME280_RET_t _get_pressure_raw(BME280_t* bme, uint32_t* value);
+static BME280_RET_t _get_humidity_raw(BME280_t* bme, uint16_t* value);
 
 
 /***** FUNCTIONS ******************************************************/
 /***
  * Initialization of a BME280 sensor instance.
  * 
- * @param[out]  bme     Pointer to the device structure to be filled
+ * @param[out]  bme         Pointer to the device structure to be filled
+ * @param[in]   address     Device I2C address
  * @return      OK in case of success; ERROR otherwise
  ***/
-BME280_RET_t bme280_init(BME280_t* bme) {
+BME280_RET_t bme280_init(BME280_t* bme, uint8_t address) {
     /* Initialize I2C master interface */
-    i2c_init();
+   i2c_init();
+   /* Check if the device is available */
+   if(i2c_is_available(address) != I2C_RET_OK) {
+        /* Return ERROR */
+        return BME280_RET_ERROR_NODEV;
+   }
     
-    /* Set the sensor configuration */
-    bme->address = BME280_I2C_ADDRESS;
+    /* Device is available ... store address in device structure */
+    bme->address = address;
+    
     /* Load calibration values */
     if(_load_calibration(bme) != BME280_RET_OK) {
         /* Loading calibration failed */
@@ -95,8 +101,8 @@ BME280_RET_t bme280_init(BME280_t* bme) {
 /***
  * Read the BME280 chip ID.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[out]  value   BME280 chip ID
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[out]  value       BME280 chip ID
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_get_chipid(BME280_t* bme, uint8_t* value) {
@@ -113,8 +119,8 @@ BME280_RET_t bme280_get_chipid(BME280_t* bme, uint8_t* value) {
 /***
  * Read the humidity-control register.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[out]  value   Humidity-control register value
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[out]  value       Humidity-control register value
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_get_ctrl_hum(BME280_t* bme, uint8_t* value) {
@@ -131,8 +137,8 @@ BME280_RET_t bme280_get_ctrl_hum(BME280_t* bme, uint8_t* value) {
 /***
  * Read the status register.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[out]  value   Status register value
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[out]  value       Status register value
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_get_status(BME280_t* bme, uint8_t* value) {
@@ -149,8 +155,8 @@ BME280_RET_t bme280_get_status(BME280_t* bme, uint8_t* value) {
 /***
  * Read the measurement control register.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[out]  value   Measurement control register value
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[out]  value       Measurement control register value
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_get_ctrl_meas(BME280_t* bme, uint8_t* value) {
@@ -167,8 +173,8 @@ BME280_RET_t bme280_get_ctrl_meas(BME280_t* bme, uint8_t* value) {
 /***
  * Read the configuration register.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[out]  value   Configuration register value
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[out]  value       Configuration register value
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_get_config(BME280_t* bme, uint8_t* value) {
@@ -185,7 +191,7 @@ BME280_RET_t bme280_get_config(BME280_t* bme, uint8_t* value) {
 /***
  * Request a sensor reset.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
+ * @param[in]   bme         Pointer to the device structure to be filled
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_reset(BME280_t* bme) {
@@ -202,8 +208,8 @@ BME280_RET_t bme280_reset(BME280_t* bme) {
 /***
  * Set the mode of operation.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[in]   value   Mode of operation to be set
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[in]   value       Mode of operation to be set
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_set_mode(BME280_t* bme, BME280_MODE_t value) {
@@ -231,8 +237,8 @@ BME280_RET_t bme280_set_mode(BME280_t* bme, BME280_MODE_t value) {
 /***
  * Set the temperature sampling mode.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[in]   value   Temperature sampling mode to be set
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[in]   value       Temperature sampling mode to be set
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_set_t_sample(BME280_t* bme, BME280_SAMPLE_t value) {
@@ -260,8 +266,8 @@ BME280_RET_t bme280_set_t_sample(BME280_t* bme, BME280_SAMPLE_t value) {
 /***
  * Set the pressure sampling mode.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[in]   value   Pressure sampling mode to be set
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[in]   value       Pressure sampling mode to be set
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_set_p_sample(BME280_t* bme, BME280_SAMPLE_t value) {
@@ -289,8 +295,8 @@ BME280_RET_t bme280_set_p_sample(BME280_t* bme, BME280_SAMPLE_t value) {
 /***
  * Set the humidity sampling mode.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[in]   value   Humidity sampling mode to be set
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[in]   value       Humidity sampling mode to be set
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_set_h_sample(BME280_t* bme, BME280_SAMPLE_t value) {
@@ -318,8 +324,8 @@ BME280_RET_t bme280_set_h_sample(BME280_t* bme, BME280_SAMPLE_t value) {
 /***
  * Set the standby mode.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[in]   value   Standby mode to be set
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[in]   value       Standby mode to be set
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_set_standby(BME280_t* bme, BME280_STANDBY_t value) {
@@ -347,8 +353,8 @@ BME280_RET_t bme280_set_standby(BME280_t* bme, BME280_STANDBY_t value) {
 /***
  * Set the filter mode.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[in]   value   Filter mode to be set
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[in]   value       Filter mode to be set
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_set_filter(BME280_t* bme, BME280_FILTER_t value) {
@@ -376,7 +382,7 @@ BME280_RET_t bme280_set_filter(BME280_t* bme, BME280_FILTER_t value) {
 /***
  * Enable the SPI interface.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
+ * @param[in]   bme         Pointer to the device structure to be filled
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_spi_enable(BME280_t* bme) {
@@ -402,7 +408,7 @@ BME280_RET_t bme280_spi_enable(BME280_t* bme) {
 /***
  * Disable the SPI interface.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
+ * @param[in]   bme         Pointer to the device structure to be filled
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_spi_disable(BME280_t* bme) {
@@ -428,8 +434,8 @@ BME280_RET_t bme280_spi_disable(BME280_t* bme) {
 /***
  * Get the compensated temperature reading in degree Celsius (°C).
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[out]  value   Compensated temperature reading in degree Celsius (°C)
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[out]  value       Compensated temperature reading in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_get_temperature(BME280_t* bme, float* value) {
@@ -453,8 +459,8 @@ BME280_RET_t bme280_get_temperature(BME280_t* bme, float* value) {
 /***
  * Get the compensated pressure reading in degree Celsius (°C).
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[out]  value   Compensated pressure reading in hectopascal (hPa)
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[out]  value       Compensated pressure reading in hectopascal (hPa)
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_get_pressure(BME280_t* bme, float* value) {
@@ -498,8 +504,8 @@ BME280_RET_t bme280_get_pressure(BME280_t* bme, float* value) {
 /***
  * Get the compensated humidity reading in degree Celsius (°C).
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[out]  value   Compensated humidity reading in percent relative humidity (%RH)
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[out]  value       Compensated humidity reading in percent relative humidity (%RH)
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_get_humidity(BME280_t* bme, float* value) {
@@ -534,8 +540,8 @@ BME280_RET_t bme280_get_humidity(BME280_t* bme, float* value) {
 /***
  * Get the calculated dew-point in degree Celsius (°C) (only accurate at > 50% RH).
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[out]  value   Calculated dew-point in degree Celsius (°C)
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[out]  value       Calculated dew-point in degree Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_get_dewpoint(BME280_t* bme, float* value) {
@@ -561,10 +567,10 @@ BME280_RET_t bme280_get_dewpoint(BME280_t* bme, float* value) {
 /***
  * Load the calibration values stored on the sensor.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
+ * @param[in]   bme         Pointer to the device structure to be filled
  * @return      OK in case of success; ERROR otherwise
  ***/
-BME280_RET_t _load_calibration(BME280_t* bme) {
+static BME280_RET_t _load_calibration(BME280_t* bme) {
     uint8_t tmp8U=0;
     int8_t tmp8S=0;
     uint16_t tmp16U=0;
@@ -732,10 +738,10 @@ BME280_RET_t _load_calibration(BME280_t* bme) {
 /***
  * Check if the sensor readings are ready.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
+ * @param[in]   bme         Pointer to the device structure to be filled
  * @return      OK in case of success; ERROR otherwise
  ***/
-BME280_RET_t _wait_for_ready(BME280_t* bme) {
+static BME280_RET_t _wait_for_ready(BME280_t* bme) {
     uint8_t value=0xFF;
     /* Wait for conversion to complete */
     uint16_t time_cnt=0;
@@ -771,7 +777,7 @@ BME280_RET_t _wait_for_ready(BME280_t* bme) {
  * @param[out]  value   Raw temperature reading
  * @return      OK in case of success; ERROR otherwise
  ***/
-BME280_RET_t _get_temperature_raw(BME280_t* bme, uint32_t* value) {
+static BME280_RET_t _get_temperature_raw(BME280_t* bme, uint32_t* value) {
     /* Temporary result array */
     uint8_t  msb=0;
     uint8_t  lsb=0;
@@ -806,11 +812,11 @@ BME280_RET_t _get_temperature_raw(BME280_t* bme, uint32_t* value) {
 /***
  * Get the raw pressure reading from the sensor.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[out]  value   Raw pressure reading
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[out]  value       Raw pressure reading
  * @return      OK in case of success; ERROR otherwise
  ***/
-BME280_RET_t _get_pressure_raw(BME280_t* bme, uint32_t* value) {
+static BME280_RET_t _get_pressure_raw(BME280_t* bme, uint32_t* value) {
     /* Temporary result array */
     uint8_t  msb=0;
     uint8_t  lsb=0;
@@ -845,11 +851,11 @@ BME280_RET_t _get_pressure_raw(BME280_t* bme, uint32_t* value) {
 /***
  * Get the raw humidity reading from the sensor.
  * 
- * @param[in]   bme     Pointer to the device structure to be filled
- * @param[out]  value   Raw humidity reading
+ * @param[in]   bme         Pointer to the device structure to be filled
+ * @param[out]  value       Raw humidity reading
  * @return      OK in case of success; ERROR otherwise
  ***/
-BME280_RET_t _get_humidity_raw(BME280_t* bme, uint16_t* value) {
+static BME280_RET_t _get_humidity_raw(BME280_t* bme, uint16_t* value) {
     /* Temporary result array */
     uint8_t  msb=0;
     uint8_t  lsb=0;

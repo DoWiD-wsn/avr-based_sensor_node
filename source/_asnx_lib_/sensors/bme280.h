@@ -3,11 +3,10 @@
  *
  * Library to support the BME280 environmental sensor.
  *
- * @file    /_asnx_lib_/sensors/ds18x20.h
+ * @file    /_asnx_lib_/sensors/bme280.h
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/14 $
- * @see     https://github.com/rm-hull/bme280
  * @see     https://github.com/bitbank2/bme280
  * @see     https://github.com/BoschSensortec/BME280_driver
  *****/
@@ -23,41 +22,20 @@
 
 /***** DEFINES ********************************************************/
 /* I2C address */
-#define BME280_I2C_ADDRESS              (0x76)
+#define BME280_I2C_ADDRESS              0x76
 /* Timeour for sensor readings [ms] */
-#define BME280_READ_TIMEOUT             (500)
+#define BME280_READ_TIMEOUT             500
 /* Configuration register reset value */
-#define BME280_RESET_VALUE              (0xB6)
+#define BME280_RESET_VALUE              0xB6
 /* Status codes */
-#define BME280_STATUS_MEASURING         (0x08)
-#define BME280_STATUS_UPDATING          (0x01)
-/* Temperature compensation value addresses */
-#define BME280_REG_DIG_T1               (0x88)
-#define BME280_REG_DIG_T2               (0x8A)
-#define BME280_REG_DIG_T3               (0x8C)
-/* Pressure compensation value addresses */
-#define BME280_REG_DIG_P1               (0x8E)
-#define BME280_REG_DIG_P2               (0x90)
-#define BME280_REG_DIG_P3               (0x92)
-#define BME280_REG_DIG_P4               (0x94)
-#define BME280_REG_DIG_P5               (0x96)
-#define BME280_REG_DIG_P6               (0x98)
-#define BME280_REG_DIG_P7               (0x9A)
-#define BME280_REG_DIG_P8               (0x9C)
-#define BME280_REG_DIG_P9               (0x9E)
-/* Humidty compensation value addresses */
-#define BME280_REG_DIG_H1               (0xA1)
-#define BME280_REG_DIG_H2               (0xE1)
-#define BME280_REG_DIG_H3               (0xE3)
-#define BME280_REG_DIG_H4               (0xE4)
-#define BME280_REG_DIG_H5               (0xE5)
-#define BME280_REG_DIG_H6               (0xE6)
-#define BME280_REG_DIG_H7               (0xE7)
+#define BME280_STATUS_MEASURING         0x08
+#define BME280_STATUS_UPDATING          0x01
 
 
 /***** ENUMERATION ****************************************************/
 /* Enumeration for the BME280 function return values */
 typedef enum {
+    BME280_RET_ERROR_NODEV  = -2,
     BME280_RET_ERROR        = -1,
     BME280_RET_OK           = 0
 } BME280_RET_t;
@@ -77,7 +55,29 @@ typedef enum {
     BME280_REG_T_LSB        = 0xFB,
     BME280_REG_T_XLSB       = 0xFC,
     BME280_REG_H_MSB        = 0xFD,
-    BME280_REG_H_LSB        = 0xFE
+    BME280_REG_H_LSB        = 0xFE,
+    /* Temperature compensation value addresses */
+    BME280_REG_DIG_T1       = 0x88,
+    BME280_REG_DIG_T2       = 0x8A,
+    BME280_REG_DIG_T3       = 0x8C,
+    /* Pressure compensation value addresses */
+    BME280_REG_DIG_P1       = 0x8E,
+    BME280_REG_DIG_P2       = 0x90,
+    BME280_REG_DIG_P3       = 0x92,
+    BME280_REG_DIG_P4       = 0x94,
+    BME280_REG_DIG_P5       = 0x96,
+    BME280_REG_DIG_P6       = 0x98,
+    BME280_REG_DIG_P7       = 0x9A,
+    BME280_REG_DIG_P8       = 0x9C,
+    BME280_REG_DIG_P9       = 0x9E,
+    /* Humidty compensation value addresses */
+    BME280_REG_DIG_H1       = 0xA1,
+    BME280_REG_DIG_H2       = 0xE1,
+    BME280_REG_DIG_H3       = 0xE3,
+    BME280_REG_DIG_H4       = 0xE4,
+    BME280_REG_DIG_H5       = 0xE5,
+    BME280_REG_DIG_H6       = 0xE6,
+    BME280_REG_DIG_H7       = 0xE7
 } BME280_REG_t;
 
 /* Enumeration for the BME280 sampling modes */
@@ -155,6 +155,8 @@ typedef struct {
 
 /***
  * A structure to store the BME280 sensor configuration.
+ *
+ * @todo    Make sure the structure values are read in init() and updated
  ***/
 typedef struct {
     uint8_t address;        /**< I2C address */
@@ -171,7 +173,7 @@ typedef struct {
 
 /***** FUNCTION PROTOTYPES ********************************************/
 /* General */
-BME280_RET_t bme280_init(BME280_t* bme);
+BME280_RET_t bme280_init(BME280_t* bme, uint8_t address);
 BME280_RET_t bme280_reset(BME280_t* bme);
 BME280_RET_t bme280_spi_enable(BME280_t* bme);
 BME280_RET_t bme280_spi_disable(BME280_t* bme);
