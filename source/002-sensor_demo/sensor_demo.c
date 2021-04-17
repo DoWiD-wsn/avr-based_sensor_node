@@ -219,6 +219,7 @@ int main(void) {
     
     /* Initialize the ADC */
     adc_init(ADC_ADPS_16,ADC_REFS_VCC);
+    adc_set_input(ADC_CH1);
 
 #if ENABLE_DS18X20
     /* Initialize the DS18B20 sensor */
