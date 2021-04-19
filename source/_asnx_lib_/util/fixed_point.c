@@ -41,7 +41,7 @@ float fp_fixed16_to_float(uint16_t input, uint8_t f_bits) {
  * @return      Corresponding 16-bit fixed-point number
  ***/
 uint16_t fp_float_to_fixed16(float input, uint8_t f_bits) {
-    uint16_t tmp;
+    uint16_t tmp = 0x0000;
     /* Check sign of input */
     if(input<0) {
         input *= -1;
@@ -80,8 +80,8 @@ double fp_fixed32_to_double(uint32_t input, uint8_t f_bits) {
  * @param[in]   f_bits      Number of fractional bits
  * @return      Corresponding 32-bit fixed-point number
  ***/
-uint32_t fp_double_to_fixed16(double input, uint8_t f_bits) {
-    uint32_t tmp;
+uint32_t fp_double_to_fixed32(double input, uint8_t f_bits) {
+    uint32_t tmp = 0x00000000;
     /* Check sign of input */
     if(input<0) {
         input *= -1;
