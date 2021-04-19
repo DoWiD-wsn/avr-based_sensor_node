@@ -7,6 +7,8 @@
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/19 $
+ *
+ * @todo    Implement better way for (asynchronous) response handling/matching
  *****/
 
 /***** INCLUDES *******************************************************/
@@ -188,7 +190,7 @@ static XBEE_RET_t _at_local_query(char* command, uint8_t fid) {
  *
  * @param[out]  value       Value returned by the command
  * @param[out]  fid         Frame ID returned.
- * @return      OK in case of success; ERROR otherwise
+ * @return      Size of the command value in case of success; ERROR otherwise
  ***/
 static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
     /* Data array for the frame (max. length: 17 bytes) */
@@ -403,7 +405,7 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
  * @param[in]   command     AT command (two character)
  * @param[in]   value       Value for the command
  * @param[in]   fid         Frame ID.
- * @return      OK in case of success; ERROR otherwise
+ * @return      Size of the command value in case of success; ERROR otherwise
  ***/
 XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value, uint8_t fid){
     int8_t ret;
@@ -442,7 +444,7 @@ XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value, uint8_t fid){
  * @param[in]   command     AT command (two character)
  * @param[out]  value       Value returned by the command
  * @param[in]   fid         Frame ID.
- * @return      OK in case of success; ERROR otherwise
+ * @return      Size of the command value in case of success; ERROR otherwise
  ***/
 XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value, uint8_t fid) {
     int8_t ret;
@@ -649,7 +651,7 @@ static XBEE_RET_t _at_remote_query(uint64_t mac, uint16_t addr, char* command, u
  * @param[in]   addr        16-bit address
  * @param[out]  value       Value for the command
  * @param[out]  fid         Frame ID returned.
- * @return      OK in case of success; ERROR otherwise
+ * @return      Size of the command value in case of success; ERROR otherwise
  ***/
 static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, uint8_t* fid) {
     uint8_t i=0;
@@ -886,7 +888,7 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
  * @param[in]   command     AT command (two character)
  * @param[in]   value       Value for the command
  * @param[in]   fid         Frame ID.
- * @return      OK in case of success; ERROR otherwise
+ * @return      Size of the command value in case of success; ERROR otherwise
  ***/
 XBEE_RET_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, uint64_t value, uint8_t fid) {
     uint8_t fid_ret;
@@ -945,7 +947,7 @@ XBEE_RET_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, 
  * @param[in]   command     AT command (two character)
  * @param[out]  value       Value returned by the command
  * @param[in]   fid         Frame ID.
- * @return      OK in case of success; ERROR otherwise
+ * @return      Size of the command value in case of success; ERROR otherwise
  ***/
 XBEE_RET_t xbee_at_remote_cmd_read(uint64_t mac, uint16_t addr, char* command, uint64_t* value, uint8_t fid) {
     uint8_t fid_ret;
@@ -1279,6 +1281,46 @@ inline XBEE_RET_t xbee_transmit_unicast(uint64_t mac, uint8_t* payload, uint16_t
     return xbee_transmit(mac, XBEE_ADDR16_USE64, payload, cnt, fid);
 }
 
+
+/***
+ * Check if the device has successfully joined a network.
+ *
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_is_connected(void) {
+    uint64_t response;
+    /* Check Xbee connection status (need 1 return byte) */
+    if(xbee_at_local_cmd_read("AI", &response, 0x01) == 1) {
+        if(response == XBEE_AI_RET_SUCCESS) {
+            /* Successfully connected */
+            return XBEE_RET_OK;
+        }
+    }
+    /* Not connected */
+    return XBEE_RET_ERROR;
+}
+
+
+/***
+ * Wait until the device has successfully joined a network.
+ *
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_wait_for_connected(uint8_t timeout) {
+    uint32_t time = 0;
+    /* Check Xbee module connection */
+    while(xbee_is_connected() != XBEE_RET_OK) {
+        /* Check if timeout [s] has been reached (counter in [ms]) */
+        if(time >= (timeout*1000)) {
+            return XBEE_RET_ERROR;
+        } else {
+            /* Wait for some time */
+            time += XBEE_JOIN_TIMEOUT_DELAY;
+            _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
+        }
+    }
+    return XBEE_RET_OK;
+}
 
 
 /***

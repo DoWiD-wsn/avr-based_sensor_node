@@ -7,6 +7,8 @@
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/19 $
+ *
+ * @todo    Implement better way for (asynchronous) response handling/matching
  *****/
 
 #ifndef _ASNX_XBEE_H_
@@ -20,8 +22,13 @@
 /* Use UART blocking (0) or non-blocking (1) functions */
 #define XBEE_WRITE_NONBLOCKING              (1)
 
+/* Join network timeout [s] */
+#define XBEE_JOIN_TIMEOUT                   (120L)
+/* Join network delay between tries [ms] */
+#define XBEE_JOIN_TIMEOUT_DELAY             (1000UL)
+
 /* RX timeout [ms] */
-#define XBEE_RX_TIMEOUT                     (2000)
+#define XBEE_RX_TIMEOUT                     (2000UL)
 /* RX delay between tries [ms] */
 #define XBEE_RX_TIMEOUT_DELAY               (50)
 
@@ -219,6 +226,8 @@ XBEE_RET_t xbee_check_crc(uint8_t* data, uint8_t len, uint8_t crc);
 /*** COMMON ***/
 XBEE_RET_t xbee_transmit_broadcast(uint8_t* payload, uint16_t cnt, uint8_t fid);
 XBEE_RET_t xbee_transmit_unicast(uint64_t mac, uint8_t* payload, uint16_t cnt, uint8_t fid);
+XBEE_RET_t xbee_is_connected(void);
+XBEE_RET_t xbee_wait_for_connected(uint8_t timeout);
 XBEE_RET_t xbee_cmd_get_temperature(float* temp);
 XBEE_RET_t xbee_cmd_get_vss(float* vss);
 
