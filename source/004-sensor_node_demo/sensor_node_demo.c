@@ -1,10 +1,11 @@
 /****
- * @brief   Demo application for the Xbee network functionality.
+ * @brief   Demo application for a full sensor node.
  *
- * Simple demo application to periodically send a value to a specific
- * network destination and increment the value after each cycle.
+ * Demo application for an environmental monitoring sensor node that
+ * periodically measures certain physical quantities and transmits the
+ * data to a central cluster head via Zigbee (Xbee).
  *
- * @file    /003-xbee_demo/xbee_demo.c
+ * @file    /004-sensor_node_demo/sensor_node_demo.c
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/19 $
@@ -22,9 +23,6 @@
 #include "util/printf.h"
 #include "xbee/xbee.h"
 
-
-/***** DEFINES ********************************************************/
-#define XBEE_DESTINATION_MAC        (0x0013A20041B9FD07)
 
 /***** MAIN ***********************************************************/
 int main(void) {
