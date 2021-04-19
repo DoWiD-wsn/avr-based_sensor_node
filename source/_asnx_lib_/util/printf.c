@@ -38,12 +38,12 @@ typedef struct {
 void (*_printf_putc)(char c) = NULL;
 
 
-/***** LOCAL FUNCTION PROTOTYPES **********************************************/
+/***** LOCAL FUNCTION PROTOTYPES **************************************/
 // forward declaration so that _ftoa can switch to exp notation for values > PRINTF_MAX_FLOAT
 static size_t _etoa(out_fct_type out, char* buffer, size_t idx, size_t maxlen, double value, unsigned int prec, unsigned int width, unsigned int flags);
 
 
-/***** WRAPPER FUNCTIONS ******************************************************/
+/***** WRAPPER FUNCTIONS **********************************************/
 /* Internal buffer output */
 static inline void _out_buffer(char character, void* buffer, size_t idx, size_t maxlen) {
     if (idx < maxlen) {
@@ -92,9 +92,11 @@ static inline bool _is_digit(char ch) {
 }
 
 
-/***** FUNCTIONS **************************************************************/
+/***** FUNCTIONS ******************************************************/
 /***
  * Initialize the printf function (set putc function).
+ *
+ * @param[in]   callback        putc() function callback
  ***/
 void printf_init(void (*callback)(char c)) {
     /* Set the putc function */

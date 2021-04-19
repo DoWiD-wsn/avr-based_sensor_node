@@ -38,7 +38,7 @@
 #define SEN_MSG_MAC_SN5                     (0x0013A20041B9FD22)
 #define SEN_MSG_MAC_SN6                     (0x0013A20041BA26F1)
 #define SEN_MSG_MAC_SNx                     (0x0013A20041B9F864)
-#define SEN_MSG_MAC_RPi                     (0x0013A20041B9FD07)
+#define SEN_MSG_MAC_RPI                     (0x0013A20041B9FD07)
 #define SEN_MSG_MAC_DEF                     (0x0013A20041B9E77A)
 /* Get the IDs (SL) */
 #define SEN_MSG_ID_CH                       (SEN_MSG_MAC_SL(SEN_MSG_MAC_CH))

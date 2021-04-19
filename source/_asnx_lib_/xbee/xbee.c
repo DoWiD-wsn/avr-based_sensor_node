@@ -1,61 +1,59 @@
-/**
- *  Source file for Xbee 3 functionality.
- */
+/*****
+ * @brief   ASN(x) Xbee 3 library
+ *
+ * Library to the Xbee 3 module accessible via UART.
+ *
+ * @file    /_asnx_lib_/xbee/xbee.c
+ * @author  $Author: Dominik Widhalm $
+ * @version $Revision: 1.0 $
+ * @date    $Date: 2021/04/19 $
+ *****/
 
-/***** INCLUDES ***************************************************************/
-/* STD */
-/* AVR */
-#include <util/delay.h>
-/* OWN */
+/***** INCLUDES *******************************************************/
 #include "xbee.h"
+/*** AVR ***/
+#include <avr/interrupt.h>
+#include <util/delay.h>
+/*** ASNX LIB ***/
 #include "uart/uart.h"
 
 
-/***** MACROS *****************************************************************/
-
-
-/***** ENUMERATION ************************************************************/
-
-
-/***** STRUCTURES *************************************************************/
-
-
-/***** GLOBAL VARIABLES *******************************************************/
-
-
-/***** LOCAL FUNCTION PROTOTYPES **********************************************/
+/***** LOCAL FUNCTION PROTOTYPES **************************************/
 /* Local AT command */
-int8_t xbee_at_local_write(char* command, uint64_t value, uint8_t fid);
-int8_t xbee_at_local_query(char* command, uint8_t fid);
-int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid);
+static XBEE_RET_t _at_local_write(char* command, uint64_t value, uint8_t fid);
+static XBEE_RET_t _at_local_query(char* command, uint8_t fid);
+static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid);
 /* Remote AT command */
-int8_t xbee_at_remote_write(uint64_t mac, uint16_t addr, char* command, uint64_t value, uint8_t fid);
-int8_t xbee_at_remote_query(uint64_t mac, uint16_t addr, char* command, uint8_t fid);
-int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, uint8_t* fid);
+static XBEE_RET_t _at_remote_write(uint64_t mac, uint16_t addr, char* command, uint64_t value, uint8_t fid);
+static XBEE_RET_t _at_remote_query(uint64_t mac, uint16_t addr, char* command, uint8_t fid);
+static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, uint8_t* fid);
 
 
-/***** WRAPPER FUNCTIONS ******************************************************/
-
-
-/***** FUNCTIONS **************************************************************/
-/*** COMMON ***************************/
-/*
- * Initialize everything needed for Xbee communication (e.g., UART)
- */
+/***** FUNCTIONS ******************************************************/
+/***
+ * Initialize the UART interface for Xbee communication.
+ *
+ * @param[in]   baud        BAUD rate to be used.
+ ***/
 void xbee_init(uint32_t baud) {
     /* Initialize the UART interface */
     uart0_init();
     uart0_set_baudrate(baud);
     uart0_interrupt_enable();
+    /* Enable interrupts globally */
+    sei();
 }
 
 
-/*** SENDING/RECEIVING COMMANDS *******/
-
-/*
- *  Write a local AT command
- */
-int8_t xbee_at_local_write(char* command, uint64_t value, uint8_t fid) {
+/***
+ * Write a local AT command.
+ *
+ * @param[in]   command     AT command (two character)
+ * @param[in]   value       Value to be assigned
+ * @param[in]   fid         Frame ID.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+static XBEE_RET_t _at_local_write(char* command, uint64_t value, uint8_t fid) {
     /* Temporary variables for frame length (depends on value) */
     uint16_t len;
     /* Data array for the frame (max. length: 16 bytes) */
@@ -141,10 +139,14 @@ int8_t xbee_at_local_write(char* command, uint64_t value, uint8_t fid) {
 }
 
 
-/*
- *  Query a local AT command
- */
-int8_t xbee_at_local_query(char* command, uint8_t fid) {
+/***
+ * Query a local AT command.
+ *
+ * @param[in]   command     AT command (two character)
+ * @param[in]   fid         Frame ID.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+static XBEE_RET_t _at_local_query(char* command, uint8_t fid) {
     /* Data array for the frame (length: 8 bytes) */
     uint8_t data[8] = {0};
     
@@ -181,10 +183,14 @@ int8_t xbee_at_local_query(char* command, uint8_t fid) {
 }
 
 
-/*
- * Get the response to a local AT command
- */
-int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid) {
+/***
+ * Get the response to a local AT command.
+ *
+ * @param[out]  value       Value returned by the command
+ * @param[out]  fid         Frame ID returned.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
     /* Data array for the frame (max. length: 17 bytes) */
     uint8_t data[17] = {0};
     /* Number of bytes of the response value received */
@@ -273,7 +279,7 @@ int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid) {
     switch(diff) {
         case 0:         // No command data
             /* No command data -> check CRC */
-            if(!xbee_check_crc(&data[3], 5, data[8])) {
+            if(xbee_check_crc(&data[3], 5, data[8]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 0 bytes value */
@@ -281,7 +287,7 @@ int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid) {
             break;
         case 1:         // 8-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 6, data[9])) {
+            if(xbee_check_crc(&data[3], 6, data[9]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 1 command data byte */
@@ -290,7 +296,7 @@ int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid) {
             break;
         case 2:         // 16-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 7, data[10])) {
+            if(xbee_check_crc(&data[3], 7, data[10]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 2 command data byte */
@@ -300,7 +306,7 @@ int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid) {
             break;
         case 3:         // 24-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 8, data[11])) {
+            if(xbee_check_crc(&data[3], 8, data[11]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 3 command data byte */
@@ -311,7 +317,7 @@ int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid) {
             break;
         case 4:         // 32-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 9, data[12])) {
+            if(xbee_check_crc(&data[3], 9, data[12]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 4 command data byte */
@@ -323,7 +329,7 @@ int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid) {
             break;
         case 5:         // 40-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 10, data[13])) {
+            if(xbee_check_crc(&data[3], 10, data[13]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 5 command data byte */
@@ -336,7 +342,7 @@ int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid) {
             break;
         case 6:         // 48-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 11, data[14])) {
+            if(xbee_check_crc(&data[3], 11, data[14]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 6 command data byte */
@@ -350,7 +356,7 @@ int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid) {
             break;
         case 7:         // 56-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 12, data[15])) {
+            if(xbee_check_crc(&data[3], 12, data[15]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 7 command data byte */
@@ -365,7 +371,7 @@ int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid) {
             break;
         case 8:         // 64-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 13, data[16])) {
+            if(xbee_check_crc(&data[3], 13, data[16]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 8 command data byte */
@@ -391,24 +397,29 @@ int8_t xbee_at_local_response(uint64_t* value, uint8_t* fid) {
 }
 
 
-/*
- * Write a local AT command and check the response
- */
-int8_t xbee_at_local_cmd_write(char* command, uint64_t value, uint8_t fid){
+/***
+ * Write a local AT command and check the response.
+ *
+ * @param[in]   command     AT command (two character)
+ * @param[in]   value       Value for the command
+ * @param[in]   fid         Frame ID.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value, uint8_t fid){
     int8_t ret;
     uint8_t fid_ret;
     /* There should be no response value, still ... */
     uint64_t resp;
     
     /* Send the local AT command with the new value */
-    ret = xbee_at_local_write(command, value, fid);
+    ret = _at_local_write(command, value, fid);
     if(ret < XBEE_RET_OK) {
         /* Sending failed */
         return ret;
     }
     
     /* Check the response */
-    ret = xbee_at_local_response(&resp, &fid_ret);
+    ret = _at_local_response(&resp, &fid_ret);
     if(ret < XBEE_RET_OK) {
         /* Response error */
         return ret;
@@ -425,21 +436,26 @@ int8_t xbee_at_local_cmd_write(char* command, uint64_t value, uint8_t fid){
 }
 
 
-/*
- * Read the response to a local AT command
- */
-int8_t xbee_at_local_cmd_read(char* command, uint64_t* value, uint8_t fid) {
+/***
+ * Read the response to a local AT command.
+ *
+ * @param[in]   command     AT command (two character)
+ * @param[out]  value       Value returned by the command
+ * @param[in]   fid         Frame ID.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value, uint8_t fid) {
     int8_t ret;
     uint8_t fid_ret;
     /* Send the local AT command */
-    ret = xbee_at_local_query(command, fid);
+    ret = _at_local_query(command, fid);
     if(ret != XBEE_RET_OK) {
         /* Sending failed */
         return ret;
     }
     
     /* Check the response */
-    ret = xbee_at_local_response(value, &fid_ret);
+    ret = _at_local_response(value, &fid_ret);
     if(ret < XBEE_RET_OK) {
         /* Response error */
         return ret;
@@ -456,11 +472,18 @@ int8_t xbee_at_local_cmd_read(char* command, uint64_t* value, uint8_t fid) {
 }
 
 
-/*
- *  Write a remote AT command.
- *  Remote target specified by MAC or Address
- */
-int8_t xbee_at_remote_write(uint64_t mac, uint16_t addr, char* command, uint64_t value, uint8_t fid) {
+/***
+ * Write a remote AT command.
+ * Remote target specified by MAC or 16-bit address.
+ *
+ * @param[in]   mac         MAC address
+ * @param[in]   addr        16-bit address
+ * @param[in]   command     AT command (two character)
+ * @param[in]   value       Value for the command
+ * @param[in]   fid         Frame ID.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+static XBEE_RET_t _at_remote_write(uint64_t mac, uint16_t addr, char* command, uint64_t value, uint8_t fid) {
     uint8_t i=0;
     /* Temporary variables for frame length (depends on value) */
     uint16_t len=0;
@@ -562,11 +585,17 @@ int8_t xbee_at_remote_write(uint64_t mac, uint16_t addr, char* command, uint64_t
 }
 
 
-/*
- *  Query a remote AT command
- *  Remote target specified by MAC or Address
- */
-int8_t xbee_at_remote_query(uint64_t mac, uint16_t addr, char* command, uint8_t fid) {
+/***
+ * Query a remote AT command.
+ * Remote target specified by MAC or 16-bit address.
+ *
+ * @param[in]   mac         MAC address
+ * @param[in]   addr        16-bit address
+ * @param[in]   command     AT command (two character)
+ * @param[in]   fid         Frame ID.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+static XBEE_RET_t _at_remote_query(uint64_t mac, uint16_t addr, char* command, uint8_t fid) {
     uint8_t i=0;
     /* Data array for the frame (max. length: 23 bytes) */
     uint8_t data[19] = {0};
@@ -612,10 +641,17 @@ int8_t xbee_at_remote_query(uint64_t mac, uint16_t addr, char* command, uint8_t 
 }
 
 
-/*
- *  Get the response to a remote AT command
- */
-int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, uint8_t* fid) {
+/***
+ * Get the response to a remote AT command.
+ * Remote target specified by MAC or 16-bit address.
+ *
+ * @param[in]   mac         MAC address
+ * @param[in]   addr        16-bit address
+ * @param[out]  value       Value for the command
+ * @param[out]  fid         Frame ID returned.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, uint8_t* fid) {
     uint8_t i=0;
     /* Data array for the frame (max. length: 27 bytes) */
     uint8_t data[27] = {0};
@@ -717,7 +753,7 @@ int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, u
     switch(diff) {
         case 0:         // No command data
             /* No command data -> check CRC */
-            if(!xbee_check_crc(&data[3], 15, data[18])) {
+            if(xbee_check_crc(&data[3], 15, data[18]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 0 command data bytes */
@@ -725,7 +761,7 @@ int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, u
             break;
         case 1:         // 8-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 16, data[19])) {
+            if(xbee_check_crc(&data[3], 16, data[19]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 1 command data byte */
@@ -734,7 +770,7 @@ int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, u
             break;
         case 2:         // 16-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 17, data[20])) {
+            if(xbee_check_crc(&data[3], 17, data[20]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 2 command data byte */
@@ -744,7 +780,7 @@ int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, u
             break;
         case 3:         // 24-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 18, data[21])) {
+            if(xbee_check_crc(&data[3], 18, data[21]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 3 command data byte */
@@ -755,7 +791,7 @@ int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, u
             break;
         case 4:         // 32-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 19, data[22])) {
+            if(xbee_check_crc(&data[3], 19, data[22]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 4 command data byte */
@@ -767,7 +803,7 @@ int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, u
             break;
         case 5:         // 40-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 20, data[23])) {
+            if(xbee_check_crc(&data[3], 20, data[23]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 5 command data byte */
@@ -780,7 +816,7 @@ int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, u
             break;
         case 6:         // 48-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 21, data[24])) {
+            if(xbee_check_crc(&data[3], 21, data[24]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 6 command data byte */
@@ -794,7 +830,7 @@ int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, u
             break;
         case 7:         // 64-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 22, data[25])) {
+            if(xbee_check_crc(&data[3], 22, data[25]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 7 command data byte */
@@ -809,7 +845,7 @@ int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, u
             break;
         case 8:         // 64-bit command data
             /* Check the CRC */
-            if(!xbee_check_crc(&data[3], 23, data[26])) {
+            if(xbee_check_crc(&data[3], 23, data[26]) != XBEE_RET_OK) {
                 return XBEE_RET_INVALID_CRC;
             }
             /* 8 command data byte */
@@ -842,10 +878,17 @@ int8_t xbee_at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, u
 }
 
 
-/*
- * Write a remote AT command and check the response
- */
-int8_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, uint64_t value, uint8_t fid) {
+/***
+ * Write a remote AT command and check the response.
+ *
+ * @param[in]   mac         MAC address
+ * @param[in]   addr        16-bit address
+ * @param[in]   command     AT command (two character)
+ * @param[in]   value       Value for the command
+ * @param[in]   fid         Frame ID.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, uint64_t value, uint8_t fid) {
     uint8_t fid_ret;
     uint16_t addr_ret;
     uint64_t mac_ret;
@@ -854,14 +897,14 @@ int8_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, uint
     uint64_t resp;
     
     /* Send the remote AT command */
-    ret = xbee_at_remote_write(mac, addr, command, value, fid);
+    ret = _at_remote_write(mac, addr, command, value, fid);
     if(ret < XBEE_RET_OK) {
         /* Sending failed */
         return ret;
     }
     
     /* Check the response */
-    ret = xbee_at_remote_response(&mac_ret, &addr_ret, &resp, &fid_ret);
+    ret = _at_remote_response(&mac_ret, &addr_ret, &resp, &fid_ret);
     if(ret < XBEE_RET_OK) {
         /* Response error */
         return ret;
@@ -894,23 +937,30 @@ int8_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, uint
 }
 
 
-/*
- * Read the response to a remote AT command
- */
-int8_t xbee_at_remote_cmd_read(uint64_t mac, uint16_t addr, char* command, uint64_t* value, uint8_t fid) {
+/***
+ * Read the response to a remote AT command.
+ *
+ * @param[in]   mac         MAC address
+ * @param[in]   addr        16-bit address
+ * @param[in]   command     AT command (two character)
+ * @param[out]  value       Value returned by the command
+ * @param[in]   fid         Frame ID.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_at_remote_cmd_read(uint64_t mac, uint16_t addr, char* command, uint64_t* value, uint8_t fid) {
     uint8_t fid_ret;
     uint16_t addr_ret;
     uint64_t mac_ret;
     int8_t ret;
     /* Send the remote AT command */
-    ret = xbee_at_remote_query(mac, addr, command, fid);
+    ret = _at_remote_query(mac, addr, command, fid);
     if(ret < XBEE_RET_OK) {
         /* Sending failed */
         return ret;
     }
     
     /* Check the response */
-    ret = xbee_at_remote_response(&mac_ret, &addr_ret, value, &fid_ret);
+    ret = _at_remote_response(&mac_ret, &addr_ret, value, &fid_ret);
     if(ret < XBEE_RET_OK) {
         /* Response error */
         return ret;
@@ -943,11 +993,18 @@ int8_t xbee_at_remote_cmd_read(uint64_t mac, uint16_t addr, char* command, uint6
 }
 
 
-/*
- *  Transmit a specified number of bytes (len) to a destination
- *  Destination target specified by MAC or Address
- */
-int8_t xbee_transmit(uint64_t mac, uint16_t addr, uint8_t* payload, uint16_t cnt, uint8_t fid) {
+/***
+ * Transmit a specified number of bytes to the destination.
+ * Destination target specified by MAC or 16-bit address.
+ *
+ * @param[in]   mac         MAC address
+ * @param[in]   addr        16-bit address
+ * @param[in]   payload     Payload data to be transmitted
+ * @param[in]   cnt         Number of payload bytes
+ * @param[in]   fid         Frame ID.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_transmit(uint64_t mac, uint16_t addr, uint8_t* payload, uint16_t cnt, uint8_t fid) {
     uint8_t i=0;
     /* Temporary variables for frame length (depends on cnt) */
     uint16_t len = cnt + 14;
@@ -1004,10 +1061,13 @@ int8_t xbee_transmit(uint64_t mac, uint16_t addr, uint8_t* payload, uint16_t cnt
 }
 
 
-/*
- *  Get the transmit status
- */
-int8_t xbee_transmit_status(uint8_t* delivery) {
+/***
+ * Get the transmit response status.
+ *
+ * @param[out]  delivery    Delivery response status
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
     /* Data array for the frame (max. length: 23 bytes) */
     uint8_t data[11] = {0};
     /* Temporary variables for frame length (depends on value) and timeout */
@@ -1019,7 +1079,7 @@ int8_t xbee_transmit_status(uint8_t* delivery) {
             /* Check if timeout has been reached */
             if(timeout >= XBEE_RX_TIMEOUT) {
                 /* No frame was received */
-                return XBEE_RET_ERROR;
+                return XBEE_RET_TIMEOUT;
             }
             /* Wait for some time */
             _delay_ms(XBEE_RX_TIMEOUT_DELAY);
@@ -1035,7 +1095,7 @@ int8_t xbee_transmit_status(uint8_t* delivery) {
         /* Check if timeout has been reached */
         if(timeout >= XBEE_RX_TIMEOUT) {
             /* No frame was received */
-            return XBEE_RET_ERROR;
+            return XBEE_RET_TIMEOUT;
         }
         /* Wait for some time */
         _delay_ms(XBEE_RX_TIMEOUT_DELAY);
@@ -1055,7 +1115,7 @@ int8_t xbee_transmit_status(uint8_t* delivery) {
         return XBEE_RET_INVALID_FRAME;
     }
     /* Check the CRC */
-    if(!xbee_check_crc(&data[3], 7, data[10])) {
+    if(xbee_check_crc(&data[3], 7, data[10]) != XBEE_RET_OK) {
         return XBEE_RET_INVALID_CRC;
     }
     /* Get the Delivery status */
@@ -1066,10 +1126,17 @@ int8_t xbee_transmit_status(uint8_t* delivery) {
 }
 
 
-/*
- *  Get the extended transmit status
- */
-int8_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* delivery, uint8_t* discovery, uint8_t* fid) {
+/***
+ * Get the extended transmit status.
+ *
+ * @param[out]  addr        16-bit address received
+ * @param[out]  retries     Number of transmission retries received
+ * @param[out]  delivery    Delivery status received
+ * @param[out]  discovery   Discovery status received
+ * @param[out]  fid         Frame ID received
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* delivery, uint8_t* discovery, uint8_t* fid) {
     /* Data array for the frame (max. length: 23 bytes) */
     uint8_t data[11] = {0};
     /* Temporary variables for frame length (depends on value) and timeout */
@@ -1117,7 +1184,7 @@ int8_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* deliv
         return XBEE_RET_INVALID_FRAME;
     }
     /* Check the CRC */
-    if(!xbee_check_crc(&data[3], 7, data[10])) {
+    if(xbee_check_crc(&data[3], 7, data[10]) != XBEE_RET_OK) {
         return XBEE_RET_INVALID_CRC;
     }
     /* Get the frame id */
@@ -1136,11 +1203,13 @@ int8_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* deliv
 }
 
 
-/*** CRC Check ************************/
-
-/*
- * Get the CRC value of a frame
- */
+/***
+ * Get the CRC value of a given frame.
+ *
+ * @param[in]   data        Frame data
+ * @param[in]   len         Number of bytes in frame.
+ * @return      Calculated CRC
+ ***/
 uint8_t xbee_get_crc(uint8_t* data, uint8_t len) {
     uint16_t checksum = 0;
     uint8_t i;
@@ -1156,10 +1225,15 @@ uint8_t xbee_get_crc(uint8_t* data, uint8_t len) {
 }
 
 
-/*
- * Check the CRC value of a frame
- */
-uint8_t xbee_check_crc(uint8_t* data, uint8_t len, uint8_t crc) {
+/***
+ * Check the CRC value of a frame.
+ *
+ * @param[in]   data        Frame data
+ * @param[in]   len         Number of bytes in frame.
+ * @param[in]   crc         Received CRC.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_check_crc(uint8_t* data, uint8_t len, uint8_t crc) {
     uint16_t checksum = 0;
     uint8_t i;
     /* Iterate over the data bytes (ignore first three bytes) */
@@ -1171,22 +1245,49 @@ uint8_t xbee_check_crc(uint8_t* data, uint8_t len, uint8_t crc) {
     /* Check if calculated CRC matches received CRC */
     if((uint8_t)checksum == crc) {
         /* Checksum is correct */
-        return 1;
+        return XBEE_RET_OK;
     } else {
         /* Checksum is incorrect */
-        return 0;
+        return XBEE_RET_INVALID_CRC;
     }
 }
 
 
-/**************************************/
-/*** COMMON FUNCTIONALITY *************/
-/**************************************/
+/***
+ * Transmit a specified number of bytes via broadcast.
+ *
+ * @param[in]   payload     Payload data to be transmitted
+ * @param[in]   cnt         Number of payload bytes
+ * @param[in]   fid         Frame ID.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+inline XBEE_RET_t xbee_transmit_broadcast(uint8_t* payload, uint16_t cnt, uint8_t fid) {
+    return xbee_transmit(XBEE_ADDR64_BROADCAST, XBEE_ADDR16_ALL_DEVICES, payload, cnt, fid);
+}
 
-/*
- * Read the current device temperature
- */
-int8_t xbee_cmd_get_temperature(int16_t* temp) {
+
+/***
+ * Transmit a specified number of bytes via unicast to a specific destination.
+ *
+ * @param[in]   mac         MAC address of the destination
+ * @param[in]   payload     Payload data to be transmitted
+ * @param[in]   cnt         Number of payload bytes
+ * @param[in]   fid         Frame ID.
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+inline XBEE_RET_t xbee_transmit_unicast(uint64_t mac, uint8_t* payload, uint16_t cnt, uint8_t fid) {
+    return xbee_transmit(mac, XBEE_ADDR16_USE64, payload, cnt, fid);
+}
+
+
+
+/***
+ * Read the current device temperature.
+ *
+ * @param[out]  temp        Device temperature read
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_cmd_get_temperature(float* temp) {
     int8_t ret;
     uint64_t retval;
     ret = xbee_at_local_cmd_read("TP", &retval, 0x01);
@@ -1195,16 +1296,19 @@ int8_t xbee_cmd_get_temperature(int16_t* temp) {
         return ret;
     }
     /* Copy temperature reading */
-    *temp = (int16_t)(retval & 0xFFFF);
+    *temp = (float)(retval & 0xFFFF);
     /* Seem like everything worked */
     return XBEE_RET_OK;
 }
 
 
-/*
- * Read the current supply voltage level
- */
-int8_t xbee_cmd_get_vss(uint16_t* vss) {
+/***
+ * Read the current supply voltage level.
+ *
+ * @param[out]  vss         Device supply voltage level
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_cmd_get_vss(float* vss) {
     int8_t ret;
     uint64_t retval;
     ret = xbee_at_local_cmd_read("%V", &retval, 0x01);
@@ -1213,70 +1317,24 @@ int8_t xbee_cmd_get_vss(uint16_t* vss) {
         return ret;
     }
     /* Copy temperature reading */
-    *vss = (uint16_t)retval;
+    *vss = ((float)retval / 1000.0);
     /* Seem like everything worked */
     return XBEE_RET_OK;
 }
 
 
-/*
- * Write the destination address (DH & DL)
- */
-int8_t xbee_cmd_set_destination(uint32_t dh, uint32_t dl) {
-    int8_t ret;
-    uint64_t retval;
-    
-    /* Write the higher address word */
-    ret = xbee_at_local_cmd_write("DH", dh, 0x01);
-    if(ret < XBEE_RET_OK) {
-        /* Command failed -> Error */
-        return ret;
-    }
-    
-    /* Write the lower address word */
-    ret = xbee_at_local_cmd_write("DL", dl, 0x01);
-    if(ret < XBEE_RET_OK) {
-        /* Command failed -> Error */
-        return ret;
-    }
-    
-    /* Confirm writing */
-    ret = xbee_at_local_cmd_read("WR", &retval, 0x01);
-    if(ret < XBEE_RET_OK) {
-        /* Command failed -> Error */
-        return ret;
-    }
-    
-    /* Seem like everything worked */
-    return XBEE_RET_OK;
-}
-
-
-/*
- * Write the destination address to broadcast address
- */
-int8_t xbee_cmd_set_broadcast(void) {
-    /* Set the broadcast DH & DL addresses */
-    return xbee_cmd_set_destination(XBEE_DH_BROADCAST,XBEE_DL_BROADCAST);
-}
-
-
-/**************************************/
-/*** MISC FUNCTIONALITY ***************/
-/**************************************/
-
-/*
- * Flush the receive buffer
- */
+/***
+ * Flush the receive buffer.
+ ***/
 void xbee_flush_rx(void) {
     /* Flush the UART RX buffer */
     uart0_rx_flush();
 }
 
 
-/*
- * Flush the transmit buffer
- */
+/***
+ * Flush the transmit buffer.
+ ***/
 void xbee_flush_tx(void) {
     /* Flush the UART TX buffer */
     uart0_tx_flush();

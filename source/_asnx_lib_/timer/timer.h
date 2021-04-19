@@ -27,7 +27,9 @@
 #define TIMER0_ENABLED           (1)
 #define TIMER1_ENABLED           (1)
 #define TIMER2_ENABLED           (1)
-/*** Prescaler ***/
+
+
+/***** ENUMERATION ****************************************************/
 /* Enumeration for the available TIMER0 prescaler */
 typedef enum {
     TIMER0_PRESCALER_NONE        = 0x00,     /**< Deactivated */
@@ -37,6 +39,7 @@ typedef enum {
     TIMER0_PRESCALER_256         = 0x04,     /**< Division factor 256 */
     TIMER0_PRESCALER_1024        = 0x05      /**< Division factor 1024 */
 } TIMER0_PRESCALER_t;
+
 /* Enumeration for the available TIMER1 prescaler */
 typedef enum {
     TIMER1_PRESCALER_NONE        = 0x00,     /**< Deactivated */
@@ -46,6 +49,7 @@ typedef enum {
     TIMER1_PRESCALER_256         = 0x04,     /**< Division factor 256 */
     TIMER1_PRESCALER_1024        = 0x05      /**< Division factor 1024 */
 } TIMER1_PRESCALER_t;
+
 /* Enumeration for the available TIMER2 prescaler */
 typedef enum {
     TIMER2_PRESCALER_NONE        = 0x00,     /**< Deactivated */
