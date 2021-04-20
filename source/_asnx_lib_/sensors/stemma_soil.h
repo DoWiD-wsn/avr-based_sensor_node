@@ -23,6 +23,11 @@
 
 
 /***** DEFINES ********************************************************/
+/* Maximum capacitance value */
+#define STEMMA_CAP_MAX      (1017.0)
+/* Minimum capacitance value */
+#define STEMMA_CAP_MIN      (300.0)
+
 /* I2C address */
 #define STEMMA_I2C_ADDRESS              0x36
 /* I2C register addresses */
@@ -62,7 +67,7 @@ typedef struct {
 STEMMA_RET_t stemma_init(STEMMA_t* dev, uint8_t address);
 STEMMA_RET_t stemma_get_version(STEMMA_t* dev, uint32_t* version);
 STEMMA_RET_t stemma_get_temperature(STEMMA_t* dev, float* temperature);
-STEMMA_RET_t stemma_get_capacity(STEMMA_t* dev, uint16_t* capacity);
+STEMMA_RET_t stemma_get_humidity(STEMMA_t* dev, float* humidity);
 
 
 #endif // _ASNX_STEMMA_H_

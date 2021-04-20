@@ -75,9 +75,6 @@ void read_and_print(void) {
 #if (ENABLE_DS18X20 || ENABLE_AM2302 || ENABLE_BME280 || ENABLE_TMP275 || ENABLE_LM75 || ENABLE_STEMMA)
     float f_tmp;
 #endif
-#if ENABLE_STEMMA
-    uint16_t u_tmp;
-#endif
     
     /*** internal ADC ***/
     printf("=> Internal ADC\n");
@@ -171,9 +168,9 @@ void read_and_print(void) {
     } else {
         printf("ERROR\n");
     }
-    printf("...Capacity: ");
-    if(stemma_get_capacity(&stemma, &u_tmp) == STEMMA_RET_OK) {
-        printf("%4d\n",u_tmp);
+    printf("...Humidity: ");
+    if(stemma_get_humidity(&stemma, &f_tmp) == STEMMA_RET_OK) {
+        printf("%2.2f %%\n",f_tmp);
     } else {
         printf("ERROR\n");
     }

@@ -86,12 +86,12 @@ STEMMA_RET_t stemma_get_temperature(STEMMA_t* dev, float* temperature) {
 
 
 /***
- * Read the capacity of the sensor represented as integer between 0 and 1023.
+ * Read the humidity of the sensor indicated by its capacitance.
  * 
- * @param[out]  capacity        Sensor capacity (between 0 and 1023)
+ * @param[out]  humidity        Humidity in percent
  * @return      OK in case of success; ERROR otherwise
  ***/
-STEMMA_RET_t stemma_get_capacity(STEMMA_t* dev, uint16_t* capacity) {
+STEMMA_RET_t stemma_get_humidity(STEMMA_t* dev, float* humidity) {
     /* Variable for the read result */
     uint16_t ret = STEMMA_TOUCH_WORKING;
     /* Capacitance measurement can take some time */
@@ -103,7 +103,7 @@ STEMMA_RET_t stemma_get_capacity(STEMMA_t* dev, uint16_t* capacity) {
         }
     }while(ret == STEMMA_TOUCH_WORKING);
     /* Copy the result */
-    *capacity = ret;
+    *humidity = (((float)ret - STEMMA_CAP_MIN) / (STEMMA_CAP_MAX - STEMMA_CAP_MIN)) * 100.0;
     /* Return success */
     return STEMMA_RET_OK;
 }
