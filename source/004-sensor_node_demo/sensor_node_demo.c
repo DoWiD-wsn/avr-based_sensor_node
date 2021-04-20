@@ -13,6 +13,9 @@
 
 
 /*** DEMO CONFIGURATION ***/
+/* Enable debug output via UART1 */
+#define ENABLE_DBG              (1)
+
 /* Update interval [s] */
 #define UPDATE_INTERVAL         (30)
 
@@ -75,14 +78,30 @@ DHT_t am2302;
 #endif
 /* Misc */
 #include "util/fixed_point.h"
-#include "util/printf.h"
 #include "util/sensor_msg.h"
+#if ENABLE_DBG
+#  include "util/printf.h"
+#else
+#  define printf(...) do { } while (0)
+#endif
 
 
 /***** GLOBAL VARIABLES ***********************************************/
 /* Variable (flag) for barrier synchronization */
 uint8_t barrier = 0;
 
+
+/***
+ * Turn off the WDT as early in the startup process as possible.
+ * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
+ ***/
+uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
+void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
+void get_mcusr(void) {
+  MCUSR_dump = MCUSR;
+  MCUSR = 0;
+  wdt_disable();
+}
 
 /***
  * Callback function to be called by the systick timer.
@@ -135,9 +154,12 @@ int main(void) {
     uint16_t inc_sum = 0;           /**< Total incident counter (sum of others) */
     /* Sensors working */
     uint8_t en_tmp275 = 0;          /**< TMP275 is available (1) or has failed (0) */
+#if NODE_CONFIGURATION==0
     uint8_t en_ds18b20 = 0;         /**< DS18B20 is available (1) or has failed (0)  */
     uint8_t en_stemma = 0;          /**< STEMMA is available (1) or has failed (0) */
+#elif NODE_CONFIGURATION==1
     uint8_t en_am2302 = 0;          /**< AM2302 is available (1) or has failed (0) */
+#endif
     
     /*** Initialize the message structure ***/
     msg.struc.time = 0;
@@ -156,10 +178,12 @@ int main(void) {
     /* Initialize the ADC */
     adc_init(ADC_ADPS_16,ADC_REFS_VCC);
 
+#if ENABLE_DBG
     /* Initialize UART1 for debug purposes */
     uart1_init();
     /* Initialize the printf function to use the uart1_putc() function for output */
     printf_init(uart1_putc);
+#endif
     
     /* Initialize Xbee 3 (uses UART0) */
     xbee_init(9600UL);
@@ -174,10 +198,8 @@ int main(void) {
     wdt_enable(WDTO_8S);
     
     /*** Get last reset source and store in msg structure ***/
-    /* Get register value */
-    msg.struc.values[MSG_VALUE_REBOOOT].value = MCUSR & 0x0F;
-    /* Clear reset indicator bit(s) */
-    MCUSR &= 0xF0;
+    /* Get reset source register value (from its mirror) */
+    msg.struc.values[MSG_VALUE_REBOOOT].value = MCUSR_dump & 0x0F;
     
     /*** Initialization of sensors and message value fields ***/
     /* ADC self check */
@@ -460,9 +482,12 @@ int main(void) {
         printf("... INCIDENT COUNTER (ENABLE):\n");
         printf("    ... XBEE:    %d\n", inc_xbee);
         printf("    ... TMP275:  %d (%d)\n", inc_tmp275, en_tmp275);
+#if NODE_CONFIGURATION==0
         printf("    ... DS18B20: %d (%d)\n", inc_ds18b20, en_ds18b20);
         printf("    ... STEMMA:  %d (%d)\n", inc_stemma, en_stemma);
+#elif NODE_CONFIGURATION==1
         printf("    ... AM2302:  %d (%d)\n", inc_am2302, en_am2302);
+#endif
         printf("    ... TOTAL:   %d\n", inc_sum);
         /* Counter value between 0 and defined threshold */
         msg.struc.values[MSG_VALUE_INCIDENT].value = inc_sum;
