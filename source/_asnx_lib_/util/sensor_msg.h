@@ -19,7 +19,7 @@
 
 /***** DEFINES ********************************************************/
 /* Number of sensor measurements per message */
-#define SEN_MSG_NUM_MEASUREMENTS            (8)
+#define SEN_MSG_NUM_MEASUREMENTS            (10)
 
 /* Get SL & SH from 64-bit MAC */
 #define SEN_MSG_MAC_SH(mac)                 ((uint32_t)((mac>>32) & 0xFFFFFFFF))
@@ -57,8 +57,9 @@
 /* Enumeration for the DS18x20 function return values */
 typedef enum {
     /* Special */
-    SEN_MSG_TYPE_INCIDENTS      = 0x00,     /**< Incident counter; uint16; 0 (dec) */
-    SEN_MSG_TYPE_REBOOT         = 0x01,     /**< Reboot source; uint16; 1 (dec) */
+    SEN_MSG_TYPE_IGNORE         = 0x00,     /**< Ignore value; uint16; 0 (dec) */
+    SEN_MSG_TYPE_INCIDENTS      = 0x01,     /**< Incident counter; uint16; 1 (dec) */
+    SEN_MSG_TYPE_REBOOT         = 0x02,     /**< Reboot source; uint16; 2 (dec) */
     /* Temperature (0x1.) */
     SEN_MSG_TYPE_TEMP_RES       = 0x10,     /**< RESERVED; float; 16 (dec) */
     SEN_MSG_TYPE_TEMP_AIR       = 0x11,     /**< Air temperature; float; 17 (dec) */
@@ -66,6 +67,7 @@ typedef enum {
     SEN_MSG_TYPE_TEMP_MCU       = 0x13,     /**< MCU core temperature; float; 19 (dec) */
     SEN_MSG_TYPE_TEMP_RADIO     = 0x14,     /**< Radio core temperature; float; 20 (dec) */
     SEN_MSG_TYPE_TEMP_SURFACE   = 0x15,     /**< MCU surface temperature; float; 21 (dec) */
+    SEN_MSG_TYPE_TEMP_BOARD     = 0x16,     /**< Board surface temperature; float; 22 (dec) */
     /* Humidity (0x2.) */
     SEN_MSG_TYPE_HUMID_RES      = 0x20,     /**< RESERVED; float; 32 (dec) */
     SEN_MSG_TYPE_HUMID_AIR      = 0x21,     /**< Air relative humidity; float; 33 (dec) */
@@ -73,11 +75,15 @@ typedef enum {
     /* Light intensity (0x3.) */
     SEN_MSG_TYPE_LUMI_RES       = 0x30,     /**< RESERVED; uint16; 48 (dec) */
     /* ... */
-    /* Supply voltage (0xF.) */
-    SEN_MSG_TYPE_VSS_RES        = 0xF0,     /**< RESERVED; float; 240 (dec) */
-    SEN_MSG_TYPE_VSS_BAT        = 0xF1,     /**< Battery voltage; float; 241 (dec) */
-    SEN_MSG_TYPE_VSS_MCU        = 0xF2,     /**< MCU supply voltage; float; 242 (dec) */
-    SEN_MSG_TYPE_VSS_RADIO      = 0xF3,     /**< Radio supply voltage; float; 243 (dec) */
+    /* Supply voltage (0xE.) */
+    SEN_MSG_TYPE_VSS_RES        = 0xE0,     /**< RESERVED; float; 224 (dec) */
+    SEN_MSG_TYPE_VSS_BAT        = 0xE1,     /**< Battery voltage; float; 225 (dec) */
+    SEN_MSG_TYPE_VSS_MCU        = 0xE2,     /**< MCU supply voltage; float; 226 (dec) */
+    SEN_MSG_TYPE_VSS_RADIO      = 0xE3,     /**< Radio supply voltage; float; 227 (dec) */
+    /* Self-check (0xF.) */
+    SEN_MSG_TYPE_CHK_RES        = 0xF0,     /**< RESERVED; float; 240 (dec) */
+    SEN_MSG_TYPE_CHK_ADC        = 0xF1,     /**< ADC self check; float; 241 (dec) */
+    SEN_MSG_TYPE_CHK_UART       = 0xF2,     /**< UART self check; float; 242 (dec) */
 } SEN_TYPE_t;
 
 
