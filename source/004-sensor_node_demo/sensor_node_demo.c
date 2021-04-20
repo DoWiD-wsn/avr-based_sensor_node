@@ -272,6 +272,8 @@ int main(void) {
         if(time >= (XBEE_JOIN_TIMEOUT*1000)) {
             printf("Couldn't connect to the network ... aborting!\n");
             /* Run into endless loop and wait for watchdog reset */
+            led1_low();
+            led2_low();
             while(1);
         } else {
             /* Wait for some time */
@@ -286,7 +288,7 @@ int main(void) {
     printf("\n");
     
     /* Main routine ... */
-    while (1) {
+    while(1) {
         /*** Barrier synchronization */
         /* Wait until the barrier sync flag is set */
         while(barrier == 0) {
@@ -467,6 +469,8 @@ int main(void) {
         /* Check total incident counter */
         if(inc_sum >= INCIDENT_TOTAL_MAX) {
             /* Run into endless loop and wait for watchdog reset */
+            led1_low();
+            led2_low();
             while(1);
         }
         
@@ -494,6 +498,8 @@ int main(void) {
                         inc_xbee++;
                     } else {
                         /* Run into endless loop and wait for watchdog reset */
+                        led1_low();
+                        led2_low();
                         while(1);
                     }
                 }
@@ -504,6 +510,8 @@ int main(void) {
                     inc_xbee++;
                 } else {
                     /* Run into endless loop and wait for watchdog reset */
+                    led1_low();
+                    led2_low();
                     while(1);
                 }
             }
@@ -515,6 +523,8 @@ int main(void) {
                 inc_xbee+=2;
             } else {
                 /* Run into endless loop and wait for watchdog reset */
+                led1_low();
+                led2_low();
                 while(1);
             }
         }
