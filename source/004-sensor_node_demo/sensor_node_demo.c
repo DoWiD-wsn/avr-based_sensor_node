@@ -282,7 +282,8 @@ int main(void) {
         }
     }
     /* Print status message */
-    printf("... ZIGBEE connected\n");
+    printf("... ZIGBEE connected (message size = %d bytes)\n", SEN_MSG_SIZE);
+    printf("\n");
     
     /* Main routine ... */
     while (1) {
@@ -475,7 +476,7 @@ int main(void) {
         /* Send the measurement to the CH */
         int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, msg.byte, SEN_MSG_SIZE, 0x00);
         if(ret == XBEE_RET_OK) {
-            printf("Sensor value update sent!\n");
+            printf("Sensor value update sent! (#%d)\n",msg.struc.time);
             /* Check the transmit response */
             uint8_t status;
             ret = xbee_transmit_status(&status);
@@ -517,6 +518,8 @@ int main(void) {
                 while(1);
             }
         }
+        /* Increment consecutive message counter */
+        msg.struc.time++;
         printf("\n");
     }
 
