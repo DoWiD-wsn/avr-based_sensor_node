@@ -19,7 +19,7 @@
 
 /***** DEFINES ********************************************************/
 /* Number of sensor measurements per message */
-#define SEN_MSG_NUM_MEASUREMENTS            (10)
+#define SEN_MSG_NUM_MEASUREMENTS            (12)
 
 /* Get SL & SH from 64-bit MAC */
 #define SEN_MSG_MAC_SH(mac)                 ((uint32_t)((mac>>32) & 0xFFFFFFFF))
@@ -81,9 +81,9 @@ typedef enum {
     SEN_MSG_TYPE_VSS_MCU        = 0xE2,     /**< MCU supply voltage; float; 226 (dec) */
     SEN_MSG_TYPE_VSS_RADIO      = 0xE3,     /**< Radio supply voltage; float; 227 (dec) */
     /* Self-check (0xF.) */
-    SEN_MSG_TYPE_CHK_RES        = 0xF0,     /**< RESERVED; float; 240 (dec) */
-    SEN_MSG_TYPE_CHK_ADC        = 0xF1,     /**< ADC self check; float; 241 (dec) */
-    SEN_MSG_TYPE_CHK_UART       = 0xF2,     /**< UART self check; float; 242 (dec) */
+    SEN_MSG_TYPE_CHK_RES        = 0xF0,     /**< RESERVED; uint16; 240 (dec) */
+    SEN_MSG_TYPE_CHK_ADC        = 0xF1,     /**< ADC self check; uint16; 241 (dec) */
+    SEN_MSG_TYPE_CHK_UART       = 0xF2,     /**< UART self check; uint16; 242 (dec) */
 } SEN_TYPE_t;
 
 

@@ -28,9 +28,9 @@
 #define XBEE_JOIN_TIMEOUT_DELAY             (1000UL)
 
 /* RX timeout [ms] */
-#define XBEE_RX_TIMEOUT                     (2000UL)
+#define XBEE_RX_TIMEOUT                     (5000UL)
 /* RX delay between tries [ms] */
-#define XBEE_RX_TIMEOUT_DELAY               (50)
+#define XBEE_RX_TIMEOUT_DELAY               (100)
 
 /* Maximum Number of Transmission Bytes (for transparent mode) */
 #define XBEE_CONF_NP                        (54)

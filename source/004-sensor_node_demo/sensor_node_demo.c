@@ -8,7 +8,7 @@
  * @file    /004-sensor_node_demo/sensor_node_demo.c
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/20 $
+ * @date    $Date: 2021/04/26 $
  *****/
 
 
@@ -16,11 +16,11 @@
 /* Enable debug output via UART1 */
 #define ENABLE_DBG              (1)
 
-/* Update interval [s] */
-#define UPDATE_INTERVAL         (30)
+/* Update interval [min] */
+#define UPDATE_INTERVAL         (10)
 
 /* MAC address of the destination */
-#define XBEE_DESTINATION_MAC    (0x0013A20041B9FD07)
+#define XBEE_DESTINATION_MAC    SEN_MSG_MAC_CH
 
 /* Incident counter total threshold */
 #define INCIDENT_TOTAL_MAX      (100)
@@ -31,20 +31,20 @@
 #define NODE_CONFIGURATION      (0)
 /* Thermistor surface measurement available (0 ... no / 1 ... yes) */
 #define NODE_103JT_AVAILABLE    (1)
-/* Value to indicate incorrect measurment */
-#define NODE_READING_FAILED     (-55.5)
 
 /* Measurement message data indices */
 #define MSG_VALUE_ADC_SELF      (0)
 #define MSG_VALUE_MCU_VSS       (1)
-#define MSG_VALUE_103JT_T       (2)
-#define MSG_VALUE_TMP275_T      (3)
-#define MSG_VALUE_DS18B20_T     (4)
-#define MSG_VALUE_STEMMA_H      (5)
-#define MSG_VALUE_AM2302_T      (6)
-#define MSG_VALUE_AM2302_H      (7)
-#define MSG_VALUE_INCIDENT      (8)
-#define MSG_VALUE_REBOOOT       (9)
+#define MSG_VALUE_XBEE_T        (2)
+#define MSG_VALUE_XBEE_VSS      (3)
+#define MSG_VALUE_103JT_T       (4)
+#define MSG_VALUE_TMP275_T      (5)
+#define MSG_VALUE_DS18B20_T     (6)
+#define MSG_VALUE_STEMMA_H      (7)
+#define MSG_VALUE_AM2302_T      (8)
+#define MSG_VALUE_AM2302_H      (9)
+#define MSG_VALUE_INCIDENT      (10)
+#define MSG_VALUE_REBOOOT       (11)
 
 
 /***** INCLUDES *******************************************************/
@@ -197,10 +197,6 @@ int main(void) {
     /* Enable Watchdog (time: 8s) */
     wdt_enable(WDTO_8S);
     
-    /*** Get last reset source and store in msg structure ***/
-    /* Get reset source register value (from its mirror) */
-    msg.struc.values[MSG_VALUE_REBOOOT].value = MCUSR_dump & 0x0F;
-    
     /*** Initialization of sensors and message value fields ***/
     /* ADC self check */
     msg.struc.values[MSG_VALUE_ADC_SELF].type = SEN_MSG_TYPE_CHK_ADC;
@@ -213,7 +209,7 @@ int main(void) {
     msg.struc.values[MSG_VALUE_INCIDENT].value = 0;
     /* Reboot sources */
     msg.struc.values[MSG_VALUE_REBOOOT].type = SEN_MSG_TYPE_REBOOT;
-    msg.struc.values[MSG_VALUE_REBOOOT].value = 0;
+    msg.struc.values[MSG_VALUE_REBOOOT].value = MCUSR_dump & 0x0F;
     
     /* 103JT thermistor */
 #if NODE_103JT_AVAILABLE
@@ -279,7 +275,7 @@ int main(void) {
     /* Initialize the systick timer */
     systick_init();
     /* Set a systick callback function to be called every second */
-    systick_set_callback_sec(update);
+    systick_set_callback_min(update);
     /* Enable interrupts globally */
     sei();
 
@@ -332,7 +328,59 @@ int main(void) {
         printf("... Supply voltage: %.2f\n", measurement);
         /* Pack measurement into msg as fixed-point number */
         msg.struc.values[MSG_VALUE_MCU_VSS].value = fp_float_to_fixed16_10to6(measurement);
-        
+
+        /*** Xbee3 temperature ***/
+        /* Temperature in degree Celsius (°C) */
+        if(xbee_cmd_get_temperature(&measurement) == XBEE_RET_OK) {
+            printf("... Xbee temperature: %.2f\n", measurement);
+            /* Pack measurement into msg as fixed-point number */
+            msg.struc.values[MSG_VALUE_XBEE_T].type = SEN_MSG_TYPE_TEMP_RADIO;
+            msg.struc.values[MSG_VALUE_XBEE_T].value = fp_float_to_fixed16_10to6(measurement);
+            /* Decrement incident counter */
+            if(inc_xbee > 0) {
+                inc_xbee--;
+            }
+        } else {
+            msg.struc.values[MSG_VALUE_XBEE_T].type = SEN_MSG_TYPE_IGNORE;
+            msg.struc.values[MSG_VALUE_XBEE_T].value = 0;
+            printf("... Xbee temperature: FAILED!\n");
+            /* Increment incident counter */
+            if(inc_xbee < INCIDENT_SINGLE_MAX) {
+                inc_xbee++;
+            } else {
+                /* Run into endless loop and wait for watchdog reset */
+                led1_low();
+                led2_low();
+                while(1);
+            }
+        }
+
+        /*** Xbee3 supply voltage ***/
+        /* Supply voltage in volts (V) */
+        if(xbee_cmd_get_vss(&measurement) == XBEE_RET_OK) {
+            printf("... Xbee temperature: %.2f\n", measurement);
+            /* Pack measurement into msg as fixed-point number */
+            msg.struc.values[MSG_VALUE_XBEE_VSS].type = SEN_MSG_TYPE_VSS_RADIO;
+            msg.struc.values[MSG_VALUE_XBEE_VSS].value = fp_float_to_fixed16_10to6(measurement);
+            /* Decrement incident counter */
+            if(inc_xbee > 0) {
+                inc_xbee--;
+            }
+        } else {
+            msg.struc.values[MSG_VALUE_XBEE_VSS].type = SEN_MSG_TYPE_IGNORE;
+            msg.struc.values[MSG_VALUE_XBEE_VSS].value = 0;
+            printf("... Xbee temperature: FAILED!\n");
+            /* Increment incident counter */
+            if(inc_xbee < INCIDENT_SINGLE_MAX) {
+                inc_xbee++;
+            } else {
+                /* Run into endless loop and wait for watchdog reset */
+                led1_low();
+                led2_low();
+                while(1);
+            }
+        }
+
 #if NODE_103JT_AVAILABLE
         /*** 103JT thermistor (via ADC CH1) ***/
         /* Temperature in degree Celsius (°C) */
@@ -502,50 +550,20 @@ int main(void) {
         /* Reset the WDT */
         wdt_reset();
         
+        /* Reset the Xbee buffer */
+        xbee_flush_rx();
+        xbee_flush_tx();
+        
         /* Send the measurement to the CH */
         int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, msg.byte, SEN_MSG_SIZE, 0x00);
         if(ret == XBEE_RET_OK) {
             printf("Sensor value update sent! (#%d)\n",msg.struc.time);
-            /* Check the transmit response */
-            uint8_t status;
-            ret = xbee_transmit_status(&status);
-            if(ret == XBEE_RET_OK) {
-                if(ret == XBEE_TRANSMIT_STAT_DEL_OK) {
-                    printf("... positive response received!\n");
-                    /* Decrement incident counter */
-                    if(inc_xbee > 0) {
-                        inc_xbee--;
-                    }
-                } else {
-                    printf("... NEGATIVE response received (%d)!\n",status);
-                    /* Increment incident counter */
-                    if(inc_xbee < INCIDENT_SINGLE_MAX) {
-                        inc_xbee++;
-                    } else {
-                        /* Run into endless loop and wait for watchdog reset */
-                        led1_low();
-                        led2_low();
-                        while(1);
-                    }
-                }
-            } else {
-                printf("ERROR receiving response (%d)!\n",ret);
-                /* Increment incident counter */
-                if(inc_xbee < INCIDENT_SINGLE_MAX) {
-                    inc_xbee++;
-                } else {
-                    /* Run into endless loop and wait for watchdog reset */
-                    led1_low();
-                    led2_low();
-                    while(1);
-                }
-            }
         } else {
             printf("ERROR sending message (%d)!\n",ret);
             /* Increment incident counter */
             if(inc_xbee < INCIDENT_SINGLE_MAX) {
                 /* Severe issue, increment by 2 */
-                inc_xbee+=2;
+                inc_xbee += 2;
             } else {
                 /* Run into endless loop and wait for watchdog reset */
                 led1_low();
