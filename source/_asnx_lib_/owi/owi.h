@@ -25,8 +25,6 @@
 
 /***** DEFINES ********************************************************/
 /*** Enable/disable functionality ***/
-/* Exclude onewire_search by setting to (0) */
-#define OWI_SEARCH                  (1)
 /* Exclude CRC checks by setting to (0) */
 #define OWI_CRC                     (1)
 /* Select table-lookup for 8-bit CRC (1)
@@ -34,6 +32,9 @@
 #define OWI_CRC8_TABLE              (1)
 /* Allow 16-bit CRC checks by setting to (1) */
 #define OWI_CRC16                   (1)
+
+/* ROM size in bytes */
+#define OWI_ROM_SIZE                (8)
 
 /*** Timeouts ***/
 #define OWI_TIMEOUT                 (125)
@@ -56,6 +57,19 @@
 #define OWI_ROM_SEARCH              (0xF0)
 
 
+
+/***** STRUCTURES *****************************************************/
+/***
+ * A structure to store the search properties.
+ ***/
+typedef struct {
+    uint8_t ROM_NO[OWI_ROM_SIZE];       /**< ROM data */
+    uint8_t last_discrepancy;           /**< Flag for last discrepancy */
+    uint8_t last_family_discrepancy;    /**< Flag for last family discrepancy */
+    uint8_t last_device_flag;           /**< Flag for last device */
+} OWI_DATA_t;
+
+
 /***** ENUMERATION ****************************************************/
 /* Enumeration for the OWI search return values */
 typedef enum {
@@ -72,7 +86,7 @@ typedef enum {
 
 /***** FUNCTION PROTOTYPES ********************************************/
 /* General */
-void owi_get(hw_io_t* gpio, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
+void owi_get(hw_io_t* gpio, OWI_DATA_t* data, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
 uint8_t owi_reset(hw_io_t* gpio);
 void owi_depower(hw_io_t* gpio);
 /* Bit */
@@ -84,16 +98,14 @@ void owi_write(hw_io_t* gpio, const uint8_t *bytes, uint16_t count, OWI_POWER_t 
 uint8_t owi_read_byte(hw_io_t* gpio);
 void owi_read(hw_io_t* gpio, uint8_t *bytes, uint16_t count);
 /* ROM */
-void owi_select(hw_io_t* gpio, const uint8_t rom[8]);
+void owi_select(hw_io_t* gpio, uint8_t *addr);
 void owi_skip(hw_io_t* gpio);
 
 
 /* Search */
-#if OWI_SEARCH
-void owi_search_reset(void);
-void owi_search_target(uint8_t family_code);
-OWI_SEARCH_t owi_search(hw_io_t* gpio, uint8_t *addr);
-#endif
+void owi_search_reset(OWI_DATA_t* data);
+void owi_search_target(OWI_DATA_t* data, uint8_t family_code);
+OWI_SEARCH_t owi_search(hw_io_t* gpio, OWI_DATA_t* data, uint8_t *addr);
 
 /* CRC */
 #if OWI_CRC

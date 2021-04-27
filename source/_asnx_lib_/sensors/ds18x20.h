@@ -72,8 +72,9 @@ typedef enum {
  ***/
 typedef struct {
     hw_io_t gpio;       /**< OWI GPIO handle */
-    uint8_t addr[8];    /**< Sensors ROM address */
+    uint8_t addr[8];    /**< Sensor address */
     DS18X20_DEV_t type; /**< Sensor type */
+    OWI_DATA_t data;    /**< Sensor data structure */
 } DS18X20_t;
 
 

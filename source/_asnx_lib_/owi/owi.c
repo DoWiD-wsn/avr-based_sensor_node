@@ -25,16 +25,6 @@
 #include <util/delay.h>
 
 
-/***** GLOBAL VARIABLES ***********************************************/
-#if OWI_SEARCH
-/* Global search state */
-unsigned char ROM_NO[8];
-uint8_t last_discrepancy;
-uint8_t last_family_discrepancy;
-uint8_t last_device_flag;
-#endif
-
-
 /***** FUNCTIONS ******************************************************/
 /***
  * Get a HW structure with the register values of a given GPIO.
@@ -45,9 +35,17 @@ uint8_t last_device_flag;
  * @param[in]   pin     Pointer to the GPIO's PINx register
  * @param[in]   portpin Index of the GPIO pin
  ***/
-void owi_get(hw_io_t* gpio, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
+void owi_get(hw_io_t* gpio, OWI_DATA_t* data, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
     /* Call the respective HW function */
     hw_get_io(gpio, ddr, port, pin, portpin);
+    /* Initialize the data structure */
+    data->last_discrepancy = 0;
+    data->last_family_discrepancy = 0;
+    data->last_device_flag = 0;
+    uint8_t i;
+    for(i=0; i<OWI_ROM_SIZE; i++) {
+        data->ROM_NO[i] = 0;
+    }
 }
 
 
@@ -63,7 +61,7 @@ uint8_t owi_reset(hw_io_t* gpio) {
     uint8_t ret = 0xFF;
     uint8_t retries = OWI_TIMEOUT;
 
-    /* Disable interrupts */
+    /* Time critical section start - disable interrupts */
     cli();
     
     /* Release bus */
@@ -71,27 +69,30 @@ uint8_t owi_reset(hw_io_t* gpio) {
     /* Wait until the bus is high */
     do {
         /* Check if timeout has been reached */
-        if(--retries == 0) return 0;
+        if(--retries == 0) {
+            return 0;
+        }
         /* Wait for some time */
         _delay_ms(2);
     } while(!HW_GPIO_READ(gpio));
+    
     /* Drive bus low */
     HW_GPIO_LOW(gpio);
     HW_GPIO_OUTPUT(gpio);
     /* Delay H */
     _delay_us(OWI_DELAY_H);
+    
     /* Release bus */
     HW_GPIO_INPUT(gpio);
     /* Delay I */
     _delay_us(OWI_DELAY_I);
-    /* Only one delay does not work */
-    _delay_us(OWI_DELAY_I);
-    /* Read bus state */
+    
+    /* Read bus state (inverted) */
     ret = HW_GPIO_READ(gpio) ? 0 : 1;
     /* Delay J */
     _delay_us(OWI_DELAY_J);
     
-    /* Restore interrupts */
+    /* Time critical section end - restore interrupts */
     sei();
     
     /* Return result */
@@ -271,14 +272,14 @@ void owi_read(hw_io_t* gpio, uint8_t *data, uint16_t len) {
  * @param[in]   gpio    Pointer to the GPIO structure
  * @param[in]   rom     ROM data bytes
  ***/
-void owi_select(hw_io_t* gpio, const uint8_t rom[8]) {
+void owi_select(hw_io_t* gpio, uint8_t *addr) {
     uint8_t i;
     /* Write the "select" ROM address */
     owi_write_byte(gpio, OWI_ROM_SELECT, OWI_PARASITE_ON);
     /* Write the eight ROM bytes */
-    for(i=0; i<8; i++) {
+    for(i=0; i<OWI_ROM_SIZE; i++) {
         /* Write current byte */
-        owi_write_byte(gpio, rom[i], OWI_PARASITE_ON);
+        owi_write_byte(gpio, addr[i], OWI_PARASITE_ON);
     }
 }
 
@@ -294,22 +295,18 @@ void owi_skip(hw_io_t* gpio) {
 }
 
 
-
-
-#if OWI_SEARCH
 /***
  * Clear the search state so that it will start from the beginning again.
  ***/
-void owi_search_reset(void) {
+void owi_search_reset(OWI_DATA_t* data) {
     uint8_t i;
     /* Reset the search state */
-    last_discrepancy = 0;
-    last_family_discrepancy = 0;
-    last_device_flag = OWI_SEARCH_NOT_FOUND;
+    data->last_discrepancy = 0;
+    data->last_family_discrepancy = 0;
+    data->last_device_flag = OWI_SEARCH_NOT_FOUND;
     /* Clear ROM table */
-    for(i=0; i<8; i++) {
-        /* Clear entry */
-        ROM_NO[i] = 0;
+    for(i=0; i<OWI_ROM_SIZE; i++) {
+        data->ROM_NO[i] = 0;
     }
 }
 
@@ -319,18 +316,18 @@ void owi_search_reset(void) {
  *
  * @param[in]   family_code     Device family code to be found
  ***/
-void owi_search_target(uint8_t family_code) {
+void owi_search_target(OWI_DATA_t* data, uint8_t family_code) {
     uint8_t i;
     /* Set the search state to find devices with the given family code */
-    ROM_NO[0] = family_code;
+    data->ROM_NO[0] = family_code;
     /* Clear the other entries */
-    for(i=1; i<8; i++) {
+    for(i=1; i<OWI_ROM_SIZE; i++) {
         /* Clear entry */
-        ROM_NO[i] = 0;
+        data->ROM_NO[i] = 0;
     }
-    last_discrepancy = 64;
-    last_family_discrepancy = 0;
-    last_device_flag = OWI_SEARCH_NOT_FOUND;
+    data->last_discrepancy = 64;
+    data->last_family_discrepancy = 0;
+    data->last_device_flag = OWI_SEARCH_NOT_FOUND;
 }
 
 
@@ -341,7 +338,7 @@ void owi_search_target(uint8_t family_code) {
  * @param[out]  addr    Address of a matching device (if found)
  * @return      FOUND in case of success; NOT_FOUND otherwise
  ***/
-OWI_SEARCH_t owi_search(hw_io_t* gpio, uint8_t *addr) {
+OWI_SEARCH_t owi_search(hw_io_t* gpio, OWI_DATA_t* data, uint8_t *addr) {
     uint8_t i;
     /* Temporary and intermediate variables */
     uint8_t id_bit_number = 1;
@@ -354,17 +351,16 @@ OWI_SEARCH_t owi_search(hw_io_t* gpio, uint8_t *addr) {
     uint8_t search_direction;
 
     /* Check if the last call was not the last one */
-    if (!last_device_flag) {
+    if (!data->last_device_flag) {
         /* Perform a OWI reset */
         if(!owi_reset(gpio)) {
             /* Reset the search */
-            last_discrepancy = 0;
-            last_family_discrepancy = 0;
-            last_device_flag = OWI_SEARCH_NOT_FOUND;
+            data->last_discrepancy = 0;
+            data->last_family_discrepancy = 0;
+            data->last_device_flag = OWI_SEARCH_NOT_FOUND;
             /* Return no device found */
             return OWI_SEARCH_NOT_FOUND;
         }
-
         /* Write the "search" ROM address */
         owi_write_byte(gpio, OWI_ROM_SEARCH, OWI_PARASITE_ON);
 
@@ -385,12 +381,12 @@ OWI_SEARCH_t owi_search(hw_io_t* gpio, uint8_t *addr) {
                     search_direction = id_bit;
                 } else {
                     /* If this discrepancy is before the last discrepancy  on a previous ... */
-                    if(id_bit_number < last_discrepancy) {
+                    if(id_bit_number < data->last_discrepancy) {
                         /* next then pick the same as last time */
-                        search_direction = ((ROM_NO[rom_byte_number] & rom_byte_mask) > 0);
+                        search_direction = ((data->ROM_NO[rom_byte_number] & rom_byte_mask) > 0);
                     } else {
                         /* If equal to last pick 1, if not then pick 0 */
-                        search_direction = (id_bit_number == last_discrepancy);
+                        search_direction = (id_bit_number == data->last_discrepancy);
                     }
 
                     /* If 0 was picked then record its position in last_zero */
@@ -400,7 +396,7 @@ OWI_SEARCH_t owi_search(hw_io_t* gpio, uint8_t *addr) {
                         /* Check for last discrepancy in family */
                         if(last_zero < 9) {
                             /* Get last discrepancy in family */
-                            last_family_discrepancy = last_zero;
+                            data->last_family_discrepancy = last_zero;
                         }
                     }
                 }
@@ -408,10 +404,10 @@ OWI_SEARCH_t owi_search(hw_io_t* gpio, uint8_t *addr) {
                 /* Depending on the search direction ... */
                 if (search_direction == 1) {
                     /* ... set the bit in the ROM byte */
-                    ROM_NO[rom_byte_number] |= rom_byte_mask;
+                    data->ROM_NO[rom_byte_number] |= rom_byte_mask;
                 } else {
                     /* ... clear the bit in the ROM byte */
-                    ROM_NO[rom_byte_number] &= ~rom_byte_mask;
+                    data->ROM_NO[rom_byte_number] &= ~rom_byte_mask;
                 }
 
                 /* Serial number search direction write bit */
@@ -434,33 +430,32 @@ OWI_SEARCH_t owi_search(hw_io_t* gpio, uint8_t *addr) {
         /* If the search was successful ... */
         if(!(id_bit_number < 65)) {
             /* ... then set the variables appropriately */
-            last_discrepancy = last_zero;
+            data->last_discrepancy = last_zero;
             /* ... and check for last device */
-            if(last_discrepancy == 0) {
-                last_device_flag = OWI_SEARCH_FOUND;
+            if(data->last_discrepancy == 0) {
+                data->last_device_flag = OWI_SEARCH_FOUND;
             }
             search_result = OWI_SEARCH_FOUND;
         }
     }
 
     /* If no device found ... */
-    if(!search_result || !ROM_NO[0]) {
+    if(!search_result || !data->ROM_NO[0]) {
         /* ... then reset counters so next 'search' will be like a first */
-        last_discrepancy = 0;
-        last_family_discrepancy = 0;
-        last_device_flag = OWI_SEARCH_NOT_FOUND;
+        data->last_discrepancy = 0;
+        data->last_family_discrepancy = 0;
+        data->last_device_flag = OWI_SEARCH_NOT_FOUND;
         search_result = OWI_SEARCH_NOT_FOUND;
     }
+    
     /* Copy the found addresses */
     for(i=0; i<8; i++) {
-        addr[i] = ROM_NO[i];
+        addr[i] = data->ROM_NO[i];
     }
     
     /* Return the search result */
     return search_result;
 }
-#endif
-
 
 
 /* The OWI CRC scheme is described in Maxim Application Note 27:

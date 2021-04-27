@@ -35,16 +35,8 @@ static float _raw2celsius(int16_t raw);
  * @return      OK in case of success; ERROR otherwise
  ***/
 DS18X20_RET_t ds18x20_init(DS18X20_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
-    uint8_t i;
-    /* Fill the HW GPIO structure */
-    dev->gpio.ddr = ddr;
-    dev->gpio.port = port;
-    dev->gpio.pin = pin;
-    dev->gpio.portpin = portpin;
-    /* Initially, fill address space with zeros */
-    for(i=0; i<8; i++) {
-        dev->addr[i] = 0;
-    }
+    /* Fill the HW GPIO and data structure */
+    owi_get(&(dev->gpio), &(dev->data), ddr, port, pin, portpin);
     /* Initially, device type is not known */
     dev->type = DS18X20_DEV_NA;
     /* Try to find a sensor on the OWI data line */
@@ -60,9 +52,9 @@ DS18X20_RET_t ds18x20_init(DS18X20_t* dev, volatile uint8_t* ddr, volatile uint8
  ***/
 DS18X20_RET_t _find(DS18X20_t* dev) {
     /* Search for a onewire device */
-    if(!owi_search(&(dev->gpio),dev->addr)) {
+    if(!owi_search(&(dev->gpio),&(dev->data),dev->addr)) {
         /* Reset search state */
-        owi_search_reset();
+        owi_search_reset(&(dev->data));
         /* Return no device found */
         return DS18X20_RET_ERROR_NODEV;
     }
@@ -84,7 +76,7 @@ DS18X20_RET_t _find(DS18X20_t* dev) {
             break;
         default:
             /* Reset search state */
-            owi_search_reset();
+            owi_search_reset(&(dev->data));
             /* Return wrong sensor type */
             return DS18X20_RET_ERROR_DEV;
     }
