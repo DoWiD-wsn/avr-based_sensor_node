@@ -283,6 +283,10 @@ int main(void) {
     /* Reset the WDT */
     wdt_reset();
 
+    /* Reset the Xbee buffer */
+    xbee_flush_rx();
+    xbee_flush_tx();
+
     /* Check Xbee module connection */
     uint32_t time = 0;
     /* Check Xbee module connection */
@@ -331,6 +335,9 @@ int main(void) {
         msg.struc.values[MSG_VALUE_MCU_VSS].value = fp_float_to_fixed16_10to6(measurement);
 
         /*** Xbee3 temperature ***/
+        /* Reset the Xbee buffer */
+        xbee_flush_rx();
+        xbee_flush_tx();
         /* Temperature in degree Celsius (°C) */
         if(xbee_cmd_get_temperature(&measurement) == XBEE_RET_OK) {
             printf("... Xbee temperature: %.2f\n", measurement);
@@ -357,6 +364,9 @@ int main(void) {
         }
 
         /*** Xbee3 supply voltage ***/
+        /* Reset the Xbee buffer */
+        xbee_flush_rx();
+        xbee_flush_tx();
         /* Supply voltage in volts (V) */
         if(xbee_cmd_get_vss(&measurement) == XBEE_RET_OK) {
             printf("... Xbee supply voltage: %.2f\n", measurement);
