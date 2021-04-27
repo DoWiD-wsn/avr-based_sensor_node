@@ -27,10 +27,10 @@
 /* Incident counter single threshold */
 #define INCIDENT_SINGLE_MAX     (10)
 
-/* Sensor node configuration (0 ... stemma soil / 1 ... am2302) */
+/* Sensor node configuration (0 ... stemma soil, ds18b20 / 1 ... am2302) */
 #define NODE_CONFIGURATION      (0)
 /* Thermistor surface measurement available (0 ... no / 1 ... yes) */
-#define NODE_103JT_AVAILABLE    (1)
+#define NODE_103JT_AVAILABLE    (0)
 
 /* Measurement message data indices */
 #define MSG_VALUE_ADC_SELF      (0)
@@ -88,7 +88,7 @@ DHT_t am2302;
 
 /***** GLOBAL VARIABLES ***********************************************/
 /* Variable (flag) for barrier synchronization */
-uint8_t barrier = 0;
+uint8_t barrier = 1;
 
 
 /***
@@ -157,6 +157,7 @@ int main(void) {
 #if NODE_CONFIGURATION==0
     uint8_t en_ds18b20 = 0;         /**< DS18B20 is available (1) or has failed (0)  */
     uint8_t en_stemma = 0;          /**< STEMMA is available (1) or has failed (0) */
+    STEMMA_AVG_t avg_stemma = {0};  /**< Structure for the STEMMA floating average values */
 #elif NODE_CONFIGURATION==1
     uint8_t en_am2302 = 0;          /**< AM2302 is available (1) or has failed (0) */
 #endif
@@ -453,7 +454,7 @@ int main(void) {
         /*** STEMMA SOIL ***/
         if(en_stemma) {
             /* Relative humidity in percent (% RH) */
-            if(stemma_get_humidity(&stemma, &measurement) == STEMMA_RET_OK) {
+            if(stemma_get_humidity_avg(&stemma, &avg_stemma, &measurement) == STEMMA_RET_OK) {
                 printf("... STEMMA humidity: %.2f\n", measurement);
                 /* Pack measurement into msg as fixed-point number */
                 msg.struc.values[MSG_VALUE_STEMMA_H].type = SEN_MSG_TYPE_HUMID_SOIL;
@@ -576,5 +577,5 @@ int main(void) {
         printf("\n");
     }
 
-    return(0);
+    return 0;
 }

@@ -33,5 +33,5 @@ int main (void) {
         _delay_ms(500);
     }
 
-    return(0);
+    return 0;
 }

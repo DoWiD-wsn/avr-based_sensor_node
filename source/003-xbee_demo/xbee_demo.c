@@ -91,5 +91,5 @@ int main(void) {
         _delay_ms(2000UL);
     }
 
-    return(0);
+    return 0;
 }
