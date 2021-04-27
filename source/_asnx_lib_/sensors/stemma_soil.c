@@ -21,6 +21,9 @@
 /***** FUNCTIONS ******************************************************/
 /***
  * Initialization of the STEMMA SOIL sensor.
+ *
+ * @param[out]  dev             Device structure to be filled
+ * @param[in]   address         I2C address of the sensor
  ***/
 STEMMA_RET_t stemma_init(STEMMA_t* dev, uint8_t address) {
     /* Initialize I2C master interface */
@@ -44,6 +47,7 @@ STEMMA_RET_t stemma_init(STEMMA_t* dev, uint8_t address) {
  * Read the version code of the STEMMA SOIL sensor.
  * Bits [31:16] will be a date code, [15:0] will be the product id.
  * 
+ * @param[in]   dev             Device structure
  * @param[out]  version         Version code read from the sensor
  * @return      OK in case of success; ERROR otherwise
  ***/
@@ -65,7 +69,8 @@ STEMMA_RET_t stemma_get_version(STEMMA_t* dev, uint32_t* version) {
 /***
  * Read the temperature of the sensor in degrees Celsius (°C).
  * 
- * @param[out]  temperature      Sensor temperature in degrees Celsius (°C)
+ * @param[in]   dev             Device structure
+ * @param[out]  temperature     Sensor temperature in degrees Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
  ***/
 STEMMA_RET_t stemma_get_temperature(STEMMA_t* dev, float* temperature) {
@@ -88,6 +93,7 @@ STEMMA_RET_t stemma_get_temperature(STEMMA_t* dev, float* temperature) {
 /***
  * Read the humidity of the sensor indicated by its capacitance.
  * 
+ * @param[in]   dev             Device structure
  * @param[out]  humidity        Humidity in percent
  * @return      OK in case of success; ERROR otherwise
  ***/
@@ -105,5 +111,50 @@ STEMMA_RET_t stemma_get_humidity(STEMMA_t* dev, float* humidity) {
     /* Copy the result */
     *humidity = (((float)ret - STEMMA_CAP_MIN) / (STEMMA_CAP_MAX - STEMMA_CAP_MIN)) * 100.0;
     /* Return success */
+    return STEMMA_RET_OK;
+}
+
+
+/***
+ * Read the humidity of the sensor indicated by its capacitance and use
+ * a floating average over a defined number of readings to smooth the value.
+ * 
+ * @param[in]   dev             Device structure
+ * @param[in]   structure       Floating average structure
+ * @param[out]  humidity        Humidity in percent
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+STEMMA_RET_t stemma_get_humidity_avg(STEMMA_t* dev, STEMMA_AVG_t* structure, float* humidity) {
+    float tmp;                      /**< Temporary variable for the sensor reading */
+    uint8_t i = 0;                  /**< Temporary counter variable */
+    static uint8_t index = 0;       /**< Static variable for the value array index */
+    /* Get a new reading */
+    STEMMA_RET_t ret = stemma_get_humidity(dev, &tmp);
+    /* Check if the reading is valid */
+    if(ret != STEMMA_RET_OK) {
+        /* Something went wrong */
+        return ret;
+    }
+    /* Check if it is the first reading */
+    if(structure->empty == 0) {
+        for(i=0; i<STEMMA_AVG_CNT; i++) {
+            structure->value[i] = tmp;
+            index = 1;
+        }
+    } else {
+        /* There are other readings available already */
+        structure->value[index] = tmp;
+        /* Get new index */
+        index = (index+1) % STEMMA_AVG_CNT;
+    }
+    /* Calculate average */
+    double sum = 0;
+    for(i=0; i<STEMMA_AVG_CNT; i++) {
+        sum += structure->value[i];
+    }
+    sum /= STEMMA_AVG_CNT;
+    /* Copy result to pointer location */
+    *humidity = sum;
+    /* Return with success */
     return STEMMA_RET_OK;
 }
