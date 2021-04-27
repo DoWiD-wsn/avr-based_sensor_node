@@ -14,7 +14,7 @@
 
 /*** DEMO CONFIGURATION ***/
 /* Enable debug output via UART1 */
-#define ENABLE_DBG              (1)
+#define ENABLE_DBG              (0)
 
 /* Update interval [min] */
 #define UPDATE_INTERVAL         (10)
@@ -359,7 +359,7 @@ int main(void) {
         /*** Xbee3 supply voltage ***/
         /* Supply voltage in volts (V) */
         if(xbee_cmd_get_vss(&measurement) == XBEE_RET_OK) {
-            printf("... Xbee temperature: %.2f\n", measurement);
+            printf("... Xbee supply voltage: %.2f\n", measurement);
             /* Pack measurement into msg as fixed-point number */
             msg.struc.values[MSG_VALUE_XBEE_VSS].type = SEN_MSG_TYPE_VSS_RADIO;
             msg.struc.values[MSG_VALUE_XBEE_VSS].value = fp_float_to_fixed16_10to6(measurement);
