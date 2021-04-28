@@ -26,7 +26,7 @@
 /***** MAIN ***********************************************************/
 int main(void) {
     /*** Local variables ***/
-    float vcc;
+    float vcc, vbat;
     uint16_t value;
     
     /*** Initialize the hardware ***/
@@ -41,24 +41,30 @@ int main(void) {
     while (1) {
         // Read and print the current supply voltage
         vcc = adc_read_vcc();
-        printf("Vcc = %.2f V\n", vcc);
+        printf("Vcc  = %.2f V\n", vcc);
         // Read and print all eight ADC channels
-        value = adc_read_input(ADC_CH0);
-        printf("ADC0 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
-        value = adc_read_input(ADC_CH1);
-        printf("ADC1 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
+        /* Supply voltage in volts (V) */
         value = adc_read_input(ADC_CH2);
-        printf("ADC2 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
-        value = adc_read_input(ADC_CH3);
-        printf("ADC3 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
-        value = adc_read_input(ADC_CH4);
-        printf("ADC4 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
-        value = adc_read_input(ADC_CH5);
-        printf("ADC5 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
-        value = adc_read_input(ADC_CH6);
-        printf("ADC6 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
-        value = adc_read_input(ADC_CH7);
-        printf("ADC7 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
+        /* Calculate voltage from value (voltage divider 1:1) */
+        vbat = 2.0 * (value * (vcc / 1023.0));
+        printf("Vbat = %.2f V\n", vbat);
+        
+        //value = adc_read_input(ADC_CH0);
+        //printf("ADC0 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
+        //value = adc_read_input(ADC_CH1);
+        //printf("ADC1 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
+        //value = adc_read_input(ADC_CH2);
+        //printf("ADC2 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
+        //value = adc_read_input(ADC_CH3);
+        //printf("ADC3 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
+        //value = adc_read_input(ADC_CH4);
+        //printf("ADC4 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
+        //value = adc_read_input(ADC_CH5);
+        //printf("ADC5 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
+        //value = adc_read_input(ADC_CH6);
+        //printf("ADC6 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
+        //value = adc_read_input(ADC_CH7);
+        //printf("ADC7 value = %d (%.2f V)\n", value, (value * (vcc / 1023)));
         printf("\n");
         // Update once per second
         _delay_ms(1000);

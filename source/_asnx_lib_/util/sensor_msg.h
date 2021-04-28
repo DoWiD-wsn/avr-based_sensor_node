@@ -19,7 +19,7 @@
 
 /***** DEFINES ********************************************************/
 /* Number of sensor measurements per message */
-#define SEN_MSG_NUM_MEASUREMENTS            (12)
+#define SEN_MSG_NUM_MEASUREMENTS            (13)
 
 /* Get SL & SH from 64-bit MAC */
 #define SEN_MSG_MAC_SH(mac)                 ((uint32_t)((mac>>32) & 0xFFFFFFFF))

@@ -14,7 +14,7 @@
 
 /*** DEMO CONFIGURATION ***/
 /* Enable debug output via UART1 */
-#define ENABLE_DBG              (0)
+#define ENABLE_DBG              (1)
 
 /* Update interval [min] */
 #define UPDATE_INTERVAL         (10)
@@ -30,21 +30,22 @@
 /* Sensor node configuration (0 ... stemma soil, ds18b20 / 1 ... am2302) */
 #define NODE_CONFIGURATION      (0)
 /* Thermistor surface measurement available (0 ... no / 1 ... yes) */
-#define NODE_103JT_AVAILABLE    (0)
+#define NODE_103JT_AVAILABLE    (1)
 
 /* Measurement message data indices */
 #define MSG_VALUE_ADC_SELF      (0)
 #define MSG_VALUE_MCU_VSS       (1)
-#define MSG_VALUE_XBEE_T        (2)
-#define MSG_VALUE_XBEE_VSS      (3)
-#define MSG_VALUE_103JT_T       (4)
-#define MSG_VALUE_TMP275_T      (5)
-#define MSG_VALUE_DS18B20_T     (6)
-#define MSG_VALUE_STEMMA_H      (7)
-#define MSG_VALUE_AM2302_T      (8)
-#define MSG_VALUE_AM2302_H      (9)
-#define MSG_VALUE_INCIDENT      (10)
-#define MSG_VALUE_REBOOOT       (11)
+#define MSG_VALUE_BAT_VSS       (2)
+#define MSG_VALUE_XBEE_T        (3)
+#define MSG_VALUE_XBEE_VSS      (4)
+#define MSG_VALUE_103JT_T       (5)
+#define MSG_VALUE_TMP275_T      (6)
+#define MSG_VALUE_DS18B20_T     (7)
+#define MSG_VALUE_STEMMA_H      (8)
+#define MSG_VALUE_AM2302_T      (9)
+#define MSG_VALUE_AM2302_H      (10)
+#define MSG_VALUE_INCIDENT      (11)
+#define MSG_VALUE_REBOOOT       (12)
 
 
 /***** INCLUDES *******************************************************/
@@ -142,7 +143,8 @@ int main(void) {
     /* Message data structure */
     SEN_MSG_u msg;
     /* Temporary variable for sensor measurements */
-    float measurement = 0.0;
+    float measurement = 0.0, vcc = 0.0;
+    uint16_t adcres = 0;
     /* Temporary counter variable */
     uint8_t i = 0;
     /* Incident counter(s) */
@@ -205,6 +207,9 @@ int main(void) {
     /* MCU supply voltage */
     msg.struc.values[MSG_VALUE_MCU_VSS].type = SEN_MSG_TYPE_VSS_MCU;
     msg.struc.values[MSG_VALUE_MCU_VSS].value = 0;
+    /* Battery voltage */
+    msg.struc.values[MSG_VALUE_BAT_VSS].type = SEN_MSG_TYPE_VSS_BAT;
+    msg.struc.values[MSG_VALUE_BAT_VSS].value = 0;
     /* Incident counter */
     msg.struc.values[MSG_VALUE_INCIDENT].type = SEN_MSG_TYPE_INCIDENTS;
     msg.struc.values[MSG_VALUE_INCIDENT].value = 0;
@@ -329,10 +334,19 @@ int main(void) {
         
         /*** MCU supply voltage (via ADC) ***/
         /* Supply voltage in volts (V) */
-        measurement = adc_read_vcc();
-        printf("... Supply voltage: %.2f\n", measurement);
+        vcc = adc_read_vcc();
+        printf("... Supply voltage: %.2f\n", vcc);
         /* Pack measurement into msg as fixed-point number */
-        msg.struc.values[MSG_VALUE_MCU_VSS].value = fp_float_to_fixed16_10to6(measurement);
+        msg.struc.values[MSG_VALUE_MCU_VSS].value = fp_float_to_fixed16_10to6(vcc);
+        
+        /*** Battery voltage (via ADC) ***/
+        /* Supply voltage in volts (V) */
+        adcres = adc_read_input(ADC_CH2);
+        /* Calculate voltage from value (voltage divider 1:1) */
+        measurement = 2.0 * (adcres * (vcc / 1023.0));
+        printf("... Battery voltage: %.2f\n", measurement);
+        /* Pack measurement into msg as fixed-point number */
+        msg.struc.values[MSG_VALUE_BAT_VSS].value = fp_float_to_fixed16_10to6(measurement);
 
         /*** Xbee3 temperature ***/
         /* Reset the Xbee buffer */
