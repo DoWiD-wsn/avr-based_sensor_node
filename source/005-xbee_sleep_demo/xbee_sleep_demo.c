@@ -364,7 +364,7 @@ int main(void) {
                 wdt_reset();
             }
         }
-        printf("Local time: %4d:%02d:%04d\n", systick_get_min(), systick_get_sec(), systick_get_msec());
+        printf("Local time: %03d days %02d:%02d:%02d.%03d\n", systick_get_day(), systick_get_hour(), systick_get_min(), systick_get_sec(), systick_get_msec());
         
         /*** ADC self-diagnosis (via ADC CH0) ***/
         /* Constant voltage divider (1:1) */

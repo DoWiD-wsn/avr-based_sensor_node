@@ -20,11 +20,12 @@
 
 /***** GLOBAL VARIABLES ***********************************************/
 /* Global struct for the elapsed time of the systick timer */
-systick_t systime = {0,0,0};
+systick_t systime = {0,0,0,0,0};
 /* Callback function pointer */
 void (*_systick_cb_msec)() = NULL;
 void (*_systick_cb_sec)() = NULL;
 void (*_systick_cb_min)() = NULL;
+void (*_systick_cb_hour)() = NULL;
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
@@ -60,6 +61,8 @@ void systick_reset(void) {
     systime.msec = 0;
     systime.sec = 0;
     systime.min = 0;
+    systime.hour = 0;
+    systime.day = 0;
     /* Re-init systick timer */
     systick_init();
 }
@@ -70,9 +73,9 @@ void systick_reset(void) {
  * 
  * @return  Number of systick ticks elapsed
  ***/
-uint32_t systick_get_ticks(void) {
+uint64_t systick_get_ticks(void) {
     /* Derive the total number of milli-seconds */
-    return ((uint32_t)systime.msec + ((uint32_t)systime.sec*1000) + ((uint32_t)systime.min*1000*60));
+    return ((uint64_t)systime.msec + ((uint64_t)systime.sec*1000) + ((uint64_t)systime.min*1000*60) + ((uint64_t)systime.hour*1000*60*60) + ((uint64_t)systime.day*1000*60*60*24));
 }
 
 
@@ -103,9 +106,31 @@ uint8_t systick_get_sec(void) {
  * 
  * @return  Number of minutes (min) elapsed
  ***/
-uint16_t systick_get_min(void) {
+uint8_t systick_get_min(void) {
     /* Return the number of minutes */
     return systime.min;
+}
+
+
+/***
+ * Get the total number of hours (hour) elapsed.
+ * 
+ * @return  Number of hours (hour) elapsed
+ ***/
+uint8_t systick_get_hour(void) {
+    /* Return the number of hours */
+    return systime.hour;
+}
+
+
+/***
+ * Get the total number of days (day) elapsed.
+ * 
+ * @return  Number of days (day) elapsed
+ ***/
+uint16_t systick_get_day(void) {
+    /* Return the number of days */
+    return systime.day;
 }
 
 
@@ -123,23 +148,42 @@ void systick_tick(void) {
         systime.msec = 0;
         /* Check if a minute has passed */
         if(systime.sec >= 60) {
-            /* Increment number of seconds */
+            /* Increment number of minutes */
             systime.min++;
-            /* Reset milli-seconds */
+            /* Reset seconds */
             systime.sec = 0;
-            /* Check if min callback sould be called */
+            /* Check if an hour has passed */
+            if(systime.min >= 60) {
+                /* Increment number of hours */
+                systime.hour++;
+                /* Reset minutes */
+                systime.min = 0;
+                /* Check if a day has passed */
+                if(systime.hour >= 24) {
+                    /* Increment number of days */
+                    systime.day++;
+                    /* Reset hours */
+                    systime.hour = 0;
+                }
+                /* Check if hour callback should be called */
+                if(_systick_cb_hour != NULL) {
+                    /* Call the callback */
+                    _systick_cb_hour();
+                }
+            }
+            /* Check if min callback should be called */
             if(_systick_cb_min != NULL) {
                 /* Call the callback */
                 _systick_cb_min();
             }
         }
-        /* Check if sec callback sould be called */
+        /* Check if sec callback should be called */
         if(_systick_cb_sec != NULL) {
             /* Call the callback */
             _systick_cb_sec();
         }
     }
-    /* Check if msec callback sould be called */
+    /* Check if msec callback should be called */
     if(_systick_cb_msec != NULL) {
         /* Call the callback */
         _systick_cb_msec();
@@ -181,6 +225,17 @@ void systick_set_callback_min(void (*func)()) {
 
 
 /***
+ * Set a callback function to be called every elapsed hour.
+ *
+ * @param[in]   func    Callback function pointer
+ ***/
+void systick_set_callback_hour(void (*func)()) {
+    /* Assign the user defined callback function */
+    _systick_cb_hour = func;
+}
+
+
+/***
  * Clear the ms callback function.
  ***/
 void systick_clear_callback_msec(void) {
@@ -204,4 +259,13 @@ void systick_clear_callback_sec(void) {
 void systick_clear_callback_min(void) {
     /* Assign the user defined callback function */
     _systick_cb_min = NULL;
+}
+
+
+/***
+ * Clear the hour callback function.
+ ***/
+void systick_clear_callback_hour(void) {
+    /* Assign the user defined callback function */
+    _systick_cb_hour = NULL;
 }
