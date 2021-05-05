@@ -27,6 +27,11 @@
 /* Join network delay between tries [ms] */
 #define XBEE_JOIN_TIMEOUT_DELAY             (1000UL)
 
+/* Wake-up timeout [ms] */
+#define XBEE_WAKE_TIMEOUT                   (500)
+/* Wake-up delay between tries [ms] */
+#define XBEE_WAKE_TIMEOUT_DELAY             (5)
+
 /* RX timeout [ms] */
 #define XBEE_RX_TIMEOUT                     (5000UL)
 /* RX delay between tries [ms] */
