@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Schematic/PCB: thermistor balance resistor changed from 0.1% to 1% accuracy (sufficient)
 - PCB: updated and improved silk layer
 - PCB: unified header pads to circular (rectangle not recognizable afters soldering)
+- ASNX LIB: use define in DHT library to decide whether to check last measurement time or not
 ### Removed
 - N/A
 

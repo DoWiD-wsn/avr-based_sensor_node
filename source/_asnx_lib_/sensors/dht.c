@@ -18,11 +18,9 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 /*** ASNX LIB ***/
-#include "timer/systick.h"
-
-
-#include "uart/uart.h"
-#include "util/printf.h"
+#if DHT_CHECK_LAST_MEAS
+#  include "timer/systick.h"
+#endif
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
@@ -68,6 +66,7 @@ static DHT_RET_t _read(DHT_t* dev) {
     /* Temporary counter variables */
     uint8_t i,j = 0;
     
+#if DHT_CHECK_LAST_MEAS
     /*** Check if sensor was read less than two seconds ago ***/
     static uint32_t lasttime = 0;
     /* Read in the current tick count (ms) */
@@ -82,6 +81,7 @@ static DHT_RET_t _read(DHT_t* dev) {
     }
     /* Update last reading time */
     lasttime = currenttime;
+#endif
     
     /* Perform a new read -> reset result data section */
     for(i=0; i<5; i++) {
@@ -178,7 +178,9 @@ static DHT_RET_t _read(DHT_t* dev) {
         return DHT_RET_OK;
     } else {
         /* Reading failed */
+#if DHT_CHECK_LAST_MEAS
         lasttime = 0;
+#endif
         return DHT_RET_ERROR_CRC;
     }
 }
