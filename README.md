@@ -63,6 +63,11 @@ For coding bugs or minor improvements simply use pull requests.
 However, for major changes or general discussions please contact [Dominik Widhalm](mailto:widhalm@technikum-wien.at?subject=AVR-based%20Sensor%20Node%20(ASN)%20on%20GitHub).
 
 
+## Changelog
+
+A list of prior versions and changes between the updates can be found inn the [CHANGELOG.md](CHANGELOG.md) file.
+
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
