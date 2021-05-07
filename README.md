@@ -17,12 +17,13 @@ It was designed with a focus on energy efficiency and robustness.
     * one for debug purposes
 * Programmable via 6-pin AVR-ISP connector
 * On-board [TMP275](docs/datasheets/TMP275.pdf) temperature sensor (I²C)
+* On-board [PCF85263A](docs/datasheets/PCF85263A.pdf) RTC as MCU wake-up source
 * Fixed 3.3V DC/DC converter [TPS63031DSKR](docs/datasheets/TPS63031DSKR.pdf)
     * Input voltage range: 1.8V to 5.5V
     * Output current: >= 500mA
     * Energy efficiency: >= 80%
 * Xbee socket with connected sleep-request and sleep pins
-* On-board [PCF85263A](docs/datasheets/PCF85263A.pdf) RTC acting as MCU wake-up source
+
 * Two low-current user LEDs (can be disconnected via cut-through solder jumpers)
 * Two solder jumpers to enable bridging of UART0 and UART1 (for loopbacks)
 * Onboard ADC self-test resistor divider
