@@ -17,7 +17,7 @@ It was designed with a focus on energy efficiency and robustness.
     * one for debug purposes
 * Programmable via 6-pin AVR-ISP connector
 * On-board [TMP275](docs/datasheets/TMP275.pdf) temperature sensor (I²C)
-* On-board [PCF85263A](docs/datasheets/PCF85263A.pdf) RTC as MCU wake-up source
+* On-board [PCF85263A](docs/datasheets/PCF85263A.pdf) RTC as MCU wake-up source (I²C; INT2)
 * Fixed 3.3V DC/DC converter [TPS63031DSKR](docs/datasheets/TPS63031DSKR.pdf)
     * Input voltage range: 1.8V to 5.5V
     * Output current: >= 500mA
