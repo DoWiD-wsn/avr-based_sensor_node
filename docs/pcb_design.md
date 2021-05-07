@@ -27,8 +27,7 @@ kicad/
 
 ## Costs
 
-For the bill of materials (BOM) provided in the `.ods` file links to suitable components available at [Farnell](https://www.farnell.com/) are given including the prices valid at the time of the development (2021-03).
-The cost of one *ASN(x)* was around 20€ for the components ([Farnell](https://www.farnell.com/)) and around 10€ for the PCB ([PCB Pool / Beta Layout](https://eu.beta-layout.com/pcb/)).
+The cost of one *ASN(x)* is around 20€ for the components (2021-05; [Farnell](https://www.farnell.com/)) and around 10€ for the PCB ([PCB Pool / Beta Layout](https://eu.beta-layout.com/pcb/)).
 Thus, the total costs of one *ASN(x)* are around **30€**.
 Depending on the supplier and quantities ordered, the costs may vary.
 
