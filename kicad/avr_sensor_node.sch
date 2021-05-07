@@ -4,9 +4,9 @@ EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
-Title "AVR Sensor Node"
-Date "2021-03-12"
-Rev "1.0"
+Title "AVR-based Sensor Node with Xbee (ASN(x))"
+Date "2021-05-07"
+Rev "1.1"
 Comp "UAS Technikum Wien"
 Comment1 ""
 Comment2 ""
@@ -1173,7 +1173,7 @@ PC4
 Text Label 7950 2250 2    50   ~ 0
 PC5
 Text Label 6900 1400 0    50   ~ 0
-PB2
+INT2
 Text Label 8650 2250 0    50   ~ 0
 PB4
 Text Label 8650 2150 0    50   ~ 0
@@ -1183,7 +1183,7 @@ PB1
 Text Label 8650 1850 0    50   ~ 0
 PB0
 Text Label 8650 2050 0    50   ~ 0
-PB2
+INT2
 Text Label 1100 6000 0    50   ~ 0
 OWI1
 Text Label 1850 6100 0    50   ~ 0
@@ -1697,8 +1697,6 @@ Wire Notes Line
 	4300 4600 7500 4600
 Wire Notes Line
 	7500 4600 7500 5950
-Wire Notes Line
-	7500 5950 4300 5950
 Connection ~ 7250 5000
 Connection ~ 7250 5700
 Wire Wire Line
@@ -1736,7 +1734,6 @@ Wire Wire Line
 Connection ~ 4950 5100
 Wire Wire Line
 	4600 5100 4550 5100
-Connection ~ 4550 5100
 Text Label 1050 2950 2    50   ~ 0
 sleep_rq
 Text Label 1050 3150 2    50   ~ 0
@@ -1865,4 +1862,145 @@ Wire Notes Line
 	4200 3900 2500 3900
 Wire Notes Line
 	2500 3900 2500 1850
+$Comp
+L mycomponents:PCF85263A U4
+U 1 1 60970D03
+P 8500 5050
+F 0 "U4" H 8300 5550 50  0000 C CNN
+F 1 "PCF85263A" V 8500 5050 50  0000 C CNN
+F 2 "Package_SO:TSSOP-10_3x3mm_P0.5mm" H 8500 4200 50  0001 C CNN
+F 3 "https://www.nxp.com/docs/en/data-sheet/PCF85263A.pdf" H 8500 5100 50  0001 C CNN
+	1    8500 5050
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C C16
+U 1 1 60973669
+P 8150 5700
+F 0 "C16" V 8250 5850 50  0000 C CNN
+F 1 "100n" V 8050 5550 50  0000 C CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 8188 5550 50  0001 C CNN
+F 3 "~" H 8150 5700 50  0001 C CNN
+	1    8150 5700
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:GND #PWR047
+U 1 1 60977FA9
+P 8500 5700
+F 0 "#PWR047" H 8500 5450 50  0001 C CNN
+F 1 "GND" H 8500 5550 50  0000 C CNN
+F 2 "" H 8500 5700 50  0001 C CNN
+F 3 "" H 8500 5700 50  0001 C CNN
+	1    8500 5700
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3V3 #PWR046
+U 1 1 6097926B
+P 8500 4400
+F 0 "#PWR046" H 8500 4250 50  0001 C CNN
+F 1 "+3V3" H 8515 4573 50  0000 C CNN
+F 2 "" H 8500 4400 50  0001 C CNN
+F 3 "" H 8500 4400 50  0001 C CNN
+	1    8500 4400
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R16
+U 1 1 6097997A
+P 8850 4400
+F 0 "R16" V 8750 4350 50  0000 L CNN
+F 1 "10k" V 8950 4350 50  0000 L CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 8780 4400 50  0001 C CNN
+F 3 "~" H 8850 4400 50  0001 C CNN
+	1    8850 4400
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	8500 4500 8500 4400
+Text Label 9000 5050 0    50   ~ 0
+INT2
+Text Label 9000 4850 0    50   ~ 0
+I2C_SCL
+Text Label 9000 4750 0    50   ~ 0
+I2C_SDA
+NoConn ~ 8000 5350
+Wire Wire Line
+	8100 5350 8000 5350
+Wire Wire Line
+	8100 5150 8000 5150
+Wire Wire Line
+	8000 5150 8000 5200
+Wire Wire Line
+	8100 4950 8000 4950
+Wire Wire Line
+	8000 4950 8000 4900
+Wire Wire Line
+	8100 4750 8000 4750
+Wire Wire Line
+	8000 4750 8000 4400
+Wire Wire Line
+	8000 4400 8500 4400
+Connection ~ 8500 4400
+Wire Wire Line
+	8000 4900 7800 4900
+Wire Wire Line
+	8000 5200 7800 5200
+Wire Wire Line
+	8300 5700 8500 5700
+Wire Wire Line
+	8500 5700 8500 5600
+Connection ~ 8500 5700
+$Comp
+L power:+3V3 #PWR045
+U 1 1 60A0E831
+P 7800 5700
+F 0 "#PWR045" H 7800 5550 50  0001 C CNN
+F 1 "+3V3" H 7815 5873 50  0000 C CNN
+F 2 "" H 7800 5700 50  0001 C CNN
+F 3 "" H 7800 5700 50  0001 C CNN
+	1    7800 5700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8000 5700 7800 5700
+Wire Wire Line
+	8900 4750 9000 4750
+Wire Wire Line
+	9000 4850 8900 4850
+Wire Wire Line
+	8900 5050 9000 5050
+NoConn ~ 9000 5250
+Wire Wire Line
+	9000 5250 8900 5250
+Text Label 9100 4400 0    50   ~ 0
+INT2
+Wire Wire Line
+	8500 4400 8700 4400
+Wire Wire Line
+	9000 4400 9100 4400
+Text Notes 7650 4300 0    50   ~ 0
+RTC
+Wire Notes Line
+	9350 5950 9350 4150
+Wire Notes Line
+	7600 4150 7600 5950
+$Comp
+L Device:Crystal Y2
+U 1 1 60AE0949
+P 7800 5050
+F 0 "Y2" V 7754 5181 50  0000 L CNN
+F 1 "32.768kHz" V 7600 4900 50  0000 L CNN
+F 2 "Crystal:Crystal_SMD_3215-2Pin_3.2x1.5mm" H 7800 5050 50  0001 C CNN
+F 3 "" H 7800 5050 50  0001 C CNN
+	1    7800 5050
+	0    1    1    0   
+$EndComp
+Wire Notes Line
+	7600 4150 9350 4150
+Wire Notes Line
+	9350 5950 7600 5950
+Wire Notes Line
+	7500 5950 4300 5950
 $EndSCHEMATC

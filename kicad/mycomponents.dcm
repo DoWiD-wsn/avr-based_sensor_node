@@ -5,6 +5,11 @@ D 8-bit Microcontroller with 128K Bytes In-System Programmable Flash
 F https://ww1.microchip.com/downloads/en/DeviceDoc/doc8059.pdf
 $ENDCMP
 #
+$CMP PCF85263A
+D Tiny Real-Time Clock/calendar with alarm function, battery switch-over, time stamp input, and I 2 C-bus
+F https://www.nxp.com/docs/en/data-sheet/PCF85263A.pdf
+$ENDCMP
+#
 $CMP TMP275
 D Analog thermistor temperature sensor, ±2.5C accuracy, -55C to +130C, SC-70-5
 K temperature sensor thermistor
