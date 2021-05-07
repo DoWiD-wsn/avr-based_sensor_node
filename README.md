@@ -22,6 +22,7 @@ It was designed with a focus on energy efficiency and robustness.
     * Output current: >= 500mA
     * Energy efficiency: >= 80%
 * Xbee socket with connected sleep-request and sleep pins
+* On-board [PCF85263A](docs/datasheets/PCF85263A.pdf) RTC acting as MCU wake-up source
 * Two low-current user LEDs (can be disconnected via cut-through solder jumpers)
 * Two solder jumpers to enable bridging of UART0 and UART1 (for loopbacks)
 * Onboard ADC self-test resistor divider
