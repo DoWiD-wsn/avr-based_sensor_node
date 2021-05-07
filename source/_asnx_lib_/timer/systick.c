@@ -7,6 +7,8 @@
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.0 $
  * @date    $Date: 2021/04/14 $
+ *
+ * @note    The systick timer is stopped when the MCU enters specific sleep modes!
  *****/
 
 
