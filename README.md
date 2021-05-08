@@ -54,6 +54,7 @@ The C code library, its functionality, and usage as well as example scripts are 
 
 * [KiCad EAD 5.1.9](https://kicad.org/) - PCB design
 * [avr-gcc 5.4.0](https://gcc.gnu.org/wiki/avr-gcc) - C code library
+* [avr-libc 2.0.0](https://www.nongnu.org/avr-libc/) - C code library
 
 
 ## Contributors
@@ -62,7 +63,7 @@ The C code library, its functionality, and usage as well as example scripts are 
 
 Contributions of any kind to improve the project are highly welcome.
 For coding bugs or minor improvements simply use pull requests.
-However, for major changes or general discussions please contact [Dominik Widhalm](mailto:widhalm@technikum-wien.at?subject=AVR-based%20Sensor%20Node%20(ASN)%20on%20GitHub).
+However, for major changes or general discussions please contact [Dominik Widhalm](mailto:widhalm@technikum-wien.at?subject=ASN(x)%20on%20GitHub).
 
 
 ## Changelog
