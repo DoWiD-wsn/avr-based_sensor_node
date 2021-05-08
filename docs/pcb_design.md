@@ -100,10 +100,10 @@ An interactive BOM can be found in the `/kicad/bom/` directory (see [here](../ki
 | Y1        | 4MHz  | Device         | Crystal | Crystal          | Crystal_SMD_HC49-SD | [Farnell](https://at.farnell.com/txc/9c-4-000maaj-t/xtal-4-000mhz-18pf-smd-hc-49s/dp/1842332) |
 | Y2        | 32.768kHz  | Device         | Crystal | Crystal          | Crystal_SMD_3215-2Pin_3.2x1.5mm | [Farnell](https://at.farnell.com/abracon/abs07-lr-32-768khz-6-1-t/quarz-32-768khz-6pf-3-2mm-x-1/dp/2849465) |
 | SW1       | push  | Switch         | SW_Push | Button_Switch_SMD | SW_SPST_PTS645   | [Farnell](https://at.farnell.com/c-k-components/pts645sm43smtr92lfs/taster-spst-0-05a-12vdc-smd-4/dp/2320087) |
-| J6        | - | Connector_Generic | Conn_01x02 | Connector_PinHeader_2.54mm | PinHeader_1x02_P2.54mm_Vertical | [Farnell](https://at.farnell.com/wurth-elektronik/61304011121/stiftleiste-2-54mm-tht-vertikal/dp/2356175) |
+| J6,J9     | - | Connector_Generic | Conn_01x02 | Connector_PinHeader_2.54mm | PinHeader_1x02_P2.54mm_Vertical | [Farnell](https://at.farnell.com/wurth-elektronik/61304011121/stiftleiste-2-54mm-tht-vertikal/dp/2356175) |
 | J1-J2     | - | Connector_Generic | Conn_01x03 | Connector_PinHeader_2.54mm | PinHeader_1x03_P2.54mm_Vertical | [Farnell](https://at.farnell.com/wurth-elektronik/61304011121/stiftleiste-2-54mm-tht-vertikal/dp/2356175) |
 | J4-J5     | - | Connector_Generic | Conn_01x04 | Connector_PinHeader_2.54mm | PinHeader_1x04_P2.54mm_Vertical | [Farnell](https://at.farnell.com/wurth-elektronik/61304011121/stiftleiste-2-54mm-tht-vertikal/dp/2356175) |
-| J7_J8     | - | Connector_Generic | Conn_01x14 | Connector_PinHeader_2.54mm | PinHeader_1x14_P2.54mm_Vertical | [Farnell](https://at.farnell.com/wurth-elektronik/61304011121/stiftleiste-2-54mm-tht-vertikal/dp/2356175) |
+| J7-J8     | - | Connector_Generic | Conn_01x14 | Connector_PinHeader_2.54mm | PinHeader_1x14_P2.54mm_Vertical | [Farnell](https://at.farnell.com/wurth-elektronik/61304011121/stiftleiste-2-54mm-tht-vertikal/dp/2356175) |
 | J3        | - | Connector | AVR-ISP-6 | Connector_PinHeader_2.54mm | PinHeader_2x03_P2.54mm_Vertical | [Farnell](https://at.farnell.com/wurth-elektronik/61304021121/stiftleiste-2-54mm-tht-vertikal/dp/2356148) |
 | JP1       | Xbee | *mycomponents*`*` | Xbee3 | *myfootprint*`*` | XBEE-20_THT       | [Farnell](https://at.farnell.com/harwin/m22-7131042/buchsenleiste-vert-geschlossen/dp/1109732) |
 | JP2-JP3   | bridged | Jumper | SolderJumper_2_Bridged | Jumper | SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm | - |

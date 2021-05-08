@@ -2003,4 +2003,48 @@ Wire Notes Line
 	9350 5950 7600 5950
 Wire Notes Line
 	7500 5950 4300 5950
+$Comp
+L Connector_Generic:Conn_01x02 J9
+U 1 1 6097DCD0
+P 7950 3000
+F 0 "J9" V 7850 2900 50  0000 R CNN
+F 1 "VBAT" V 8050 3050 50  0000 R CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 7950 3000 50  0001 C CNN
+F 3 "~" H 7950 3000 50  0001 C CNN
+	1    7950 3000
+	-1   0    0    -1  
+$EndComp
+$Comp
+L power:GNDPWR #PWR0101
+U 1 1 60980925
+P 8250 3200
+F 0 "#PWR0101" H 8250 3000 50  0001 C CNN
+F 1 "GNDPWR" H 8254 3046 50  0000 C CNN
+F 2 "" H 8250 3150 50  0001 C CNN
+F 3 "" H 8250 3150 50  0001 C CNN
+	1    8250 3200
+	1    0    0    -1  
+$EndComp
+Text Notes 7600 2650 0    50   ~ 0
+Alternative Vin (Vbat) input
+Wire Notes Line
+	7550 2500 9050 2500
+Wire Wire Line
+	8150 3000 8250 3000
+Wire Wire Line
+	8250 3000 8250 2900
+Wire Wire Line
+	8150 3100 8250 3100
+Wire Wire Line
+	8250 3100 8250 3200
+Wire Notes Line
+	9050 2500 9050 3450
+Wire Notes Line
+	9050 3450 7550 3450
+Wire Notes Line
+	7550 3450 7550 2500
+Text Label 4550 5100 2    50   ~ 0
+VIN
+Text Label 8250 2900 0    50   ~ 0
+VIN
 $EndSCHEMATC

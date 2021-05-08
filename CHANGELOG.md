@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Schematic/PCB: pull-down resistors for xbee sleep-request and sleep-indicator signals (active low)
 - Schematic/PCB: voltage divider connected to ADC2 for Vbat measurement (ratio 1:2)
 - Schematic/PCB: added PCF85263A (10-pin) as RTC and timer module (wake-up source)
+- Schematic/PCB: added optional 2-pin header for Vin/Vbat connection
 - ASNX LIB: added comment to systick lib that it stops during certain sleep modes
 ### Changed
 - Schematic/PCB: thermistor balance resistor changed from 0.1% to 1% accuracy (sufficient)

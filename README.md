@@ -14,8 +14,8 @@ It was designed with a focus on energy efficiency and robustness.
     * 4kB EEPROM
 * Two UART interfaces
     * one for the radio transceiver
-    * one for debug purposes
-* Programmable via 6-pin AVR-ISP connector
+    * one for debug purposes or loopback self-tests
+* Programmable via [6-pin AVR-ISP](https://www.mikrocontroller.net/wikifiles/9/97/Avr-isp-pinout.png) connector
 * On-board [TMP275](docs/datasheets/TMP275.pdf) temperature sensor (I²C)
 * On-board [PCF85263A](docs/datasheets/PCF85263A.pdf) RTC as MCU wake-up source (I²C; INT2)
 * Fixed 3.3V DC/DC converter [TPS63031DSKR](docs/datasheets/TPS63031DSKR.pdf)
@@ -24,7 +24,7 @@ It was designed with a focus on energy efficiency and robustness.
     * Energy efficiency: >= 80%
 * Xbee socket with connected sleep-request and sleep-indicator pins (incl. pull-down resistors)
 * Two low-current user LEDs (can be disconnected via cut-through solder jumpers)
-* Two solder jumpers to enable bridging of UART0 and UART1 (for loopback-selftests)
+* Two solder jumpers to enable bridging of UART0 and UART1 (for loopback self-tests)
 * Onboard resistor divider for ADC self-test 
 * Onboard resistor divider for battery voltage measurement
 * Onboard connector for thermistor temperature measurements
