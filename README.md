@@ -22,11 +22,11 @@ It was designed with a focus on energy efficiency and robustness.
     * Input voltage range: 1.8V to 5.5V
     * Output current: >= 500mA
     * Energy efficiency: >= 80%
-* Xbee socket with connected sleep-request and sleep pins
-
+* Xbee socket with connected sleep-request and sleep-indicator pins (incl. pull-down resistors)
 * Two low-current user LEDs (can be disconnected via cut-through solder jumpers)
-* Two solder jumpers to enable bridging of UART0 and UART1 (for loopbacks)
-* Onboard ADC self-test resistor divider
+* Two solder jumpers to enable bridging of UART0 and UART1 (for loopback-selftests)
+* Onboard resistor divider for ADC self-test 
+* Onboard resistor divider for battery voltage measurement
 * Onboard connector for thermistor temperature measurements
 * Two OWI connectors (incl. pull-up resistors; separate data pins)
 * Two TWI connectors (incl. pull-up resistors)
