@@ -69,6 +69,7 @@ However, for major changes or general discussions please contact [Dominik Widhal
 ## Changelog
 
 A list of prior versions and changes between the updates can be found inn the [CHANGELOG.md](CHANGELOG.md) file.
+Note that the major and minor number refer to the hardware version of the ASN(x) board while the patch version is used to denote subsequent software versions.
 
 
 ## License
