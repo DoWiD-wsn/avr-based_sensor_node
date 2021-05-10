@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/sensors/stemma_soil.h
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/14 $
+ * @version $Revision: 1.1.0 $
+ * @date    $Date: 2021/05/10 $
  * @see     https://learn.adafruit.com/adafruit-stemma-soil-sensor-i2c-capacitive-moisture-sensor/
  * @see     https://github.com/adafruit/Adafruit_Seesaw
  *****/
@@ -29,7 +29,7 @@
 #define STEMMA_CAP_MIN                  300.0
 
 /* Number of measurements for floating average calculation */
-#define STEMMA_AVG_CNT                  5
+#define STEMMA_AVG_CNT                  10
 
 /* I2C address */
 #define STEMMA_I2C_ADDRESS              0x36

@@ -9,7 +9,7 @@
  * @file    /002-sensor_demo/sensor_demo.c
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.1 $
- * @date    $Date: 2021/04/16 $
+ * @date    $Date: 2021/05/10 $
  *****/
 
 /*** DEMO CONFIGURATION ***/

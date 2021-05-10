@@ -5,8 +5,8 @@
  *
  * @file    /000-blinky_demo/blinky_demo.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/13 $
+ * @version $Revision: 1.1 $
+ * @date    $Date: 2021/05/10 $
  *****/
 
 

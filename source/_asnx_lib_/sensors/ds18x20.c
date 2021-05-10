@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/sensors/ds18x20.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/14 $
+ * @version $Revision: 1.1.0 $
+ * @date    $Date: 2021/05/10 $
  * @see     https://create.arduino.cc/projecthub/TheGadgetBoy/ds18b20-digital-temperature-sensor-and-arduino-9cc806
  *****/
 

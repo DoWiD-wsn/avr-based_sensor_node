@@ -5,10 +5,10 @@
  *
  * @file    /_asnx_lib_/sensors/lm75.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/14 $
+ * @version $Revision: 1.1.0 $
+ * @date    $Date: 2021/05/10 $
  *
- * @todo    Add more functionality (i.e., configuration)
+ * @todo    Add more device functionality (i.e., configuration)
  *****/
 
 

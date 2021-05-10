@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/sensors/stemma_soil.h
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/14 $
+ * @version $Revision: 1.1.0 $
+ * @date    $Date: 2021/05/10 $
  * @see     https://learn.adafruit.com/adafruit-stemma-soil-sensor-i2c-capacitive-moisture-sensor/
  * @see     https://github.com/adafruit/Adafruit_Seesaw
  *****/

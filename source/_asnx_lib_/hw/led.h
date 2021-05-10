@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/hw/led.h
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/13 $
+ * @version $Revision: 1.1.0 $
+ * @date    $Date: 2021/05/10 $
  *****/
 
 #ifndef _ASNX_LED_H_

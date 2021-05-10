@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/util/sensor_msg.h
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/19 $
+ * @version $Revision: 1.1.0 $
+ * @date    $Date: 2021/05/10 $
  *****/
 
 #ifndef _ASNX_MSG_H_
@@ -19,7 +19,9 @@
 
 /***** DEFINES ********************************************************/
 /* Number of sensor measurements per message */
-#define SEN_MSG_NUM_MEASUREMENTS            (13)
+#ifndef SEN_MSG_NUM_MEASUREMENTS
+#  define SEN_MSG_NUM_MEASUREMENTS            (13)
+#endif
 
 /* Get SL & SH from 64-bit MAC */
 #define SEN_MSG_MAC_SH(mac)                 ((uint32_t)((mac>>32) & 0xFFFFFFFF))

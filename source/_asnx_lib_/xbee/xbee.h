@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.h
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/19 $
+ * @version $Revision: 1.1.0 $
+ * @date    $Date: 2021/05/10 $
  *
  * @todo    Implement better way for (asynchronous) response handling/matching
  *****/

@@ -6,8 +6,8 @@
  *
  * @file    /003-xbee_demo/xbee_demo.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/19 $
+ * @version $Revision: 1.1 $
+ * @date    $Date: 2021/05/10 $
  *****/
 
 

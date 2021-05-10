@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/sensors/bme280.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.0 $
- * @date    $Date: 2021/04/14 $
+ * @version $Revision: 1.1.0 $
+ * @date    $Date: 2021/05/10 $
  * @see     https://github.com/bitbank2/bme280
  * @see     https://github.com/BoschSensortec/BME280_driver
  *****/
