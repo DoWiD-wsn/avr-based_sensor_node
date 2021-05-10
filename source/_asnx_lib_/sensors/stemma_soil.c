@@ -16,6 +16,8 @@
 #include "stemma_soil.h"
 /*** AVR ***/
 #include <util/delay.h>
+/*** ASNX LIB ***/
+#include "i2c/i2c.h"
 
 
 /***** FUNCTIONS ******************************************************/

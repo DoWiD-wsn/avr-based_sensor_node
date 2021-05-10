@@ -1,14 +1,16 @@
 /****
- * @brief   Demo application for the Xbee pin-sleep functionality.
+ * @brief   ASN(x) demo application including sleep functionality.
  *
  * Demo application based on the sensor node demo (004), but with
  * Xbee pin-sleep enabled, that is, the xbee radio is only active
  * while updating the values and is put to sleep the remaining time.
+ * Also, the PCF85263A RTC is included to have a reliable wake-up
+ * trigger for the AVR when entering power-down mode.
  *
- * @file    /005-xbee_sleep_demo/xbee_sleep_demo.c
+ * @file    /005-asnx_sleep_demo/asnx_sleep_demo.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.0 $
- * @date    $Date: 2021/05/05 $
+ * @version $Revision: 1.1 $
+ * @date    $Date: 2021/05/10 $
  *****/
 
 
