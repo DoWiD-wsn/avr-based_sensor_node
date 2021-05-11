@@ -100,9 +100,9 @@
 #define PCF85263_STW_ALARM_ENABLES          0x10        /**< Stopwatch alarm enable control register */
 #define PCF85263_STW_SEC_A1E                0x01        /**< Bit 0: second alarm1 enable */
 #define PCF85263_STW_MIN_A1E                0x02        /**< Bit 1: minute alarm1 enable */
-#define PCF85263_STW_HR_XX_XX_00_A1E        0x04        /**< Bit 2: tens of hour alarm1 enable */
-#define PCF85263_STW_HR_XX_00_XX_A1E        0x08        /**< Bit 3: thousands of hours alarm1 enable */
-#define PCF85263_STW_HR_00_XX_XX_A1E        0x10        /**< Bit 4: 100-thousands of hours alarm1 enable */
+#define PCF85263_STW_HR_XX_XX_00_A1E        0x04        /**< Bit 2: hour alarm1 enable */
+#define PCF85263_STW_HR_XX_00_XX_A1E        0x08        /**< Bit 3: hundreds of hours alarm1 enable */
+#define PCF85263_STW_HR_00_XX_XX_A1E        0x10        /**< Bit 4: 10-thousands of hours alarm1 enable */
 #define PCF85263_STW_MIN_A2E                0x20        /**< Bit 5: minute alarm2 enable */
 #define PCF85263_STW_HR_XX_00_A2E           0x40        /**< Bit 6: tens of hours alarm2 enable */
 #define PCF85263_STW_HR_00_XX_A2E           0x80        /**< Bit 7: thousands of hours alarm2 enable */
@@ -132,11 +132,13 @@
 #define PCF85263_CTL_OFFSET                 0x24        /**< Offset register */
 /* Oscillator control registers */
 #define PCF85263_CTL_OSCILLATOR             0x25        /**< Oscillator control register */
+#define PCF85263_CTL_OSC_CL_OFFSET          0           /**< CL bit offset */
 #define PCF85263_CTL_OSC_CL_MASK            0x03        /**< Bits 0-1: quartz oscillator load capacitance */
 #  define PCF85263_CTL_OSC_CL_7PF           0x00        /**< Load capacitance 7.0 pF */
 #  define PCF85263_CTL_OSC_CL_6PF           0x01        /**< Load capacitance 6.0 pF */
 #  define PCF85263_CTL_OSC_CL_12p5PF        0x02        /**< Load capacitance 12.5 pF */
-#define PCF85263_CTL_OSC_OSCD_MASK          0xC0        /**< Bits 1-2: oscillator driver bits */
+#define PCF85263_CTL_OSC_OSCD_OFFSET        2           /**< OSCD bit offset */
+#define PCF85263_CTL_OSC_OSCD_MASK          0xC0        /**< Bits 2-3: oscillator driver bits */
 #  define PCF85263_CTL_OSC_OSCD_NORMAL      0x00        /**< Normal drive; RS(max): 100 kohm */
 #  define PCF85263_CTL_OSC_OSCD_LOW         0x04        /**< Low drive; RS(max): 60 kohm; reduced IDD */
 #  define PCF85263_CTL_OSC_OSCD_HIGH        0x08        /**< High drive; RS(max): 500 kohm; increased IDD */
@@ -146,7 +148,8 @@
 #define PCF85263_CTL_OSC_CLKIV              0x80        /**< Bit 7: output clock inversion */
 /* Battery switch control registers */
 #define PCF85263_CTL_BATTERY_SWITCH         0x26        /**< Battery switch control register */
-#define PCF85263_CTL_BATTERY_BSTH_MASK      0x01        /**< Bit 0: threshold voltage control */
+#define PCF85263_CTL_BATTERY_BSTH           0x01        /**< Bit 0: threshold voltage control */
+#define PCF85263_CTL_BATTERY_BSM_OFFSET     1           /**< BSM bits offset */
 #define PCF85263_CTL_BATTERY_BSM_MASK       0x06        /**< Bits 1-2: battery switch mode bits */
 #  define PCF85263_CTL_BATTERY_BSM_VTH      0x00        /**< Switching at the Vth level */
 #  define PCF85263_CTL_BATTERY_BSM_VBAT     0x02        /**< Switching at the VBAT level */
@@ -156,11 +159,13 @@
 #define PCF85263_CTL_BATTERY_BSOFF          0x10        /**< Bit 4: battery switch on/off */
 /* Pin IO control registers */
 #define PCF85263_CTL_PIN_IO                 0x27        /**< Pin input/output control register */
+#define PCF85263_CTL_INTAPM_OFFSET          0           /**< INTAPM bits offset */
 #define PCF85263_CTL_INTAPM_MASK            0x03        /**< Bits 0-1: INTA pin mode */
 #  define PCF85263_CTL_INTAPM_CLK           0x00        /**< CLK output mode */
 #  define PCF85263_CTL_INTAPM_BAT           0x01        /**< Battery mode indication */
 #  define PCF85263_CTL_INTAPM_INTA          0x02        /**< INTA output */
 #  define PCF85263_CTL_INTAPM_HIZ           0x03        /**< Hi-Z */
+#define PCF85263_CTL_TSPM_OFFSET            2           /**< TSPM bits offset */
 #define PCF85263_CTL_TSPM_MASK              0x0C        /**< Bits 2-3: TS pin I/O control */
 #  define PCF85263_CTL_TSPM_DISABLED        0x00        /**< Disabled; input can be left floating */
 #  define PCF85263_CTL_TSPM_INTB            0x04        /**< INTB output; push-pull */
@@ -172,6 +177,7 @@
 #define PCF85263_CTL_CLKPM                  0x80        /**< Bit 7: CLK pin mode */
 /* Function control registers */
 #define PCF85263_CTL_FUNCTION               0x28        /**< Function control register */
+#define PCF85263_CTL_FUNC_COF_OFFSET        0           /**< COF bits offset */
 #define PCF85263_CTL_FUNC_COF_MASK          0x07        /**< Bits 0-2: clock output frequency */
 #  define PCF85263_CTL_FUNC_COF_32KHZ       0x00        /**< 32768Hz (60:40 to 40:60) */
 #  define PCF85263_CTL_FUNC_COF_16KHZ       0x01        /**< 16384Hz (50:50) */
@@ -183,6 +189,7 @@
 #  define PCF85263_CTL_FUNC_COF_STATIC      0x07        /**< Static LOW */
 #define PCF85263_CTL_FUNC_STOPM             0x08        /**< Bit 3: STOP mode */
 #define PCF85263_CTL_FUNC_RTCM              0x10        /**< Bit 4: RTC mode */
+#define PCF85263_CTL_FUNC_PI_OFFSET         5           /**< PI bits offset */
 #define PCF85263_CTL_FUNC_PI_MASK           0x60        /**< Bits 5-6: periodic interrupt */
 #  define PCF85263_CTL_FUNC_PI_NONE         0x00        /**< No periodic interrupt */
 #  define PCF85263_CTL_FUNC_PI_SEC          0x20        /**< Once per second */
@@ -223,16 +230,19 @@
 #define PCF85263_CTL_RAM_BYTE               0x2C        /**< RAM byte register */
 /* Watchdog registers */
 #define PCF85263_CTL_WATCHDOG               0x2D        /**< Watchdog control and status register */
+#define PCF85263_CTL_WDS_OFFSET             0           /**< WDS bits offset */
 #define PCF85263_CTL_WDS_MASK               0x03        /**< Bits 0-1: watchdog step size (source clock) */
 #  define PCF85263_CTL_WDS_4SEC             0x00        /**< 4 seconds (0.25 Hz) */
 #  define PCF85263_CTL_WDS_1SEC             0x01        /**< 1 second (1 Hz) */
 #  define PCF85263_CTL_WDS_250MSEC          0x02        /**< 1/4 second (4 Hz) */
 #  define PCF85263_CTL_WDS_67MSEC           0x03        /**< 1/16 second (16 Hz) */
+#define PCF85263_CTL_WDR_OFFSET             2           /**< WDR bits offset */
 #define PCF85263_CTL_WDR_MASK               0x7C        /**< Bits 2-6: watchdog register bits (counter value) */
 #define PCF85263_CTL_WDM                    0x80        /**< Bit 7: watchdog mode */
 /* Stop */
 #define PCF85263_CTL_STOP_ENABLE            0x2E        /**< Stop enable register */
-#define PCF85263_CTL_STOP                   0x01        /**< Bit 0: stop bit */
+#define PCF85263_CTL_START                  0x00        /**< Bit 0: stop bit -> 0 = RTC clock runs */
+#define PCF85263_CTL_STOP                   0x01        /**< Bit 0: stop bit -> 1 = RTC clock is stopped */
 /* Reset */
 #define PCF85263_CTL_RESETS                 0x2F        /**< Software reset control register */
 #define PCF85263_CTL_CTS                    0x01        /**< Bit 0: clear timestamp */
@@ -277,6 +287,7 @@
 /***** ENUMERATION ****************************************************/
 /* Enumeration for the PCR85263 function return values */
 typedef enum {
+    PCF85263_RET_NO_DEV     = -2,
     PCF85263_RET_ERROR      = -1,
     PCF85263_RET_OK         = 0
 } PCF85263_RET_t;
@@ -288,7 +299,7 @@ typedef enum {
  ***/
 typedef struct {
 #if PCF85263_100TH_SECONDS_ENABLE==1
-    uint16_t msec;      /**< Milliseconds (0-999; 100th seconds * 10) */
+    uint8_t msec10;     /**< 100th-seconds (0-99) */
 #endif
     uint8_t seconds;    /**< Seconds (0-59) */
     uint8_t minutes;    /**< Minutes (0-59) */
@@ -299,9 +310,77 @@ typedef struct {
     uint8_t years;      /**< Years (0-99) */
 } PCF85263_DATETIME_t;
 
+/***
+ * A structure to store stopwatch time information.
+ ***/
+typedef struct {
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    uint8_t msec10;     /**< 100th-seconds (0-99) */
+#endif
+    uint8_t seconds;    /**< Seconds (0-59) */
+    uint8_t minutes;    /**< Minutes (0-59) */
+    uint32_t hours;     /**< Hours (0-999999) */
+} PCF85263_CNTTIME_t;
+
 
 /***** FUNCTION PROTOTYPES ********************************************/
+/*** General ***/
+/* Init */
 PCF85263_RET_t pcf85263_init(void);
+/* Read/write register */
+PCF85263_RET_t pcf85263_read_reg(uint8_t reg, uint8_t* byte);
+PCF85263_RET_t pcf85263_write_reg(uint8_t reg, uint8_t byte);
+/* Start/stop */
+PCF85263_RET_t pcf85263_start(void);
+PCF85263_RET_t pcf85263_stop(void);
+/* Reset */
+PCF85263_RET_t pcf85263_reset(void);
+PCF85263_RET_t pcf85263_reset_prescaler(void);
+PCF85263_RET_t pcf85263_reset_timestamp(void);
+
+/*** RAM byte ***/
+PCF85263_RET_t pcf85263_read_ram(uint8_t* byte);
+PCF85263_RET_t pcf85263_write_ram(uint8_t byte);
+
+/*** Watchdog ***/
+PCF85263_RET_t pcf85263_get_watchdog(uint8_t* value);
+PCF85263_RET_t pcf85263_set_watchdog(uint8_t value);
+
+/*** Configuration ***/
+/* Offset */
+PCF85263_RET_t pcf85263_read_offset(uint8_t* value);
+PCF85263_RET_t pcf85263_write_offset(uint8_t value);
+/* Oscillator */
+PCF85263_RET_t pcf85263_get_oscillator(uint8_t* value);
+PCF85263_RET_t pcf85263_set_oscillator(uint8_t value);
+/* Battery switch */
+PCF85263_RET_t pcf85263_get_batteryswitch(uint8_t* value);
+PCF85263_RET_t pcf85263_set_batteryswitch(uint8_t value);
+/* Pin IO */
+PCF85263_RET_t pcf85263_get_pin_io(uint8_t* value);
+PCF85263_RET_t pcf85263_set_pin_io(uint8_t value);
+/* Function */
+PCF85263_RET_t pcf85263_get_function(uint8_t* value);
+PCF85263_RET_t pcf85263_set_function(uint8_t value);
+/* INTA enable */
+PCF85263_RET_t pcf85263_get_inta_en(uint8_t* value);
+PCF85263_RET_t pcf85263_set_inta_en(uint8_t value);
+/* INTA enable */
+PCF85263_RET_t pcf85263_get_intb_en(uint8_t* value);
+PCF85263_RET_t pcf85263_set_intb_en(uint8_t value);
+/* Flags */
+PCF85263_RET_t pcf85263_get_flags(uint8_t* value);
+PCF85263_RET_t pcf85263_set_flags(uint8_t value);
+
+/*** Date/time ***/
+//PCF85263_RET_t pcf85263_
+/*** Alarms ***/
+//PCF85263_RET_t pcf85263_
+/*** Interrupts ***/
+//PCF85263_RET_t pcf85263_
+
+
+/***** INLINE FUNCTIONS ***********************************************/
 
 
 #endif // _ASNX_PCF85263_H_
