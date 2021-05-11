@@ -17,6 +17,9 @@
 /* Misc */
 #include "util/printf.h"
 
+/* To test */
+#include "rtc/pcf85263.h"
+
 
 /***** GLOBAL VARIABLES ***********************************************/
 /* Variable (flag) for barrier synchronization */
