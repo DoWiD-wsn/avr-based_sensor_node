@@ -23,6 +23,8 @@
 
 /* Enable 100th seconds (0 .. disabled / 1 .. enabled) */
 #define PCF85263_100TH_SECONDS_ENABLE       0
+/* Use 12h (0) or 24h (1) mode */
+#define PCF85263_24H_MODE_ENABLE            1
 
 /*** RTC mode time registers (RTCM = 0) ***/
 /* RTC time and date registers */
@@ -303,7 +305,12 @@ typedef struct {
 #endif
     uint8_t seconds;    /**< Seconds (0-59) */
     uint8_t minutes;    /**< Minutes (0-59) */
-    uint8_t hours;      /**< Hours (1-12 / 0-23) */
+#if PCF85263_24H_MODE_ENABLE==1
+    uint8_t hours;      /**< Hours (0-23) */
+#else
+    uint8_t ampm;       /**< AM (0) or PM (1) */
+    uint8_t hours;      /**< Hours (1-12) */
+#endif
     uint8_t days;       /**< Days (1-31) */
     uint8_t dow;        /**< Day-of-week (0-6) */
     uint8_t months;     /**< Months (1-12) */
@@ -338,14 +345,6 @@ PCF85263_RET_t pcf85263_reset(void);
 PCF85263_RET_t pcf85263_reset_prescaler(void);
 PCF85263_RET_t pcf85263_reset_timestamp(void);
 
-/*** RAM byte ***/
-PCF85263_RET_t pcf85263_read_ram(uint8_t* byte);
-PCF85263_RET_t pcf85263_write_ram(uint8_t byte);
-
-/*** Watchdog ***/
-PCF85263_RET_t pcf85263_get_watchdog(uint8_t* value);
-PCF85263_RET_t pcf85263_set_watchdog(uint8_t value);
-
 /*** Configuration ***/
 /* Offset */
 PCF85263_RET_t pcf85263_read_offset(uint8_t* value);
@@ -371,9 +370,49 @@ PCF85263_RET_t pcf85263_set_intb_en(uint8_t value);
 /* Flags */
 PCF85263_RET_t pcf85263_get_flags(uint8_t* value);
 PCF85263_RET_t pcf85263_set_flags(uint8_t value);
+/* RAM byte */
+PCF85263_RET_t pcf85263_read_ram(uint8_t* byte);
+PCF85263_RET_t pcf85263_write_ram(uint8_t byte);
+/* Watchdog */
+PCF85263_RET_t pcf85263_get_watchdog(uint8_t* value);
+PCF85263_RET_t pcf85263_set_watchdog(uint8_t value);
 
 /*** Date/time ***/
-//PCF85263_RET_t pcf85263_
+/* Shared */
+PCF85263_RET_t pcf85263_get_100th_seconds(uint8_t* seconds_100th);
+PCF85263_RET_t pcf85263_set_100th_seconds(uint8_t seconds_100th);
+PCF85263_RET_t pcf85263_get_seconds(uint8_t* seconds);
+PCF85263_RET_t pcf85263_set_seconds(uint8_t seconds);
+PCF85263_RET_t pcf85263_get_minutes(uint8_t* minutes);
+PCF85263_RET_t pcf85263_set_minutes(uint8_t minutes);
+/* RTC mode */
+#if PCF85263_24H_MODE_ENABLE==1
+PCF85263_RET_t pcf85263_get_hours(uint8_t* hours);
+PCF85263_RET_t pcf85263_set_hours(uint8_t hours);
+#else
+PCF85263_RET_t pcf85263_get_hours(uint8_t* hours, uint8_t* ampm);
+PCF85263_RET_t pcf85263_set_hours(uint8_t hours, uint8_t ampm);
+#endif
+PCF85263_RET_t pcf85263_get_days(uint8_t* days);
+PCF85263_RET_t pcf85263_set_days(uint8_t days);
+PCF85263_RET_t pcf85263_get_weekdays(uint8_t* weekdays);
+PCF85263_RET_t pcf85263_set_weekdays(uint8_t weekdays);
+PCF85263_RET_t pcf85263_get_months(uint8_t* months);
+PCF85263_RET_t pcf85263_set_months(uint8_t months);
+PCF85263_RET_t pcf85263_get_years(uint8_t* years);
+PCF85263_RET_t pcf85263_set_years(uint8_t years);
+PCF85263_RET_t pcf85263_get_rtc_datetime(PCF85263_DATETIME_t* data);
+PCF85263_RET_t pcf85263_set_rtc_datetime(PCF85263_DATETIME_t* data);
+/* Stop-watch mode */
+PCF85263_RET_t pcf85263_get_hours_xx_xx_00(uint8_t* hours);
+PCF85263_RET_t pcf85263_set_hours_xx_xx_00(uint8_t hours);
+PCF85263_RET_t pcf85263_get_hours_xx_00_xx(uint8_t* hours);
+PCF85263_RET_t pcf85263_set_hours_xx_00_xx(uint8_t hours);
+PCF85263_RET_t pcf85263_get_hours_00_xx_xx(uint8_t* hours);
+PCF85263_RET_t pcf85263_set_hours_00_xx_xx(uint8_t hours);
+PCF85263_RET_t pcf85263_get_stopwatch_time(PCF85263_CNTTIME_t* data);
+PCF85263_RET_t pcf85263_set_stopwatch_time(PCF85263_CNTTIME_t* data);
+
 /*** Alarms ***/
 //PCF85263_RET_t pcf85263_
 /*** Interrupts ***/
