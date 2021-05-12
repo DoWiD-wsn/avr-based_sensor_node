@@ -312,7 +312,7 @@ typedef struct {
     uint8_t hours;      /**< Hours (1-12) */
 #endif
     uint8_t days;       /**< Days (1-31) */
-    uint8_t dow;        /**< Day-of-week (0-6) */
+    uint8_t wday;       /**< Day-of-week (0-6) */
     uint8_t months;     /**< Months (1-12) */
     uint8_t years;      /**< Years (0-99) */
 } PCF85263_DATETIME_t;
@@ -344,6 +344,10 @@ PCF85263_RET_t pcf85263_stop(void);
 PCF85263_RET_t pcf85263_reset(void);
 PCF85263_RET_t pcf85263_reset_prescaler(void);
 PCF85263_RET_t pcf85263_reset_timestamp(void);
+/* EMON & OS monitor flags */
+PCF85263_RET_t pcf85263_get_EMON(uint8_t* value);
+PCF85263_RET_t pcf85263_get_OS(uint8_t* value);
+PCF85263_RET_t pcf85263_clear_OS(void);
 
 /*** Configuration ***/
 /* Offset */
@@ -410,16 +414,43 @@ PCF85263_RET_t pcf85263_get_hours_xx_00_xx(uint8_t* hours);
 PCF85263_RET_t pcf85263_set_hours_xx_00_xx(uint8_t hours);
 PCF85263_RET_t pcf85263_get_hours_00_xx_xx(uint8_t* hours);
 PCF85263_RET_t pcf85263_set_hours_00_xx_xx(uint8_t hours);
-PCF85263_RET_t pcf85263_get_stopwatch_time(PCF85263_CNTTIME_t* data);
-PCF85263_RET_t pcf85263_set_stopwatch_time(PCF85263_CNTTIME_t* data);
+PCF85263_RET_t pcf85263_get_stw_time(PCF85263_CNTTIME_t* data);
+PCF85263_RET_t pcf85263_set_stw_time(PCF85263_CNTTIME_t* data);
 
 /*** Alarms ***/
-//PCF85263_RET_t pcf85263_
-/*** Interrupts ***/
-//PCF85263_RET_t pcf85263_
+/* RTC mode */
+PCF85263_RET_t pcf85263_get_rtc_alarm_enables(uint8_t* value);
+PCF85263_RET_t pcf85263_set_rtc_alarm_enables(uint8_t value);
+PCF85263_RET_t pcf85263_get_rtc_alarm1(PCF85263_DATETIME_t* data);
+PCF85263_RET_t pcf85263_set_rtc_alarm1(PCF85263_DATETIME_t* data);
+PCF85263_RET_t pcf85263_get_rtc_alarm2(PCF85263_DATETIME_t* data);
+PCF85263_RET_t pcf85263_set_rtc_alarm2(PCF85263_DATETIME_t* data);
+/* Stop-watch mode */
+PCF85263_RET_t pcf85263_get_stw_alarm_enables(uint8_t* value);
+PCF85263_RET_t pcf85263_set_stw_alarm_enables(uint8_t value);
+PCF85263_RET_t pcf85263_get_stw_alarm1(PCF85263_CNTTIME_t* data);
+PCF85263_RET_t pcf85263_set_stw_alarm1(PCF85263_CNTTIME_t* data);
+PCF85263_RET_t pcf85263_get_stw_alarm2(PCF85263_CNTTIME_t* data);
+PCF85263_RET_t pcf85263_set_stw_alarm2(PCF85263_CNTTIME_t* data);
 
-
-/***** INLINE FUNCTIONS ***********************************************/
-
+/*** Timestamps ***/
+/* RTC mode */
+PCF85263_RET_t pcf85263_get_rtc_timestamp_mode(uint8_t* value);
+PCF85263_RET_t pcf85263_set_rtc_timestamp_mode(uint8_t value);
+PCF85263_RET_t pcf85263_get_rtc_timestamp1(PCF85263_DATETIME_t* data);
+PCF85263_RET_t pcf85263_set_rtc_timestamp1(PCF85263_DATETIME_t* data);
+PCF85263_RET_t pcf85263_get_rtc_timestamp2(PCF85263_DATETIME_t* data);
+PCF85263_RET_t pcf85263_set_rtc_timestamp2(PCF85263_DATETIME_t* data);
+PCF85263_RET_t pcf85263_get_rtc_timestamp3(PCF85263_DATETIME_t* data);
+PCF85263_RET_t pcf85263_set_rtc_timestamp3(PCF85263_DATETIME_t* data);
+/* Stop-watch mode */
+PCF85263_RET_t pcf85263_get_stw_timestamp_mode(uint8_t* value);
+PCF85263_RET_t pcf85263_set_stw_timestamp_mode(uint8_t value);
+PCF85263_RET_t pcf85263_get_stw_timestamp1(PCF85263_CNTTIME_t* data);
+PCF85263_RET_t pcf85263_set_stw_timestamp1(PCF85263_CNTTIME_t* data);
+PCF85263_RET_t pcf85263_get_stw_timestamp2(PCF85263_CNTTIME_t* data);
+PCF85263_RET_t pcf85263_set_stw_timestamp2(PCF85263_CNTTIME_t* data);
+PCF85263_RET_t pcf85263_get_stw_timestamp3(PCF85263_CNTTIME_t* data);
+PCF85263_RET_t pcf85263_set_stw_timestamp3(PCF85263_CNTTIME_t* data);
 
 #endif // _ASNX_PCF85263_H_

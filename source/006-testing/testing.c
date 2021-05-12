@@ -67,6 +67,8 @@ int main(void) {
     uint16_t adcres = 0;
     /* Device handles */
     TMP275_t tmp275;
+    /* Date/time structure */
+    PCF85263_DATETIME_t time;
     
     /*** Initialize the hardware ***/
     /* Initialize the user LEDs and disable both by default */
@@ -81,6 +83,43 @@ int main(void) {
     uart1_init();
     /* Initialize the printf function to use the uart1_putc() function for output */
     printf_init(uart1_putc);
+    
+    /* Initialize the RTC */
+    if(pcf85263_init() != PCF85263_RET_OK) {
+        printf("Couldn't initialize RTC ... aborting!\n");
+        while(1);
+    } else {
+        printf("... RTC ready\n");
+    }
+    /* Disable the battery switch */
+    if(pcf85263_set_batteryswitch(PCF85263_CTL_BATTERY_BSOFF) != PCF85263_RET_OK) {
+        printf("RTC: Battery switch configuration FAILED ... aborting!\n");
+        while(1);
+    }
+    /* Disable CLK pin; INTA output */
+    if(pcf85263_set_pin_io(PCF85263_CTL_CLKPM | PCF85263_CTL_INTAPM_INTA) != PCF85263_RET_OK) {
+        printf("RTC: Battery switch configuration FAILED ... aborting!\n");
+        while(1);
+    }
+    /* Set RTC date/time */
+    time.seconds = 0;
+    time.minutes = 0;
+    time.hours = 0;
+    time.days = 10;
+    time.wday = 0;
+    time.months = 5;
+    time.years = 21;
+    if(pcf85263_set_rtc_datetime(&time) != PCF85263_RET_OK) {
+        printf("RTC set date/time FAILED ... aborting!\n");
+        while(1);
+    }
+    /* Start RTC */
+    if(pcf85263_start() != PCF85263_RET_OK) {
+        printf("Couldn't start RTC ... aborting!\n");
+        while(1);
+    } else {
+        printf("... RTC started\n");
+    }
     
     /* Configure INT2 to fire interrupt when logic level is "low" */
     EICRA = 0x00;
@@ -103,15 +142,7 @@ int main(void) {
     sei();
     
     /* Main routine ... */
-    while(1) {
-        /*** Barrier synchronization */
-        /* Wait until the barrier sync flag is set */
-        while(barrier == 0) {
-            _delay_ms(100);
-        }
-        /* Reset barrier sync flag */
-        barrier = 0;
-        
+    while(1) {       
         /*** ADC self-diagnosis (via ADC CH0) ***/
         /* Constant voltage divider (1:1) */
         printf("... ADC self-diagnosis: %d\n", adc_read_input(ADC_CH0));
@@ -135,8 +166,16 @@ int main(void) {
         } else {
             printf("... TMP275 temperature: FAILED!\n");
         }
+        
+        /*** RTC ***/
+        if(pcf85263_get_rtc_datetime(&time) != PCF85263_RET_OK) {
+            printf("RTC read date/time FAILED!\n");
+        } else {
+            printf("... RTC: %02d.%02d.20%02d - %02d:%02d:%02d\n",time.days,time.months,time.years,time.hours,time.minutes,time.seconds);
+        }
 
         printf("\n");
+        _delay_ms(2000);
     }
 
     return 0;

@@ -58,7 +58,32 @@ PCF85263_RET_t pcf85263_init(void) {
         return PCF85263_RET_NO_DEV;
     }
     /* Reset the device */
-    return pcf85263_reset();
+    if(pcf85263_reset() != PCF85263_RET_OK) {
+        /* Device not accessible */
+        return PCF85263_RET_ERROR;
+    }
+    /* Stop the device */
+    if(pcf85263_stop() != PCF85263_RET_OK) {
+        /* Device not accessible */
+        return PCF85263_RET_ERROR;
+    }
+    /* Enable/disable the 100th seconds resolution */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    if(pcf85263_set_function(PCF85263_CTL_FUNC_100TH) != PCF85263_RET_OK) {
+        /* Device not accessible */
+        return PCF85263_RET_ERROR;
+    }
+#endif
+    /* Set the 12h/24h configuration */
+#if PCF85263_24H_MODE_ENABLE==0
+    if(pcf85263_set_oscillator(PCF85263_CTL_OSC_12_24) != PCF85263_RET_OK) {
+        /* Device not accessible */
+        return PCF85263_RET_ERROR;
+    }
+#endif
+
+    /* Initialization finished */
+    return PCF85263_RET_OK;
 }
 
 
@@ -151,6 +176,75 @@ PCF85263_RET_t pcf85263_reset_prescaler(void) {
 PCF85263_RET_t pcf85263_reset_timestamp(void) {
     /* Request CTS via the reset register (0x2F) */
     return pcf85263_write_reg(PCF85263_CTL_RESETS, (PCF85263_CTL_CTS | PCF85263_CTL_RESETS_BITS));
+}
+
+
+/***
+ * Read the EMON flag.
+ * 
+ * @param[out]  byte        EMON flag value read
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_EMON(uint8_t* value) {
+    uint8_t tmp;
+    /* Get the minutes registers (0x02) */
+    if(pcf85263_read_reg(PCF85263_RTC_MINUTES, &tmp) != PCF85263_RET_OK) {
+        /* Read failed */
+        *value = 0;
+        return PCF85263_RET_ERROR;
+    }
+    /* Check if EMON flag is set */
+    if(tmp & PCF85263_FLAG_EMON) {
+        *value = 1;
+    } else {
+        *value = 0;
+    }
+    /* Return success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Read the OS flag.
+ * 
+ * @param[out]  byte        OS flag value read
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_OS(uint8_t* value) {
+    uint8_t tmp;
+    /* Get the seconds registers (0x01) */
+    if(pcf85263_read_reg(PCF85263_RTC_SECONDS, &tmp) != PCF85263_RET_OK) {
+        /* Read failed */
+        *value = 0;
+        return PCF85263_RET_ERROR;
+    }
+    /* Check if OS flag is set */
+    if(tmp & PCF85263_FLAG_OS) {
+        *value = 1;
+    } else {
+        *value = 0;
+    }
+    /* Return success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Clear the OS flag.
+ * 
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_clear_OS(void) {
+    uint8_t tmp;
+    /* Get the seconds registers (0x01) */
+    if(pcf85263_read_reg(PCF85263_RTC_SECONDS, &tmp) != PCF85263_RET_OK) {
+        /* Read failed */
+        return PCF85263_RET_ERROR;
+    }
+    /* Clear flag in register value */
+    tmp &= ~PCF85263_FLAG_OS;
+    /* Write new register value to the seconds register (0x2C) */
+    return pcf85263_write_reg(PCF85263_RTC_SECONDS, tmp);
 }
 
 
@@ -490,7 +584,7 @@ PCF85263_RET_t pcf85263_set_minutes(uint8_t minutes) {
 
 #if PCF85263_24H_MODE_ENABLE==1
 /***
- * Get the 24h hours register value (RTC mode only).
+ * Get the 24h hours register value (RTC mode).
  * 
  * @param[out]  hours       Hours value read
  * @return      OK in case of success; ERROR otherwise
@@ -511,7 +605,7 @@ PCF85263_RET_t pcf85263_get_hours(uint8_t* hours) {
 
 
 /***
- * Set the 24h hours register value (RTC mode only).
+ * Set the 24h hours register value (RTC mode).
  * 
  * @param[in]   hours       Hours value to be written
  * @return      OK in case of success; ERROR otherwise
@@ -526,7 +620,7 @@ PCF85263_RET_t pcf85263_set_hours(uint8_t hours) {
 
 #else
 /***
- * Get the 12h hours register value (RTC mode only).
+ * Get the 12h hours register value (RTC mode).
  * 
  * @param[out]  hours       Hours value read
  * @param[out]  ampm        AM/PM flag read
@@ -554,7 +648,7 @@ PCF85263_RET_t pcf85263_get_hours(uint8_t* hours, uint8_t* ampm) {
 
 
 /***
- * Set the 12h hours register value (RTC mode only).
+ * Set the 12h hours register value (RTC mode).
  * 
  * @param[in]   hours       Hours value to be written
  * @param[in]   ampm        AM/PM flag to be written
@@ -574,7 +668,7 @@ PCF85263_RET_t pcf85263_set_hours(uint8_t hours, uint8_t ampm) {
 
 
 /***
- * Get the days register value (RTC mode only).
+ * Get the days register value (RTC mode).
  * 
  * @param[out]  days        Days value read
  * @return      OK in case of success; ERROR otherwise
@@ -595,7 +689,7 @@ PCF85263_RET_t pcf85263_get_days(uint8_t* days) {
 
 
 /***
- * Set the days register value (RTC mode only).
+ * Set the days register value (RTC mode).
  * 
  * @param[in]   days        Days value to be written
  * @return      OK in case of success; ERROR otherwise
@@ -609,7 +703,7 @@ PCF85263_RET_t pcf85263_set_days(uint8_t days) {
 
 
 /***
- * Get the weekdays register value (RTC mode only).
+ * Get the weekdays register value (RTC mode).
  * 
  * @param[out]  weekdays    Weekdays value read
  * @return      OK in case of success; ERROR otherwise
@@ -630,7 +724,7 @@ PCF85263_RET_t pcf85263_get_weekdays(uint8_t* weekdays) {
 
 
 /***
- * Set the weekdays register value (RTC mode only).
+ * Set the weekdays register value (RTC mode).
  * 
  * @param[in]   weekdays    Weekdays value to be written
  * @return      OK in case of success; ERROR otherwise
@@ -644,7 +738,7 @@ PCF85263_RET_t pcf85263_set_weekdays(uint8_t weekdays) {
 
 
 /***
- * Get the months register value (RTC mode only).
+ * Get the months register value (RTC mode).
  * 
  * @param[out]  months      Months value read
  * @return      OK in case of success; ERROR otherwise
@@ -665,7 +759,7 @@ PCF85263_RET_t pcf85263_get_months(uint8_t* months) {
 
 
 /***
- * Set the months register value (RTC mode only).
+ * Set the months register value (RTC mode).
  * 
  * @param[in]   months      Months value to be written
  * @return      OK in case of success; ERROR otherwise
@@ -679,7 +773,7 @@ PCF85263_RET_t pcf85263_set_months(uint8_t months) {
 
 
 /***
- * Get the years register value (RTC mode only).
+ * Get the years register value (RTC mode).
  * 
  * @param[out]  years       Years value read
  * @return      OK in case of success; ERROR otherwise
@@ -700,7 +794,7 @@ PCF85263_RET_t pcf85263_get_years(uint8_t* years) {
 
 
 /***
- * Set the years register value (RTC mode only).
+ * Set the years register value (RTC mode).
  * 
  * @param[in]   years       Years value to be written
  * @return      OK in case of success; ERROR otherwise
@@ -714,7 +808,7 @@ PCF85263_RET_t pcf85263_set_years(uint8_t years) {
 
 
 /***
- * Read the current time and date (RTC mode only).
+ * Read the current time and date (RTC mode).
  * 
  * @param[out]  data        Pointer to the date-time data structure
  * @return      OK in case of success; ERROR otherwise
@@ -745,7 +839,7 @@ PCF85263_RET_t pcf85263_get_rtc_datetime(PCF85263_DATETIME_t* data) {
     data->hours     = _bcd2dec(tmp[3] & PCF85263_HOURS12_MASK);
 #endif
     data->days      = _bcd2dec(tmp[4] & PCF85263_DAYS_MASK);
-    data->dow       = _bcd2dec(tmp[5] & PCF85263_WEEKDAYS_MASK);
+    data->wday      = _bcd2dec(tmp[5] & PCF85263_WEEKDAYS_MASK);
     data->months    = _bcd2dec(tmp[6] & PCF85263_MONTHS_MASK);
     data->years     = _bcd2dec(tmp[7]);
     
@@ -755,7 +849,7 @@ PCF85263_RET_t pcf85263_get_rtc_datetime(PCF85263_DATETIME_t* data) {
 
 
 /***
- * Write the time and date (RTC mode only).
+ * Write the time and date (RTC mode).
  * 
  * @param[in]   data        Pointer to the date-time data structure
  * @return      OK in case of success; ERROR otherwise
@@ -778,7 +872,7 @@ PCF85263_RET_t pcf85263_set_rtc_datetime(PCF85263_DATETIME_t* data) {
     }
 #endif
     tmp[4]  = _dec2bcd(data->days) & PCF85263_DAYS_MASK;
-    tmp[5]  = _dec2bcd(data->dow) & PCF85263_WEEKDAYS_MASK;
+    tmp[5]  = _dec2bcd(data->wday) & PCF85263_WEEKDAYS_MASK;
     tmp[6]  = _dec2bcd(data->months) & PCF85263_MONTHS_MASK;
     tmp[7]  = _dec2bcd(data->years);
     
@@ -798,7 +892,7 @@ PCF85263_RET_t pcf85263_set_rtc_datetime(PCF85263_DATETIME_t* data) {
 
 
 /***
- * Get the hours xx_xx_00 register value (stop-watch mode only).
+ * Get the hours xx_xx_00 register value (stop-watch mode).
  * 
  * @param[out]  hours       Hours value read
  * @return      OK in case of success; ERROR otherwise
@@ -819,7 +913,7 @@ PCF85263_RET_t pcf85263_get_hours_xx_xx_00(uint8_t* hours) {
 
 
 /***
- * Set the hours xx_xx_00 register value (stop-watch mode only).
+ * Set the hours xx_xx_00 register value (stop-watch mode).
  * 
  * @param[in]   hours       Hours value to be written
  * @return      OK in case of success; ERROR otherwise
@@ -833,7 +927,7 @@ PCF85263_RET_t pcf85263_set_hours_xx_xx_00(uint8_t hours) {
 
 
 /***
- * Get the hours xx_00_xx register value (stop-watch mode only).
+ * Get the hours xx_00_xx register value (stop-watch mode).
  * 
  * @param[out]  hours       100-hours value read
  * @return      OK in case of success; ERROR otherwise
@@ -854,7 +948,7 @@ PCF85263_RET_t pcf85263_get_hours_xx_00_xx(uint8_t* hours) {
 
 
 /***
- * Set the hours xx_00_xx register value (stop-watch mode only).
+ * Set the hours xx_00_xx register value (stop-watch mode).
  * 
  * @param[in]   hours       100-hours value to be written
  * @return      OK in case of success; ERROR otherwise
@@ -868,7 +962,7 @@ PCF85263_RET_t pcf85263_set_hours_xx_00_xx(uint8_t hours) {
 
 
 /***
- * Get the hours 00_xx_xx register value (stop-watch mode only).
+ * Get the hours 00_xx_xx register value (stop-watch mode).
  * 
  * @param[out]  hours       10-thousand-hours value read
  * @return      OK in case of success; ERROR otherwise
@@ -889,7 +983,7 @@ PCF85263_RET_t pcf85263_get_hours_00_xx_xx(uint8_t* hours) {
 
 
 /***
- * Set the hours 00_xx_xx register value (stop-watch mode only).
+ * Set the hours 00_xx_xx register value (stop-watch mode).
  * 
  * @param[in]   hours       10-thousand-hours value to be written
  * @return      OK in case of success; ERROR otherwise
@@ -903,12 +997,12 @@ PCF85263_RET_t pcf85263_set_hours_00_xx_xx(uint8_t hours) {
 
 
 /***
- * Read the current time (stop-watch mode only).
+ * Read the current time (stop-watch mode).
  * 
- * @param[out]  data        Pointer to the date-time data structure
+ * @param[out]  data        Pointer to the time data structure
  * @return      OK in case of success; ERROR otherwise
  ***/
-PCF85263_RET_t pcf85263_get_stopwatch_time(PCF85263_CNTTIME_t* data) {
+PCF85263_RET_t pcf85263_get_stw_time(PCF85263_CNTTIME_t* data) {
     /* Data array to be filled */
     uint8_t tmp[6] = {0};
     /* Read raw data */
@@ -937,12 +1031,12 @@ PCF85263_RET_t pcf85263_get_stopwatch_time(PCF85263_CNTTIME_t* data) {
 
 
 /***
- * Write the time (stop-watch mode only).
+ * Write the time (stop-watch mode).
  * 
- * @param[in]   data        Pointer to the date-time data structure
+ * @param[in]   data        Pointer to the time data structure
  * @return      OK in case of success; ERROR otherwise
  ***/
-PCF85263_RET_t pcf85263_set_stopwatch_time(PCF85263_CNTTIME_t* data) {
+PCF85263_RET_t pcf85263_set_stw_time(PCF85263_CNTTIME_t* data) {
     /* Temporary data array */
     uint8_t tmp[6] = {0};
     /* Write information into data array */
@@ -961,6 +1055,740 @@ PCF85263_RET_t pcf85263_set_stopwatch_time(PCF85263_CNTTIME_t* data) {
 #else
     if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_STW_SECONDS,&tmp[1],5) != I2C_RET_OK) {
 #endif
+        /* Writing failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Read the alarm enables register value.
+ * 
+ * @param[in]   value       Alarm enables value read
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_rtc_alarm_enables(uint8_t* value) {
+    /* Get the alarm enables register (0x10) */
+    return pcf85263_read_reg(PCF85263_RTC_ALARM_ENABLES, value);
+}
+
+
+/***
+ * Write the alarm enables register value.
+ * 
+ * @param[in]   value       Alarm enables value to be written
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_rtc_alarm_enables(uint8_t value) {
+    /* Set the alarm enables registers (0x10) */
+    return pcf85263_write_reg(PCF85263_RTC_ALARM_ENABLES, value);
+}
+
+
+/***
+ * Read the alarm1 date-time registers (RTC mode).
+ * 
+ * @param[out]  data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_rtc_alarm1(PCF85263_DATETIME_t* data) {
+    /* Data array to be filled */
+    uint8_t tmp[5] = {0};
+    /* Read raw data */
+    if(i2c_read_block(PCF85263_I2C_ADDRESS,PCF85263_RTC_SECOND_ALARM1,tmp,5) != I2C_RET_OK) {
+        /* Reading failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Extract information from raw data */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10    = 0;                    /**< not available for alarm1 */
+#endif
+    data->seconds   = _bcd2dec(tmp[0] & PCF85263_SECONDS_MASK);
+    data->minutes   = _bcd2dec(tmp[1] & PCF85263_MINUTES_MASK);
+#if PCF85263_24H_MODE_ENABLE==1
+    data->hours     = _bcd2dec(tmp[2] & PCF85263_HOURS24_MASK);
+#else
+    data->ampm      = (tmp[2] & PCF85263_HOURS12_AMPM) ? 1 : 0;
+    data->hours     = _bcd2dec(tmp[2] & PCF85263_HOURS12_MASK);
+#endif
+    data->days      = _bcd2dec(tmp[3] & PCF85263_DAYS_MASK);
+    data->wday      = 0;                    /**< not available for alarm1 */
+    data->months    = _bcd2dec(tmp[4] & PCF85263_MONTHS_MASK);
+    data->years     = 0;                    /**< not available for alarm1 */
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Write the alarm1 date-time registers (RTC mode).
+ * 
+ * @param[in]   data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_rtc_alarm1(PCF85263_DATETIME_t* data) {
+    /* Temporary data array */
+    uint8_t tmp[5] = {0};
+    /* Write information into data array */
+    tmp[0]  = _dec2bcd(data->seconds) & PCF85263_SECONDS_MASK;
+    tmp[1]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
+#if PCF85263_24H_MODE_ENABLE==1
+    tmp[2]  = _dec2bcd(data->hours) & PCF85263_HOURS24_MASK;
+#else
+    tmp[2]  = (_dec2bcd(data->hours) & PCF85263_HOURS12_MASK;
+    if(data->ampm == 1) {
+        tmp[2] |= PCF85263_HOURS12_AMPM;
+    }
+#endif
+    tmp[3]  = _dec2bcd(data->days) & PCF85263_DAYS_MASK;
+    tmp[4]  = _dec2bcd(data->months) & PCF85263_MONTHS_MASK;
+    
+    /* Write data to the device */
+    if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_RTC_SECOND_ALARM1,tmp,5) != I2C_RET_OK) {
+        /* Writing failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Read the alarm2 date-time registers (RTC mode).
+ * 
+ * @param[out]  data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_rtc_alarm2(PCF85263_DATETIME_t* data) {
+    /* Data array to be filled */
+    uint8_t tmp[3] = {0};
+    /* Read raw data */
+    if(i2c_read_block(PCF85263_I2C_ADDRESS,PCF85263_RTC_MINUTE_ALARM2,tmp,3) != I2C_RET_OK) {
+        /* Reading failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Extract information from raw data */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10    = 0;                    /**< not available for alarm2 */
+#endif
+    data->seconds   = 0;                    /**< not available for alarm2 */
+    data->minutes   = _bcd2dec(tmp[0] & PCF85263_MINUTES_MASK);
+#if PCF85263_24H_MODE_ENABLE==1
+    data->hours     = _bcd2dec(tmp[1] & PCF85263_HOURS24_MASK);
+#else
+    data->ampm      = (tmp[1] & PCF85263_HOURS12_AMPM) ? 1 : 0;
+    data->hours     = _bcd2dec(tmp[1] & PCF85263_HOURS12_MASK);
+#endif
+    data->days      = 0;                    /**< not available for alarm2 */
+    data->wday      = _bcd2dec(tmp[2] & PCF85263_WEEKDAYS_MASK);
+    data->months    = 0;                    /**< not available for alarm2 */
+    data->years     = 0;                    /**< not available for alarm2 */
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Write the alarm2 date-time registers (RTC mode).
+ * 
+ * @param[in]   data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_rtc_alarm2(PCF85263_DATETIME_t* data) {
+    /* Temporary data array */
+    uint8_t tmp[3] = {0};
+    /* Write information into data array */
+    tmp[0]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
+#if PCF85263_24H_MODE_ENABLE==1
+    tmp[1]  = _dec2bcd(data->hours) & PCF85263_HOURS24_MASK;
+#else
+    tmp[1]  = (_dec2bcd(data->hours) & PCF85263_HOURS12_MASK;
+    if(data->ampm == 1) {
+        tmp[1] |= PCF85263_HOURS12_AMPM;
+    }
+#endif
+    tmp[2]  = _dec2bcd(data->wday) & PCF85263_WEEKDAYS_MASK;
+    
+    /* Write data to the device */
+    if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_RTC_MINUTE_ALARM2,tmp,3) != I2C_RET_OK) {
+        /* Writing failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Read the alarm enables register value.
+ * 
+ * @param[in]   value       Alarm enables value read
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_stw_alarm_enables(uint8_t* value) {
+    /* Get the alarm enables register (0x10) */
+    return pcf85263_read_reg(PCF85263_STW_ALARM_ENABLES, value);
+}
+
+
+/***
+ * Write the alarm enables register value.
+ * 
+ * @param[in]   value       Alarm enables value to be written
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_stw_alarm_enables(uint8_t value) {
+    /* Set the alarm enables registers (0x10) */
+    return pcf85263_write_reg(PCF85263_STW_ALARM_ENABLES, value);
+}
+
+
+/***
+ * Read the alarm1 date-time registers (RTC mode).
+ * 
+ * @param[out]  data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_stw_alarm1(PCF85263_CNTTIME_t* data) {
+    /* Data array to be filled */
+    uint8_t tmp[5] = {0};
+    /* Read raw data */
+    if(i2c_read_block(PCF85263_I2C_ADDRESS,PCF85263_STW_SECOND_ALM1,tmp,5) != I2C_RET_OK) {
+        /* Reading failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Extract information from raw data */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10    = 0;                    /**< not available for alarm1 */
+#endif
+    data->seconds   = _bcd2dec(tmp[0] & PCF85263_SECONDS_MASK);
+    data->minutes   = _bcd2dec(tmp[1] & PCF85263_MINUTES_MASK);
+    data->hours     = _bcd2dec(tmp[2]);
+    data->hours    += _bcd2dec(tmp[3]) * 100;
+    data->hours    += _bcd2dec(tmp[4]) * 10000UL;
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Write the alarm1 date-time registers (RTC mode).
+ * 
+ * @param[in]   data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_stw_alarm1(PCF85263_CNTTIME_t* data) {
+    /* Temporary data array */
+    uint8_t tmp[5] = {0};
+    /* Write information into data array */
+    tmp[0]  = _dec2bcd(data->seconds) & PCF85263_SECONDS_MASK;
+    tmp[1]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
+    tmp[2]  = _dec2bcd(data->hours % 100);
+    tmp[3]  = _dec2bcd((data->hours / 100) % 100);
+    tmp[4]  = _dec2bcd((data->hours / 10000UL) % 100);
+    
+    /* Write data to the device */
+    if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_STW_SECOND_ALM1,tmp,5) != I2C_RET_OK) {
+        /* Writing failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Read the alarm2 date-time registers (RTC mode).
+ * 
+ * @param[out]  data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_stw_alarm2(PCF85263_CNTTIME_t* data) {
+    /* Data array to be filled */
+    uint8_t tmp[3] = {0};
+    /* Read raw data */
+    if(i2c_read_block(PCF85263_I2C_ADDRESS,PCF85263_STW_MINUTE_ALM2,tmp,3) != I2C_RET_OK) {
+        /* Reading failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Extract information from raw data */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10    = 0;                    /**< not available for alarm2 */
+#endif
+    data->seconds   = 0;                    /**< not available for alarm2 */
+    data->minutes   = _bcd2dec(tmp[0] & PCF85263_MINUTES_MASK);
+    data->hours     = _bcd2dec(tmp[1]);
+    data->hours    += _bcd2dec(tmp[2]) * 100;
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Write the alarm2 date-time registers (RTC mode).
+ * 
+ * @param[in]   data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_stw_alarm2(PCF85263_CNTTIME_t* data) {
+    /* Temporary data array */
+    uint8_t tmp[3] = {0};
+    /* Write information into data array */
+    tmp[0]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
+    tmp[1]  = _dec2bcd(data->hours % 100);
+    tmp[2]  = _dec2bcd((data->hours / 100) % 100);
+    
+    /* Write data to the device */
+    if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_STW_MINUTE_ALM2,tmp,3) != I2C_RET_OK) {
+        /* Writing failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Read the timestamp mode register value (RTC mode).
+ * 
+ * @param[in]   value       Timestamp mode value read
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_rtc_timestamp_mode(uint8_t* value) {
+    /* Get the timestamp mode control register (0x23) */
+    return pcf85263_read_reg(PCF85263_RTC_TSR_MODE, value);
+}
+
+
+/***
+ * Write the timestamp mode register value (RTC mode).
+ * 
+ * @param[in]   value       Timestamp mode value to be written
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_rtc_timestamp_mode(uint8_t value) {
+    /* Set the timestamp mode control registers (0x23) */
+    return pcf85263_write_reg(PCF85263_RTC_TSR_MODE, value);
+}
+
+
+/***
+ * Read the timestamp1 time and date (RTC mode).
+ * 
+ * @param[out]  data        Pointer to the date-time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_rtc_timestamp1(PCF85263_DATETIME_t* data) {
+    /* Data array to be filled */
+    uint8_t tmp[6] = {0};
+    /* Read raw data */
+    if(i2c_read_block(PCF85263_I2C_ADDRESS,PCF85263_RTC_TSR1_SECONDS,tmp,6) != I2C_RET_OK) {
+        /* Reading failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Extract information from raw data */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10    = 0;                    /**< not available for timestamps */
+#endif
+    data->seconds   = _bcd2dec(tmp[0] & PCF85263_SECONDS_MASK);
+    data->minutes   = _bcd2dec(tmp[1] & PCF85263_MINUTES_MASK);
+#if PCF85263_24H_MODE_ENABLE==1
+    data->hours     = _bcd2dec(tmp[2] & PCF85263_HOURS24_MASK);
+#else
+    data->ampm      = (tmp[2] & PCF85263_HOURS12_AMPM) ? 1 : 0;
+    data->hours     = _bcd2dec(tmp[2] & PCF85263_HOURS12_MASK);
+#endif
+    data->days      = _bcd2dec(tmp[3] & PCF85263_DAYS_MASK);
+    data->wday      = 0;                    /**< not available for timestamps */
+    data->months    = _bcd2dec(tmp[4] & PCF85263_MONTHS_MASK);
+    data->years     = _bcd2dec(tmp[5]);
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Write the timestamp1 time and date (RTC mode).
+ * 
+ * @param[in]   data        Pointer to the date-time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_rtc_timestamp1(PCF85263_DATETIME_t* data) {
+    /* Temporary data array */
+    uint8_t tmp[6] = {0};
+    /* Write information into data array */
+    tmp[0]  = _dec2bcd(data->seconds) & PCF85263_SECONDS_MASK;
+    tmp[1]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
+#if PCF85263_24H_MODE_ENABLE==1
+    tmp[2]  = _dec2bcd(data->hours) & PCF85263_HOURS24_MASK;
+#else
+    tmp[2]  = (_dec2bcd(data->hours) & PCF85263_HOURS12_MASK;
+    if(data->ampm == 1) {
+        tmp[2] |= PCF85263_HOURS12_AMPM;
+    }
+#endif
+    tmp[3]  = _dec2bcd(data->days) & PCF85263_DAYS_MASK;
+    tmp[4]  = _dec2bcd(data->months) & PCF85263_MONTHS_MASK;
+    tmp[5]  = _dec2bcd(data->years);
+    
+    /* Write data to the device */
+    if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_RTC_TSR1_SECONDS,tmp,6) != I2C_RET_OK) {
+        /* Writing failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Read the timestamp2 time and date (RTC mode).
+ * 
+ * @param[out]  data        Pointer to the date-time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_rtc_timestamp2(PCF85263_DATETIME_t* data) {
+    /* Data array to be filled */
+    uint8_t tmp[6] = {0};
+    /* Read raw data */
+    if(i2c_read_block(PCF85263_I2C_ADDRESS,PCF85263_RTC_TSR2_SECONDS,tmp,6) != I2C_RET_OK) {
+        /* Reading failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Extract information from raw data */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10    = 0;                    /**< not available for timestamps */
+#endif
+    data->seconds   = _bcd2dec(tmp[0] & PCF85263_SECONDS_MASK);
+    data->minutes   = _bcd2dec(tmp[1] & PCF85263_MINUTES_MASK);
+#if PCF85263_24H_MODE_ENABLE==1
+    data->hours     = _bcd2dec(tmp[2] & PCF85263_HOURS24_MASK);
+#else
+    data->ampm      = (tmp[2] & PCF85263_HOURS12_AMPM) ? 1 : 0;
+    data->hours     = _bcd2dec(tmp[2] & PCF85263_HOURS12_MASK);
+#endif
+    data->days      = _bcd2dec(tmp[3] & PCF85263_DAYS_MASK);
+    data->wday      = 0;                    /**< not available for timestamps */
+    data->months    = _bcd2dec(tmp[4] & PCF85263_MONTHS_MASK);
+    data->years     = _bcd2dec(tmp[5]);
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Write the timestamp2 time and date (RTC mode).
+ * 
+ * @param[in]   data        Pointer to the date-time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_rtc_timestamp2(PCF85263_DATETIME_t* data) {
+    /* Temporary data array */
+    uint8_t tmp[6] = {0};
+    /* Write information into data array */
+    tmp[0]  = _dec2bcd(data->seconds) & PCF85263_SECONDS_MASK;
+    tmp[1]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
+#if PCF85263_24H_MODE_ENABLE==1
+    tmp[2]  = _dec2bcd(data->hours) & PCF85263_HOURS24_MASK;
+#else
+    tmp[2]  = (_dec2bcd(data->hours) & PCF85263_HOURS12_MASK;
+    if(data->ampm == 1) {
+        tmp[2] |= PCF85263_HOURS12_AMPM;
+    }
+#endif
+    tmp[3]  = _dec2bcd(data->days) & PCF85263_DAYS_MASK;
+    tmp[4]  = _dec2bcd(data->months) & PCF85263_MONTHS_MASK;
+    tmp[5]  = _dec2bcd(data->years);
+    
+    /* Write data to the device */
+    if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_RTC_TSR2_SECONDS,tmp,6) != I2C_RET_OK) {
+        /* Writing failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Read the timestamp3 time and date (RTC mode).
+ * 
+ * @param[out]  data        Pointer to the date-time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_rtc_timestamp3(PCF85263_DATETIME_t* data) {
+    /* Data array to be filled */
+    uint8_t tmp[6] = {0};
+    /* Read raw data */
+    if(i2c_read_block(PCF85263_I2C_ADDRESS,PCF85263_RTC_TSR3_SECONDS,tmp,6) != I2C_RET_OK) {
+        /* Reading failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Extract information from raw data */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10    = 0;                    /**< not available for timestamps */
+#endif
+    data->seconds   = _bcd2dec(tmp[0] & PCF85263_SECONDS_MASK);
+    data->minutes   = _bcd2dec(tmp[1] & PCF85263_MINUTES_MASK);
+#if PCF85263_24H_MODE_ENABLE==1
+    data->hours     = _bcd2dec(tmp[2] & PCF85263_HOURS24_MASK);
+#else
+    data->ampm      = (tmp[2] & PCF85263_HOURS12_AMPM) ? 1 : 0;
+    data->hours     = _bcd2dec(tmp[2] & PCF85263_HOURS12_MASK);
+#endif
+    data->days      = _bcd2dec(tmp[3] & PCF85263_DAYS_MASK);
+    data->wday      = 0;                    /**< not available for timestamps */
+    data->months    = _bcd2dec(tmp[4] & PCF85263_MONTHS_MASK);
+    data->years     = _bcd2dec(tmp[5]);
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Write the timestamp3 time and date (RTC mode).
+ * 
+ * @param[in]   data        Pointer to the date-time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_rtc_timestamp3(PCF85263_DATETIME_t* data) {
+    /* Temporary data array */
+    uint8_t tmp[6] = {0};
+    /* Write information into data array */
+    tmp[0]  = _dec2bcd(data->seconds) & PCF85263_SECONDS_MASK;
+    tmp[1]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
+#if PCF85263_24H_MODE_ENABLE==1
+    tmp[2]  = _dec2bcd(data->hours) & PCF85263_HOURS24_MASK;
+#else
+    tmp[2]  = (_dec2bcd(data->hours) & PCF85263_HOURS12_MASK;
+    if(data->ampm == 1) {
+        tmp[2] |= PCF85263_HOURS12_AMPM;
+    }
+#endif
+    tmp[3]  = _dec2bcd(data->days) & PCF85263_DAYS_MASK;
+    tmp[4]  = _dec2bcd(data->months) & PCF85263_MONTHS_MASK;
+    tmp[5]  = _dec2bcd(data->years);
+    
+    /* Write data to the device */
+    if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_RTC_TSR3_SECONDS,tmp,6) != I2C_RET_OK) {
+        /* Writing failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Read the timestamp mode register value (stopwatch mode).
+ * 
+ * @param[in]   value       Timestamp mode value read
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_stw_timestamp_mode(uint8_t* value) {
+    /* Get the timestamp mode control register (0x23) */
+    return pcf85263_read_reg(PCF85263_STW_TSR_MODE, value);
+}
+
+
+/***
+ * Write the timestamp mode register value (stopwatch mode).
+ * 
+ * @param[in]   value       Timestamp mode value to be written
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_stw_timestamp_mode(uint8_t value) {
+    /* Set the timestamp mode control registers (0x23) */
+    return pcf85263_write_reg(PCF85263_STW_TSR_MODE, value);
+}
+
+
+/***
+ * Read the timestamp1 time (stop-watch mode).
+ * 
+ * @param[out]  data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_stw_timestamp1(PCF85263_CNTTIME_t* data) {
+    /* Data array to be filled */
+    uint8_t tmp[5] = {0};
+    /* Read raw data */
+    if(i2c_read_block(PCF85263_I2C_ADDRESS,PCF85263_STW_TSR1_SECONDS,tmp,5) != I2C_RET_OK) {
+        /* Reading failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Extract information from raw data */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10    = 0;                    /**< not available for timestamps */
+#endif
+    data->seconds   = _bcd2dec(tmp[0] & PCF85263_SECONDS_MASK);
+    data->minutes   = _bcd2dec(tmp[1] & PCF85263_MINUTES_MASK);
+    data->hours     = _bcd2dec(tmp[2]);
+    data->hours    += _bcd2dec(tmp[3]) * 100;
+    data->hours    += _bcd2dec(tmp[4]) * 10000UL;
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Write the timestamp1 time (stop-watch mode).
+ * 
+ * @param[in]   data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_stw_timestamp1(PCF85263_CNTTIME_t* data) {
+    /* Temporary data array */
+    uint8_t tmp[5] = {0};
+    /* Write information into data array */
+    tmp[0]  = _dec2bcd(data->seconds) & PCF85263_SECONDS_MASK;
+    tmp[1]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
+    tmp[2]  = _dec2bcd(data->hours % 100);
+    tmp[3]  = _dec2bcd((data->hours / 100) % 100);
+    tmp[4]  = _dec2bcd((data->hours / 10000UL) % 100);
+    
+    /* Write data to the device */
+    if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_STW_TSR1_SECONDS,tmp,5) != I2C_RET_OK) {
+        /* Writing failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Read the timestamp2 time (stop-watch mode).
+ * 
+ * @param[out]  data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_stw_timestamp2(PCF85263_CNTTIME_t* data) {
+    /* Data array to be filled */
+    uint8_t tmp[5] = {0};
+    /* Read raw data */
+    if(i2c_read_block(PCF85263_I2C_ADDRESS,PCF85263_STW_TSR2_SECONDS,tmp,5) != I2C_RET_OK) {
+        /* Reading failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Extract information from raw data */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10    = 0;                    /**< not available for timestamps */
+#endif
+    data->seconds   = _bcd2dec(tmp[0] & PCF85263_SECONDS_MASK);
+    data->minutes   = _bcd2dec(tmp[1] & PCF85263_MINUTES_MASK);
+    data->hours     = _bcd2dec(tmp[2]);
+    data->hours    += _bcd2dec(tmp[3]) * 100;
+    data->hours    += _bcd2dec(tmp[4]) * 10000UL;
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Write the timestamp2 time (stop-watch mode).
+ * 
+ * @param[in]   data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_stw_timestamp2(PCF85263_CNTTIME_t* data) {
+    /* Temporary data array */
+    uint8_t tmp[5] = {0};
+    /* Write information into data array */
+    tmp[0]  = _dec2bcd(data->seconds) & PCF85263_SECONDS_MASK;
+    tmp[1]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
+    tmp[2]  = _dec2bcd(data->hours % 100);
+    tmp[3]  = _dec2bcd((data->hours / 100) % 100);
+    tmp[4]  = _dec2bcd((data->hours / 10000UL) % 100);
+    
+    /* Write data to the device */
+    if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_STW_TSR2_SECONDS,tmp,5) != I2C_RET_OK) {
+        /* Writing failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Read the timestamp3 time (stop-watch mode).
+ * 
+ * @param[out]  data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_get_stw_timestamp3(PCF85263_CNTTIME_t* data) {
+    /* Data array to be filled */
+    uint8_t tmp[5] = {0};
+    /* Read raw data */
+    if(i2c_read_block(PCF85263_I2C_ADDRESS,PCF85263_STW_TSR3_SECONDS,tmp,5) != I2C_RET_OK) {
+        /* Reading failed */
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Extract information from raw data */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10    = 0;                    /**< not available for timestamps */
+#endif
+    data->seconds   = _bcd2dec(tmp[0] & PCF85263_SECONDS_MASK);
+    data->minutes   = _bcd2dec(tmp[1] & PCF85263_MINUTES_MASK);
+    data->hours     = _bcd2dec(tmp[2]);
+    data->hours    += _bcd2dec(tmp[3]) * 100;
+    data->hours    += _bcd2dec(tmp[4]) * 10000UL;
+    
+    /* Return with success */
+    return PCF85263_RET_OK;
+}
+
+
+/***
+ * Write the timestamp3 time (stop-watch mode).
+ * 
+ * @param[in]   data        Pointer to the time data structure
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+PCF85263_RET_t pcf85263_set_stw_timestamp3(PCF85263_CNTTIME_t* data) {
+    /* Temporary data array */
+    uint8_t tmp[5] = {0};
+    /* Write information into data array */
+    tmp[0]  = _dec2bcd(data->seconds) & PCF85263_SECONDS_MASK;
+    tmp[1]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
+    tmp[2]  = _dec2bcd(data->hours % 100);
+    tmp[3]  = _dec2bcd((data->hours / 100) % 100);
+    tmp[4]  = _dec2bcd((data->hours / 10000UL) % 100);
+    
+    /* Write data to the device */
+    if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_STW_TSR3_SECONDS,tmp,5) != I2C_RET_OK) {
         /* Writing failed */
         return PCF85263_RET_ERROR;
     }
