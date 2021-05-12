@@ -8,7 +8,7 @@ However, the major and minor number are used to express the version of the hardw
 ### Added
 - Schematic/PCB: pull-down resistors for xbee sleep-request and sleep-indicator signals (active low)
 - Schematic/PCB: voltage divider connected to ADC2 for Vbat measurement (ratio 1:2)
-- Schematic/PCB: added PCF85263A (10-pin) as RTC and timer module (wake-up source)
+- Schematic/PCB: added PCF85263A RTC (10-pin) with solder-jumper connectors for INTA and TS lines
 - Schematic/PCB: added optional 2-pin header for Vin/Vbat connection
 - ASNX LIB: added comment to systick lib that it stops during certain sleep modes
 ### Changed
