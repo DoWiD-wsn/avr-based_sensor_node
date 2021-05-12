@@ -203,6 +203,9 @@ int main(void) {
     /* Initialize the ADC */
     adc_init(ADC_ADPS_16,ADC_REFS_VCC);
 
+    /* Initialize I2C master interface */
+    i2c_init();
+
 #if ENABLE_DBG
     /* Initialize UART1 for debug purposes */
     uart1_init();

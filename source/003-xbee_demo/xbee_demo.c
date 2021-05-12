@@ -33,7 +33,7 @@ int main(void) {
     led_init();
     led1_low();
     led2_high();
-    
+
     /* Initialize the UART0 */
     uart1_init();
     /* Initialize the printf function to use the uart1_putc() function for output */

@@ -75,7 +75,10 @@ int main(void) {
     led_init();
     led1_high();
     led2_high();
-
+    
+    /* Initialize I2C master interface */
+    i2c_init();
+    
     /* Initialize the ADC */
     adc_init(ADC_ADPS_16,ADC_REFS_VCC);
 

@@ -34,8 +34,6 @@ static TMP275_RET_t _get_temp_value(TMP275_t* dev, float *temp, uint8_t reg);
  * @return      OK in case of success; ERROR otherwise
  ***/
 TMP275_RET_t tmp275_init(TMP275_t* dev, uint8_t address) {
-    /* Initialize I2C master interface */
-   i2c_init();
    /* Check if the device is available */
    if(i2c_is_available(address) == I2C_RET_OK) {
         /* Device is available ... store address in device structure */

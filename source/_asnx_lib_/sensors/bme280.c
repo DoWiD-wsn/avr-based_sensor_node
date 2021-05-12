@@ -39,13 +39,11 @@ static BME280_RET_t _get_humidity_raw(BME280_t* bme, uint16_t* value);
  * @return      OK in case of success; ERROR otherwise
  ***/
 BME280_RET_t bme280_init(BME280_t* bme, uint8_t address) {
-    /* Initialize I2C master interface */
-   i2c_init();
-   /* Check if the device is available */
-   if(i2c_is_available(address) != I2C_RET_OK) {
+    /* Check if the device is available */
+    if(i2c_is_available(address) != I2C_RET_OK) {
         /* Return ERROR */
         return BME280_RET_ERROR_NODEV;
-   }
+    }
     
     /* Device is available ... store address in device structure */
     bme->address = address;

@@ -28,8 +28,6 @@
  * @param[in]   address         I2C address of the sensor
  ***/
 STEMMA_RET_t stemma_init(STEMMA_t* dev, uint8_t address) {
-    /* Initialize I2C master interface */
-   i2c_init();
    /* Check if the device is available */
    if(i2c_is_available(address) == I2C_RET_OK) {
         /* Device is available ... store address in device structure */
