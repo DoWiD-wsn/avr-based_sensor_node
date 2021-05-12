@@ -102,6 +102,9 @@ int main(void) {
         while(1);
     }
     /* Set RTC date/time */
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    time.msec10 = 0;
+#endif
     time.seconds = 0;
     time.minutes = 0;
     time.hours = 0;
@@ -171,11 +174,15 @@ int main(void) {
         if(pcf85263_get_rtc_datetime(&time) != PCF85263_RET_OK) {
             printf("RTC read date/time FAILED!\n");
         } else {
+#if PCF85263_100TH_SECONDS_ENABLE==1
+            printf("... RTC: %02d.%02d.20%02d - %02d:%02d:%02d.%02d0\n",time.days,time.months,time.years,time.hours,time.minutes,time.seconds,time.msec10);
+#else
             printf("... RTC: %02d.%02d.20%02d - %02d:%02d:%02d\n",time.days,time.months,time.years,time.hours,time.minutes,time.seconds);
+#endif
         }
 
         printf("\n");
-        _delay_ms(2000);
+        _delay_ms(5000);
     }
 
     return 0;

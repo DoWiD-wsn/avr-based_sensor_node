@@ -6,7 +6,7 @@
  * @file    /_asnx_lib_/rtc/pcf85263.c
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
+ * @date    $Date: 2021/05/12 $
  *****/
 
 

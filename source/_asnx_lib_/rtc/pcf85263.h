@@ -6,7 +6,7 @@
  * @file    /_asnx_lib_/rtc/pcf85263.h
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
+ * @date    $Date: 2021/05/12 $
  *****/
 
 #ifndef _ASNX_PCF85263_H_
@@ -22,7 +22,7 @@
 #define PCF85263_I2C_ADDRESS                0x51
 
 /* Enable 100th seconds (0 .. disabled / 1 .. enabled) */
-#define PCF85263_100TH_SECONDS_ENABLE       0
+#define PCF85263_100TH_SECONDS_ENABLE       1
 /* Use 12h (0) or 24h (1) mode */
 #define PCF85263_24H_MODE_ENABLE            1
 
