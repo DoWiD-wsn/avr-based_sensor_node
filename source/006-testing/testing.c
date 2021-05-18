@@ -36,6 +36,10 @@ int main(void) {
     led1_high();
     led2_high();
     
+    /* Disable unused hardware modules */
+    PRR0 = _BV(PRTIM2) | _BV(PRTIM1) | _BV(PRTIM0) | _BV(PRSPI);
+    PRR1 = _BV(PRTIM3);
+    
     /* Initialize I2C master interface */
     i2c_init();
     
