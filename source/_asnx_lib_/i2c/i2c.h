@@ -48,6 +48,7 @@ typedef enum {
 /***** FUNCTION PROTOTYPES ********************************************/
 /* General */
 void i2c_init(void);
+void i2c_reset(void);
 I2C_RET_t i2c_is_available(uint8_t addr);
 /* Raw Write/Read */
 I2C_RET_t i2c_write_raw(uint8_t addr, uint8_t value);

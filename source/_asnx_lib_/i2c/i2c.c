@@ -55,6 +55,18 @@ void i2c_init(void) {
     TWBR = (uint8_t)(((F_CPU/I2C_SCL_CLK)-16.0)/2.0);
 }
 
+
+/***
+ * Reset the I2C interface (necessary after sleep).
+ ***/
+void i2c_reset(void) {
+    /* Disable TWI */
+    TWCR &= ~((1 << TWSTO) | (1 << TWEN));
+    /* Re-enable TWI */
+    TWCR |= (1 << TWEN);
+}
+
+
 /***
  * Check if a device is available at the given address.
  *

@@ -44,7 +44,7 @@ The basic commands are:
     * *Extended fuses*:  
       `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U efuse:w:0xXX:m`
     * The default fuse setings for the ASN(x) are:  
-      `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U lfuse:w:0xDD:m -U hfuse:w:0xD9:m -U efuse:w:0xFF:m`  
+      `avrdude -p atmega1284p -c avrispv2 -P /dev/ttyACM0 -v -U lfuse:w:0xED:m -U hfuse:w:0xD9:m -U efuse:w:0xFF:m`  
       The same can be achieved via the makefile by executing:  
       `make defaultfuses`
 

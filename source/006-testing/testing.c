@@ -6,69 +6,29 @@
 /*** AVR ***/
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 #include <util/delay.h>
 /*** ASNX LIB ***/
 /* MCU */
 #include "adc/adc.h"
+#include "i2c/i2c.h"
 #include "hw/led.h"
 #include "uart/uart.h"
+/* RTC */
+#include "rtc/pcf85263.h"
 /* Sensors */
 #include "sensors/tmp275.h"
 /* Misc */
 #include "util/printf.h"
-
-/* To test */
-#include "rtc/pcf85263.h"
-
-
-/***** GLOBAL VARIABLES ***********************************************/
-/* Variable (flag) for barrier synchronization */
-uint8_t barrier = 1;
-
-
-/***
- * Callback function to be called by the systick timer.
- ***/
-void update(void) {
-    static int cnt = 0;
-    /* Check if update time has elapsed */
-    if(++cnt >= UPDATE_INTERVAL) {
-        /* Reset counter */
-        cnt = 0;
-        /* Set barrier sync flag */
-        barrier = 1;
-    }
-}
-
-
-/***
- * LED SHOW STARTUP
- * asynchronous blinking LED for ~10s
- ***/
-void led_show_startup(void) {
-    uint8_t cnt;
-    led1_low();
-    for(cnt=0; cnt<20; cnt++) {
-        led2_low();
-        _delay_ms(50);
-        led2_high();
-        _delay_ms(450);
-    }
-    led1_high();
-    led2_high();
-}
 
 
 /***** MAIN ***********************************************************/
 int main(void) {
     /*** Local variables ***/
     /* Temporary variable for sensor measurements */
-    float measurement = 0.0, vcc = 0.0;
-    uint16_t adcres = 0;
-    /* Device handles */
-    TMP275_t tmp275;
+    uint8_t reg = 0;
     /* Date/time structure */
-    PCF85263_DATETIME_t time;
+    PCF85263_CNTTIME_t time = {0};
     
     /*** Initialize the hardware ***/
     /* Initialize the user LEDs and disable both by default */
@@ -87,12 +47,11 @@ int main(void) {
     /* Initialize the printf function to use the uart1_putc() function for output */
     printf_init(uart1_putc);
     
+    /*** Setup the RTC as wake-up source for MCU ***/
     /* Initialize the RTC */
     if(pcf85263_init() != PCF85263_RET_OK) {
         printf("Couldn't initialize RTC ... aborting!\n");
         while(1);
-    } else {
-        printf("... RTC ready\n");
     }
     /* Disable the battery switch */
     if(pcf85263_set_batteryswitch(PCF85263_CTL_BATTERY_BSOFF) != PCF85263_RET_OK) {
@@ -104,19 +63,30 @@ int main(void) {
         printf("RTC: Battery switch configuration FAILED ... aborting!\n");
         while(1);
     }
-    /* Set RTC date/time */
-#if PCF85263_100TH_SECONDS_ENABLE==1
-    time.msec10 = 0;
-#endif
-    time.seconds = 0;
-    time.minutes = 0;
-    time.hours = 0;
-    time.days = 10;
-    time.wday = 0;
-    time.months = 5;
-    time.years = 21;
-    if(pcf85263_set_rtc_datetime(&time) != PCF85263_RET_OK) {
-        printf("RTC set date/time FAILED ... aborting!\n");
+    /* Enable stop-watch mode (read first to get 100TH and STOPM bits) */
+    if(pcf85263_get_function(&reg) != PCF85263_RET_OK) {
+        printf("RTC: Function configuration read FAILED ... aborting!\n");
+        while(1);
+    }
+    reg |= PCF85263_CTL_FUNC_RTCM;
+    if(pcf85263_set_function(reg) != PCF85263_RET_OK) {
+        printf("RTC: Function configuration write FAILED ... aborting!\n");
+        while(1);
+    }
+    /* Set desired wake-up time */
+    time.minutes = 2;
+    if(pcf85263_set_stw_alarm1(&time) != PCF85263_RET_OK) {
+        printf("RTC: Alarm time configuration FAILED ... aborting!\n");
+        while(1);
+    }
+    /* Enable the alarm */
+    if(pcf85263_set_stw_alarm_enables(PCF85263_RTC_ALARM_MIN_A1E) != PCF85263_RET_OK) {
+        printf("RTC: Alarm enable configuration FAILED ... aborting!\n");
+        while(1);
+    }
+    /* Enable the alarm interrupt */
+    if(pcf85263_set_inta_en(PCF85263_CTL_INTA_A1IEA) != PCF85263_RET_OK) {
+        printf("RTC: Alarm enable configuration FAILED ... aborting!\n");
         while(1);
     }
     /* Start RTC */
@@ -126,66 +96,26 @@ int main(void) {
     } else {
         printf("... RTC started\n");
     }
+    /**********************************/
     
     /* Configure INT2 to fire interrupt when logic level is "low" */
     EICRA = 0x00;
     EIMSK = _BV(INT2);
     
-    /* Give the hardware time to start up */
-    led_show_startup();
+    /* Configure the sleep mode */
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
-
-    /* Initialize the TMP275 sensor */
-    if(tmp275_init(&tmp275, TMP275_I2C_ADDRESS) != TMP275_RET_OK) {
-        printf("Couldn't initialize TMP275!\n");
-    } else {
-        printf("... TMP275 ready\n");
-    }
     
     /* Enable interrupts globally */
     sei();
     
     /* Main routine ... */
-    while(1) {       
-        /*** ADC self-diagnosis (via ADC CH0) ***/
-        /* Constant voltage divider (1:1) */
-        printf("... ADC self-diagnosis: %d\n", adc_read_input(ADC_CH0));
-        
-        /*** MCU supply voltage (via ADC) ***/
-        /* Supply voltage in volts (V) */
-        vcc = adc_read_vcc();
-        printf("... Supply voltage: %.2f\n", vcc);
-        
-        /*** Battery voltage (via ADC) ***/
-        /* Supply voltage in volts (V) */
-        adcres = adc_read_input(ADC_CH2);
-        /* Calculate voltage from value (voltage divider 1:1) */
-        measurement = 2.0 * (adcres * (vcc / 1023.0));
-        printf("... Battery voltage: %.2f\n", measurement);
-
-        /*** TMP275 ***/
-        /* Temperature in degree Celsius (°C) */
-        if(tmp275_get_temperature(&tmp275, &measurement) == TMP275_RET_OK) {
-            printf("... TMP275 temperature: %.2f\n", measurement);
-        } else {
-            printf("... TMP275 temperature: FAILED!\n");
-        }
-        
-        /*** RTC ***/
-        if(pcf85263_get_rtc_datetime(&time) != PCF85263_RET_OK) {
-            printf("RTC read date/time FAILED!\n");
-        } else {
-#if PCF85263_100TH_SECONDS_ENABLE==1
-            printf("... RTC: %02d.%02d.20%02d - %02d:%02d:%02d.%02d0\n",time.days,time.months,time.years,time.hours,time.minutes,time.seconds,time.msec10);
-#else
-            printf("... RTC: %02d.%02d.20%02d - %02d:%02d:%02d\n",time.days,time.months,time.years,time.hours,time.minutes,time.seconds);
-#endif
-        }
-
-        printf("\n");
-        _delay_ms(5000);
+    while(1) {
+        /* Enter power down mode */
+        sleep_mode();
+        /* ... everything else happens in the ISR */
     }
 
     return 0;
@@ -194,5 +124,18 @@ int main(void) {
 
 /***** ISR ************************************************************/
 ISR(INT2_vect) {
-    led2_toggle();
+    /* Reset the TWI */
+    i2c_reset();
+    /* Enable ADC */
+    adc_enable();
+    /* Reset stop-watch time */
+    PCF85263_CNTTIME_t time = {0};
+    pcf85263_set_stw_time(&time);
+    
+    /*** Update Sensor Values ***/
+    printf("Here I am ...\n");
+    /****************************/
+    
+    /* Disable ADC */
+    adc_disable();
 }

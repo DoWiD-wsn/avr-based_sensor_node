@@ -46,6 +46,10 @@ typedef struct {
 /*** GENERAL ***/
 void uart0_init(void);
 void uart1_init(void);
+void uart0_enable(void);
+void uart1_enable(void);
+void uart0_disable(void);
+void uart1_disable(void);
 void uart0_set_baudrate(uint32_t baudrate);
 void uart1_set_baudrate(uint32_t baudrate);
 /* ISR-specific */

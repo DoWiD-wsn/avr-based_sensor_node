@@ -89,6 +89,42 @@ void uart1_init(void) {
 
 
 /***
+ * Enable the UART0 interface.
+ ***/
+void uart0_enable(void) {
+    /* Enable RX and TX */
+    UCSR0B |= _BV(RXEN0) | _BV(TXEN0);
+}
+
+
+/***
+ * Enable the UART1 interface.
+ ***/
+void uart1_enable(void) {
+    /* Enable RX and TX */
+    UCSR1B |= _BV(RXEN1) | _BV(TXEN1);
+}
+
+
+/***
+ * Disable the UART0 interface.
+ ***/
+void uart0_disable(void) {
+    /* Disable RX and TX */
+    UCSR0B &= ~(_BV(RXEN0) | _BV(TXEN0));
+}
+
+
+/***
+ * Disable the UART1 interface.
+ ***/
+void uart1_disable(void) {
+    /* Disable RX and TX */
+    UCSR1B &= ~(_BV(RXEN1) | _BV(TXEN1));
+}
+
+
+/***
  * Set the BAUD rate of UART0.
  *
  * @param[in]   baudrate    The baud rate to be set.
@@ -240,8 +276,12 @@ void uart1_set_callback_empty(void (*callback)()) {
 void uart0_putc(char c) {
     /* Wait for transmit buffer to be empty */
     while(!(UCSR0A & _BV(UDRE0)));
+    /* Reset transmission complete flag */
+    UCSR0A |= _BV(TXC0);
     /* Write byte to the output buffer */
     UDR0 = c;
+    /* Wait until the transmission is complete */
+    while(!(UCSR0A & _BV(TXC0)));
 }
 
 
@@ -253,8 +293,12 @@ void uart0_putc(char c) {
 void uart1_putc(char c) {
     /* Wait for transmit buffer to be empty */
     while(!(UCSR1A & _BV(UDRE1)));
+    /* Reset transmission complete flag */
+    UCSR1A |= _BV(TXC1);
     /* Write byte to the output buffer */
     UDR1 = c;
+    /* Wait until the transmission is complete */
+    while(!(UCSR1A & _BV(TXC1)));
 }
 
 
