@@ -7,6 +7,7 @@
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.1.0 $
  * @date    $Date: 2021/05/10 $
+ * @todo    Add timeout to "wait" functions (e.g., blocking)
  *****/
 
 /***** INCLUDES *******************************************************/
