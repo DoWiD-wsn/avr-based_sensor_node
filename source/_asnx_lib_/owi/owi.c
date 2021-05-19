@@ -30,6 +30,7 @@
  * Get a HW structure with the register values of a given GPIO.
  *
  * @param[out]  gpio    Pointer to the structure to be filled
+ * @param[out]  data    Pointer to the device structure to be filled
  * @param[in]   ddr     Pointer to the GPIO's DDRx register
  * @param[in]   port    Pointer to the GPIO's PORTx register
  * @param[in]   pin     Pointer to the GPIO's PINx register

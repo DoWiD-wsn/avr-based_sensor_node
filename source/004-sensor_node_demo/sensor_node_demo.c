@@ -1,20 +1,19 @@
 /****
- * @brief   Demo application for a full sensor node.
+ * @brief   Demo application for a full sensor node incl. AVR/xbee sleep.
  *
  * Demo application for an environmental monitoring sensor node that
  * periodically measures certain physical quantities and transmits the
  * data to a central cluster head via Zigbee (Xbee). After the sensor
- * value updated the Xbee and the AVR are put to sleep and are woken
- * up after a defined period by the external RTC. In case of an error
- * that cannot be easily resolved, the WDT is started and the MCU waits
- * for a WDT reset.
+ * value update the Xbee and the AVR are put to sleep and are woken
+ * up after a defined period by the onboard RTC. In case of an error
+ * that cannot be resolved, the WDT is started and the MCU waits for a
+ * WDT reset.
  *
  * @file    /004-sensor_node_demo/sensor_node_demo.c
  * @author  $Author: Dominik Widhalm $
  * @version $Revision: 1.1.1 $
  * @date    $Date: 2021/05/19 $
  *
- * @todo    Move xbee sleep functionality to xbee library
  * @todo    Add RTC timestamp functionality
  *****/
 
@@ -24,7 +23,7 @@
 #define ENABLE_DBG              (1)
 
 /* Update interval [min] */
-#define UPDATE_INTERVAL         (2)
+#define UPDATE_INTERVAL         (10)
 
 /* MAC address of the destination */
 #define XBEE_DESTINATION_MAC    SEN_MSG_MAC_CH
@@ -53,18 +52,6 @@
 #define MSG_VALUE_AM2302_H      (10)
 #define MSG_VALUE_INCIDENT      (11)
 #define MSG_VALUE_REBOOT        (12)
-
-/// TODO: move to xbee library (default pins)
-/* Xbee sleep-request pin */
-#define XBEE_SLEEP_REQ_DDR      (DDRC)
-#define XBEE_SLEEP_REQ_PORT     (PORTC)
-#define XBEE_SLEEP_REQ_PIN      (PINC)
-#define XBEE_SLEEP_REQ_GPIO     (PC6)
-/* Xbee sleep-indicator pin */
-#define XBEE_SLEEP_IND_DDR      (DDRC)
-#define XBEE_SLEEP_IND_PORT     (PORTC)
-#define XBEE_SLEEP_IND_PIN      (PINC)
-#define XBEE_SLEEP_IND_GPIO     (PC7)
 
 
 /***** INCLUDES *******************************************************/
@@ -141,8 +128,6 @@ int main(void) {
     SEN_MSG_u msg;
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
-    /* Xbee sleep req & ind GPIO structures */
-    hw_io_t xslp_req, xslp_ind;     /// TODO: move to xbee library!?
     /* Temporary variable for sensor measurements */
     float measurement = 0.0, vcc = 0.0;
     uint16_t adcres = 0;
@@ -172,14 +157,6 @@ int main(void) {
     
     /* Configure the sleep mode */
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-    
-    /// TODO: move to xbee library
-    /*** Initialize the xbee sleep req & ind structures ***/
-    hw_get_io(&xslp_req, &XBEE_SLEEP_REQ_DDR, &XBEE_SLEEP_REQ_PORT, &XBEE_SLEEP_REQ_PIN, XBEE_SLEEP_REQ_GPIO);
-    hw_get_io(&xslp_ind, &XBEE_SLEEP_IND_DDR, &XBEE_SLEEP_IND_PORT, &XBEE_SLEEP_IND_PIN, XBEE_SLEEP_IND_GPIO);
-    hw_set_output_low(&xslp_req);
-    hw_set_output(&xslp_req);
-    hw_set_input(&xslp_ind);
     
     /*** Initialize the message structure ***/
     msg.struc.time = 0;
@@ -221,50 +198,50 @@ int main(void) {
     /* Initialize the RTC */
     if(pcf85263_init() != PCF85263_RET_OK) {
         printf("Couldn't initialize RTC ... aborting!\n");
-        while(1);
+        wait_for_wdt_reset();
     }
     /* Disable the battery switch */
     if(pcf85263_set_batteryswitch(PCF85263_CTL_BATTERY_BSOFF) != PCF85263_RET_OK) {
         printf("RTC: Battery switch configuration FAILED ... aborting!\n");
-        while(1);
+        wait_for_wdt_reset();
     }
     /* Disable CLK pin; INTA output */
     if(pcf85263_set_pin_io(PCF85263_CTL_CLKPM | PCF85263_CTL_INTAPM_INTA) != PCF85263_RET_OK) {
         printf("RTC: Battery switch configuration FAILED ... aborting!\n");
-        while(1);
+        wait_for_wdt_reset();
     }
     /* Enable stop-watch mode (read first to get 100TH and STOPM bits) */
     if(pcf85263_get_function(&reg) != PCF85263_RET_OK) {
         printf("RTC: Function configuration read FAILED ... aborting!\n");
-        while(1);
+        wait_for_wdt_reset();
     }
     reg |= PCF85263_CTL_FUNC_RTCM;
     if(pcf85263_set_function(reg) != PCF85263_RET_OK) {
         printf("RTC: Function configuration write FAILED ... aborting!\n");
-        while(1);
+        wait_for_wdt_reset();
     }
     /* Set desired wake-up time */
     time.minutes = UPDATE_INTERVAL;
     if(pcf85263_set_stw_alarm1(&time) != PCF85263_RET_OK) {
         printf("RTC: Alarm time configuration FAILED ... aborting!\n");
-        while(1);
+        wait_for_wdt_reset();
     }
-    /* Reset time data structure */
+    /* Reset time structure for stop-watch reset below */
     time.minutes = 0;
     /* Enable the alarm */
     if(pcf85263_set_stw_alarm_enables(PCF85263_RTC_ALARM_MIN_A1E) != PCF85263_RET_OK) {
         printf("RTC: Alarm enable configuration FAILED ... aborting!\n");
-        while(1);
+        wait_for_wdt_reset();
     }
     /* Enable the alarm interrupt */
     if(pcf85263_set_inta_en(PCF85263_CTL_INTA_A1IEA) != PCF85263_RET_OK) {
         printf("RTC: Alarm enable configuration FAILED ... aborting!\n");
-        while(1);
+        wait_for_wdt_reset();
     }
     /* Start RTC */
     if(pcf85263_start() != PCF85263_RET_OK) {
         printf("Couldn't start RTC ... aborting!\n");
-        while(1);
+        wait_for_wdt_reset();
     } else {
         printf("... RTC started\n");
     }
@@ -367,20 +344,18 @@ int main(void) {
     /* Main routine ... */
     while(1) {
         /* Wake-up xbee */
-        hw_set_output_low(&xslp_req);     // TODO: move to xbee library
-        retries = 0;
-        while(hw_read_input(&xslp_ind) == 0) {
-            /* Check if timeout [s] has been reached (counter in [ms]) */
-            if(retries >= XBEE_WAKE_TIMEOUT) {
-                printf("Couldn't wake-up xbee ... aborting!\n");
-                /* Wait for watchdog reset */
-                wait_for_wdt_reset();
-            } else {
-                /* Wait for some time */
-                retries += XBEE_WAKE_TIMEOUT_DELAY;
-                _delay_ms(XBEE_WAKE_TIMEOUT_DELAY);
-            }
+        if(xbee_sleep_disable() != XBEE_RET_OK) {
+            printf("Couldn't wake-up xbee radio ... aborting!\n");
+            /* Wait for watchdog reset */
+            wait_for_wdt_reset();
         }
+        
+        /* Reset the TWI */
+        i2c_reset();
+        /* Enable ADC */
+        adc_enable();
+        /* Reset stop-watch time */
+        pcf85263_set_stw_time(&time);
         
         /*** ADC self-diagnosis (via ADC CH0) ***/
         /* Constant voltage divider (1:1) */
@@ -657,12 +632,18 @@ int main(void) {
         printf("Sensor value update sent! (#%d)\n\n",msg.struc.time++);
         
         /* Send xbee to sleep */
-        hw_set_output_high(&xslp_req);        // TODO: move to xbee library
+        if(xbee_sleep_enable() != XBEE_RET_OK) {
+            printf("Couldn't send xbee radio to sleep ... aborting!\n");
+            /* Wait for watchdog reset */
+            wait_for_wdt_reset();
+        }
+        
         /* Disable ADC */
         adc_disable();
-        
         /* Enter power down mode */
-        sleep_mode();
+        sleep_enable();
+        sleep_bod_disable();
+        sleep_cpu();
     }
 
     return 0;
@@ -671,11 +652,8 @@ int main(void) {
 
 /***** ISR ************************************************************/
 ISR(INT2_vect) {
-    /* Reset the TWI */
-    i2c_reset();
-    /* Enable ADC */
-    adc_enable();
-    /* Reset stop-watch time */
-    PCF85263_CNTTIME_t time = {0};
-    pcf85263_set_stw_time(&time);
+    /* Actually not needed, but still ... */
+    sleep_disable();
+    /* Wait some time to fully wake up */
+    _delay_ms(5);
 }

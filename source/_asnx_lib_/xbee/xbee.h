@@ -20,7 +20,19 @@
 
 /***** DEFINES ********************************************************/
 /* Use UART blocking (0) or non-blocking (1) functions */
+/* @note    Use non-blocking mode for now; blocking mode needs major rework */
 #define XBEE_WRITE_NONBLOCKING              (1)
+
+/* Xbee sleep-request pin (default) */
+#define XBEE_SLEEP_REQ_DDR                  (DDRC)
+#define XBEE_SLEEP_REQ_PORT                 (PORTC)
+#define XBEE_SLEEP_REQ_PIN                  (PINC)
+#define XBEE_SLEEP_REQ_GPIO                 (PC6)
+/* Xbee sleep-indicator pin (default) */
+#define XBEE_SLEEP_IND_DDR                  (DDRC)
+#define XBEE_SLEEP_IND_PORT                 (PORTC)
+#define XBEE_SLEEP_IND_PIN                  (PINC)
+#define XBEE_SLEEP_IND_GPIO                 (PC7)
 
 /* Join network timeout [s] */
 #define XBEE_JOIN_TIMEOUT                   (120L)
@@ -213,6 +225,11 @@ typedef enum {
 
 /***** FUNCTION PROTOTYPES ****************************************************/
 void xbee_init(uint32_t baud) ;
+void xbee_set_sleep_request_gpio(volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
+void xbee_set_sleep_indicator_gpio(volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
+XBEE_RET_t xbee_sleep_enable(void);
+XBEE_RET_t xbee_sleep_disable(void);
+
 /*** FRAMES ***/
 /* Local AT commands */
 XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value, uint8_t fid);

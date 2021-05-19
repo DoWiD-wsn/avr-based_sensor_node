@@ -5,11 +5,11 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
+ * @version $Revision: 1.1.1 $
  * @date    $Date: 2021/05/10 $
  *
  * @todo    Implement better way for (asynchronous) response handling/matching
- * @todo    Fix blocking (non-ISR) functions
+ * @todo    Fix blocking (non-ISR) functions (not really possible now)
  *****/
 
 /***** INCLUDES *******************************************************/
@@ -19,6 +19,12 @@
 #include <util/delay.h>
 /*** ASNX LIB ***/
 #include "uart/uart.h"
+#include "hw/hw.h"
+
+
+/***** GLOBAL VARIABLES ***********************************************/
+hw_io_t xbee_sleep_req;     /**< Xbee sleep request pin GPIO structure */
+hw_io_t xbee_sleep_ind;     /**< Xbee sleep indicator pin GPIO structure */
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
@@ -45,6 +51,93 @@ void xbee_init(uint32_t baud) {
 #if XBEE_WRITE_NONBLOCKING
     uart0_interrupt_enable();
 #endif
+    /* Fill the sleep signal GPIO structures (default) */
+    hw_get_io(&xbee_sleep_req, &XBEE_SLEEP_REQ_DDR, &XBEE_SLEEP_REQ_PORT, &XBEE_SLEEP_REQ_PIN, XBEE_SLEEP_REQ_GPIO);
+    hw_get_io(&xbee_sleep_ind, &XBEE_SLEEP_IND_DDR, &XBEE_SLEEP_IND_PORT, &XBEE_SLEEP_IND_PIN, XBEE_SLEEP_IND_GPIO);
+    /* Set GPIO input/output and level (initially enabled) */
+    hw_set_output_low(&xbee_sleep_req);
+    hw_set_output(&xbee_sleep_req);
+    hw_set_input(&xbee_sleep_ind);
+}
+
+
+/***
+ * Set the sleep request gpio (SLEEP_RQ) in case not the default shall be used.
+ *
+ * @param[in]   ddr     Pointer to the GPIO's DDRx register
+ * @param[in]   port    Pointer to the GPIO's PORTx register
+ * @param[in]   pin     Pointer to the GPIO's PINx register
+ * @param[in]   portpin Index of the GPIO pin
+ ***/
+void xbee_set_sleep_request_gpio(volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
+    /* Call the respective HW function */
+    hw_get_io(&xbee_sleep_req, ddr, port, pin, portpin);
+}
+
+
+/***
+ * Set the sleep indicator gpio (SLEEP) in case not the default shall be used.
+ *
+ * @param[in]   ddr     Pointer to the GPIO's DDRx register
+ * @param[in]   port    Pointer to the GPIO's PORTx register
+ * @param[in]   pin     Pointer to the GPIO's PINx register
+ * @param[in]   portpin Index of the GPIO pin
+ ***/
+void xbee_set_sleep_indicator_gpio(volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
+    /* Call the respective HW function */
+    hw_get_io(&xbee_sleep_ind, ddr, port, pin, portpin);
+}
+
+
+/***
+ * Request the xbee to enter sleep mode
+ *
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_sleep_enable(void) {
+    /* Request xbee sleep */
+    hw_set_output_high(&xbee_sleep_req);
+    /* Check xbee's response */
+    uint32_t retries = 0;
+    while(hw_read_input(&xbee_sleep_ind) == HW_STATE_HIGH) {
+        /* Check if timeout [s] has been reached (counter in [ms]) */
+        if(retries >= XBEE_WAKE_TIMEOUT) {
+            /* Couldn't send xbee to sleep */
+            return XBEE_RET_ERROR;
+        } else {
+            /* Wait for some time */
+            retries += XBEE_WAKE_TIMEOUT_DELAY;
+            _delay_ms(XBEE_WAKE_TIMEOUT_DELAY);
+        }
+    }
+    /* Sleep request successful */
+    return XBEE_RET_OK;
+}
+
+
+/***
+ * Request the xbee to wake-up from sleep mode
+ *
+ * @return      OK in case of success; ERROR otherwise
+ ***/
+XBEE_RET_t xbee_sleep_disable(void) {
+    /* Request xbee wake-up */
+    hw_set_output_low(&xbee_sleep_req);
+    /* Check xbee's response */
+    uint32_t retries = 0;
+    while(hw_read_input(&xbee_sleep_ind) == HW_STATE_LOW) {
+        /* Check if timeout [s] has been reached (counter in [ms]) */
+        if(retries >= XBEE_WAKE_TIMEOUT) {
+            /* Couldn't wake xbee up */
+            return XBEE_RET_ERROR;
+        } else {
+            /* Wait for some time */
+            retries += XBEE_WAKE_TIMEOUT_DELAY;
+            _delay_ms(XBEE_WAKE_TIMEOUT_DELAY);
+        }
+    }
+    /* Wake-up successful */
+    return XBEE_RET_OK;
 }
 
 
