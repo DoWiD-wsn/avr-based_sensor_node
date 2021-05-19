@@ -11,7 +11,7 @@
  *
  * @file    /004-sensor_node_demo/sensor_node_demo.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.1 $
+ * @version $Revision: 1.1.2 $
  * @date    $Date: 2021/05/19 $
  *
  * @todo    Add RTC timestamp functionality
@@ -19,39 +19,52 @@
 
 
 /*** DEMO CONFIGURATION ***/
-/* Enable debug output via UART1 */
-#define ENABLE_DBG              (1)
+/* Enable debug output via UART1 (9600 BAUD) */
+#define ENABLE_DBG                  (1)
 
 /* Update interval [min] */
-#define UPDATE_INTERVAL         (10)
+#define UPDATE_INTERVAL             (10)
+
+/* Enable (1) or disable (0) measurements/sensors */
+#define ENABLE_ADC_SELF             (1)     /**< Enable the ADC self-test (via ADC) */
+#define ENABLE_MCU_V                (1)     /**< Enable the MCU supply voltage (V) measurement (via ADC) */
+#define ENABLE_BAT_V                (1)     /**< Enable the battery voltage (V) measurement (via ADC) */
+#define ENABLE_XBEE_T               (1)     /**< Enable the XBEE radio temperature (T) measurement (via UART) */
+#define ENABLE_XBEE_V               (1)     /**< Enable the XBEE radio supply voltage (V) measurement (via UART) */
+#define ENABLE_103JT_T              (1)     /**< Enable the 103JT thermistor temperature (T) measurement (via ADC) */
+#define ENABLE_TMP275_T             (1)     /**< Enable the TMP275 sensor temperature (T) measurement (via TWI) */
+#define ENABLE_DS18B20_T            (1)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_STEMMA_H             (1)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
+#define ENABLE_AM2302_T             (0)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_AM2302_H             (0)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
+#define ENABLE_INCIDENT             (1)     /**< Enable the transmission of the cumulative incident counter */
+#define ENABLE_REBOOT               (1)     /**< Enable the transmission of the last reset source (MCUSR) */
 
 /* MAC address of the destination */
-#define XBEE_DESTINATION_MAC    SEN_MSG_MAC_CH
+#define XBEE_DESTINATION_MAC        SEN_MSG_MAC_CH
 
 /* Incident counter total threshold */
-#define INCIDENT_TOTAL_MAX      (100)
+#define INCIDENT_TOTAL_MAX          (100)
 /* Incident counter single threshold */
-#define INCIDENT_SINGLE_MAX     (10)
+#define INCIDENT_SINGLE_MAX         (10)
 
-/* Sensor node configuration (0 ... stemma soil, ds18b20 / 1 ... am2302) */
-#define NODE_CONFIGURATION      (0)
-/* Thermistor surface measurement available (0 ... no / 1 ... yes) */
-#define NODE_103JT_AVAILABLE    (1)
+/* Measurement message data indices (derived from enable value above) */
+#define MSG_VALUE_ADC_SELF          (0)
+#define MSG_VALUE_MCU_V             (MSG_VALUE_ADC_SELF  + ENABLE_MCU_V)
+#define MSG_VALUE_BAT_V             (MSG_VALUE_MCU_V     + ENABLE_BAT_V)
+#define MSG_VALUE_XBEE_T            (MSG_VALUE_BAT_V     + ENABLE_XBEE_T)
+#define MSG_VALUE_XBEE_V            (MSG_VALUE_XBEE_T    + ENABLE_XBEE_V)
+#define MSG_VALUE_103JT_T           (MSG_VALUE_XBEE_V    + ENABLE_103JT_T)
+#define MSG_VALUE_TMP275_T          (MSG_VALUE_103JT_T   + ENABLE_TMP275_T)
+#define MSG_VALUE_DS18B20_T         (MSG_VALUE_TMP275_T  + ENABLE_DS18B20_T)
+#define MSG_VALUE_STEMMA_H          (MSG_VALUE_DS18B20_T + ENABLE_STEMMA_H)
+#define MSG_VALUE_AM2302_T          (MSG_VALUE_STEMMA_H  + ENABLE_AM2302_T)
+#define MSG_VALUE_AM2302_H          (MSG_VALUE_AM2302_T  + ENABLE_AM2302_H)
+#define MSG_VALUE_INCIDENT          (MSG_VALUE_AM2302_H  + ENABLE_INCIDENT)
+#define MSG_VALUE_REBOOT            (MSG_VALUE_INCIDENT  + ENABLE_REBOOT)
 
-/* Measurement message data indices */
-#define MSG_VALUE_ADC_SELF      (0)
-#define MSG_VALUE_MCU_VSS       (1)
-#define MSG_VALUE_BAT_VSS       (2)
-#define MSG_VALUE_XBEE_T        (3)
-#define MSG_VALUE_XBEE_VSS      (4)
-#define MSG_VALUE_103JT_T       (5)
-#define MSG_VALUE_TMP275_T      (6)
-#define MSG_VALUE_DS18B20_T     (7)
-#define MSG_VALUE_STEMMA_H      (8)
-#define MSG_VALUE_AM2302_T      (9)
-#define MSG_VALUE_AM2302_H      (10)
-#define MSG_VALUE_INCIDENT      (11)
-#define MSG_VALUE_REBOOT        (12)
+/* Derive number of sensor values to be transmitted (passed to sensor_msg.h) */
+#define SEN_MSG_NUM_MEASUREMENTS    (ENABLE_ADC_SELF + ENABLE_MCU_V + ENABLE_BAT_V + ENABLE_XBEE_T + ENABLE_XBEE_V + ENABLE_103JT_T + ENABLE_TMP275_T + ENABLE_DS18B20_T + ENABLE_STEMMA_H + ENABLE_AM2302_T + ENABLE_AM2302_H + ENABLE_INCIDENT + ENABLE_REBOOT)
 
 
 /***** INCLUDES *******************************************************/
@@ -63,7 +76,9 @@
 #include <util/delay.h>
 /*** ASNX LIB ***/
 /* MCU */
+#if (ENABLE_ADC_SELF || ENABLE_MCU_V || ENABLE_BAT_V || ENABLE_103JT_T)
 #include "adc/adc.h"
+#endif
 #include "hw/led.h"
 #include "i2c/i2c.h"
 #include "uart/uart.h"
@@ -72,19 +87,29 @@
 /* RTC */
 #include "rtc/pcf85263.h"
 /* Sensors */
-#include "sensors/tmp275.h"
+// 103JT
+#if ENABLE_103JT_T
+#  include "sensors/jt103.h"
+#endif
+// TMP275
+#if ENABLE_TMP275_T
+#  include "sensors/tmp275.h"
 TMP275_t tmp275;
-#if NODE_CONFIGURATION==0
+#endif
+// DS18B20
+#if ENABLE_DS18B20_T
 #  include "sensors/ds18x20.h"
 DS18X20_t ds18b20;
+#endif
+// STEMMA
+#if ENABLE_STEMMA_H
 #  include "sensors/stemma_soil.h"
 STEMMA_t stemma;
-#elif NODE_CONFIGURATION==1
+#endif
+// AM2302
+#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
 #  include "sensors/dht.h"
 DHT_t am2302;
-#endif
-#if NODE_103JT_AVAILABLE
-#  include "sensors/jt103.h"
 #endif
 /* Misc */
 #include "util/fixed_point.h"
@@ -130,26 +155,29 @@ int main(void) {
     PCF85263_CNTTIME_t time = {0};
     /* Temporary variable for sensor measurements */
     float measurement = 0.0, vcc = 0.0;
-    uint16_t adcres = 0;
     /* Temporary variables */
     uint8_t reg = 0;
     uint8_t i = 0;
-    /* Incident counter(s) */
+    /* Incident counter(s) and enable */
     uint16_t inc_xbee = 0;          /**< Incident counter for Xbee functions */
+#if ENABLE_TMP275_T
     uint16_t inc_tmp275 = 0;        /**< Incident counter for TMP275 functions */
-    uint16_t inc_ds18b20 = 0;       /**< Incident counter for DS18B20 functions */
-    uint16_t inc_stemma = 0;        /**< Incident counter for STEMMA SOIL functions */
-    uint16_t inc_am2302 = 0;        /**< Incident counter for AM2302 functions */
-    uint16_t inc_sum = 0;           /**< Total incident counter (sum of others) */
-    /* Sensors working */
     uint8_t en_tmp275 = 0;          /**< TMP275 is available (1) or has failed (0) */
-#if NODE_CONFIGURATION==0
+#endif
+#if ENABLE_DS18B20_T
+    uint16_t inc_ds18b20 = 0;       /**< Incident counter for DS18B20 functions */
     uint8_t en_ds18b20 = 0;         /**< DS18B20 is available (1) or has failed (0)  */
+#endif
+#if ENABLE_STEMMA_H
+    uint16_t inc_stemma = 0;        /**< Incident counter for STEMMA SOIL functions */
     uint8_t en_stemma = 0;          /**< STEMMA is available (1) or has failed (0) */
     STEMMA_AVG_t avg_stemma = {0};  /**< Structure for the STEMMA floating average values */
-#elif NODE_CONFIGURATION==1
+#endif
+#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+    uint16_t inc_am2302 = 0;        /**< Incident counter for AM2302 functions */
     uint8_t en_am2302 = 0;          /**< AM2302 is available (1) or has failed (0) */
 #endif
+    uint16_t inc_sum = 0;           /**< Total incident counter (sum of others) */
     
     /* Disable unused hardware modules */
     PRR0 = _BV(PRTIM2) | _BV(PRTIM1) | _BV(PRTIM0) | _BV(PRSPI);
@@ -161,7 +189,7 @@ int main(void) {
     /*** Initialize the message structure ***/
     msg.struc.time = 0;
     msg.struc.cnt = SEN_MSG_NUM_MEASUREMENTS;
-    for(i=0; i<msg.struc.cnt; i++) {
+    for(i=0; i<SEN_MSG_NUM_MEASUREMENTS; i++) {
         msg.struc.values[i].type = 0;
         msg.struc.values[i].value = 0;
     }
@@ -172,8 +200,13 @@ int main(void) {
     led1_high();
     led2_high();
 
+#if (ENABLE_ADC_SELF || ENABLE_MCU_V || ENABLE_BAT_V || ENABLE_103JT_T)
     /* Initialize the ADC */
     adc_init(ADC_ADPS_16,ADC_REFS_VCC);
+#else
+    /* Disable ADC */
+    PRR0 |= _BV(PRADC);
+#endif
 
     /* Initialize I2C master interface */
     i2c_init();
@@ -254,31 +287,38 @@ int main(void) {
     sei();
     
     /*** Initialization of sensors and message value fields ***/
+#if ENABLE_ADC_SELF
     /* ADC self check */
     msg.struc.values[MSG_VALUE_ADC_SELF].type = SEN_MSG_TYPE_CHK_ADC;
     msg.struc.values[MSG_VALUE_ADC_SELF].value = 0;
+#endif
+#if ENABLE_MCU_V
     /* MCU supply voltage */
-    msg.struc.values[MSG_VALUE_MCU_VSS].type = SEN_MSG_TYPE_VSS_MCU;
-    msg.struc.values[MSG_VALUE_MCU_VSS].value = 0;
+    msg.struc.values[MSG_VALUE_MCU_V].type = SEN_MSG_TYPE_VSS_MCU;
+    msg.struc.values[MSG_VALUE_MCU_V].value = 0;
+#endif
+#if ENABLE_BAT_V
     /* Battery voltage */
-    msg.struc.values[MSG_VALUE_BAT_VSS].type = SEN_MSG_TYPE_VSS_BAT;
-    msg.struc.values[MSG_VALUE_BAT_VSS].value = 0;
+    msg.struc.values[MSG_VALUE_BAT_V].type = SEN_MSG_TYPE_VSS_BAT;
+    msg.struc.values[MSG_VALUE_BAT_V].value = 0;
+#endif
+#if ENABLE_103JT_T
+    /* 103JT thermistor */
+    msg.struc.values[MSG_VALUE_103JT_T].type = SEN_MSG_TYPE_TEMP_SURFACE;
+    msg.struc.values[MSG_VALUE_103JT_T].value = 0;
+#endif
+#if ENABLE_INCIDENT
     /* Incident counter */
     msg.struc.values[MSG_VALUE_INCIDENT].type = SEN_MSG_TYPE_INCIDENTS;
     msg.struc.values[MSG_VALUE_INCIDENT].value = 0;
+#endif
+#if ENABLE_REBOOT
     /* Reboot sources */
     msg.struc.values[MSG_VALUE_REBOOT].type = SEN_MSG_TYPE_REBOOT;
     msg.struc.values[MSG_VALUE_REBOOT].value = MCUSR_dump & 0x0F;
-    
-    /* 103JT thermistor */
-#if NODE_103JT_AVAILABLE
-    msg.struc.values[MSG_VALUE_103JT_T].type = SEN_MSG_TYPE_TEMP_SURFACE;
-    msg.struc.values[MSG_VALUE_103JT_T].value = 0;
-#else
-    msg.struc.values[MSG_VALUE_103JT_T].type = SEN_MSG_TYPE_IGNORE;
-    msg.struc.values[MSG_VALUE_103JT_T].value = 0;
 #endif
 
+#if ENABLE_TMP275_T
     /* Initialize the TMP275 sensor */
     if(tmp275_init(&tmp275, TMP275_I2C_ADDRESS) != TMP275_RET_OK) {
         en_tmp275 = 0;
@@ -289,8 +329,9 @@ int main(void) {
         en_tmp275 = 1;
         printf("... TMP275 ready\n");
     }
+#endif
     
-#if NODE_CONFIGURATION==0
+#if ENABLE_DS18B20_T
     /* Initialize the DS18B20 sensor */
     if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) != DS18X20_RET_OK) {
         en_ds18b20 = 0;
@@ -301,7 +342,9 @@ int main(void) {
         en_ds18b20 = 1;
         printf("... DS18B20 ready\n");
     }
+#endif
     
+#if ENABLE_STEMMA_H
     /* Initialize the STEMMA SOIL sensor */
     if(stemma_init(&stemma, STEMMA_I2C_ADDRESS) != STEMMA_RET_OK) {
         en_stemma = 0;
@@ -312,7 +355,9 @@ int main(void) {
         en_stemma = 1;
         printf("... STEMMA ready\n");
     }
-#elif NODE_CONFIGURATION==1
+#endif
+    
+#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
     /* Initialize the AMS2302 sensor */
     dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
     en_am2302 = 1;
@@ -352,32 +397,39 @@ int main(void) {
         
         /* Reset the TWI */
         i2c_reset();
+#if (ENABLE_ADC_SELF || ENABLE_MCU_V || ENABLE_BAT_V || ENABLE_103JT_T)
         /* Enable ADC */
         adc_enable();
+#endif
         /* Reset stop-watch time */
         pcf85263_set_stw_time(&time);
         
+#if ENABLE_ADC_SELF
         /*** ADC self-diagnosis (via ADC CH0) ***/
         /* Constant voltage divider (1:1) */
         msg.struc.values[MSG_VALUE_ADC_SELF].value = adc_read_input(ADC_CH0);
         printf("... ADC self-diagnosis: %d\n", msg.struc.values[MSG_VALUE_ADC_SELF].value);
+#endif
         
+#if ENABLE_MCU_V
         /*** MCU supply voltage (via ADC) ***/
         /* Supply voltage in volts (V) */
         vcc = adc_read_vcc();
         printf("... Supply voltage: %.2f\n", vcc);
         /* Pack measurement into msg as fixed-point number */
-        msg.struc.values[MSG_VALUE_MCU_VSS].value = fp_float_to_fixed16_10to6(vcc);
+        msg.struc.values[MSG_VALUE_MCU_V].value = fp_float_to_fixed16_10to6(vcc);
+#endif
         
+#if ENABLE_BAT_V
         /*** Battery voltage (via ADC) ***/
-        /* Supply voltage in volts (V) */
-        adcres = adc_read_input(ADC_CH2);
         /* Calculate voltage from value (voltage divider 1:1) */
-        measurement = 2.0 * (adcres * (vcc / 1023.0));
+        measurement = 2.0 * (adc_read_input(ADC_CH2) * (vcc / 1023.0));
         printf("... Battery voltage: %.2f\n", measurement);
         /* Pack measurement into msg as fixed-point number */
-        msg.struc.values[MSG_VALUE_BAT_VSS].value = fp_float_to_fixed16_10to6(measurement);
-
+        msg.struc.values[MSG_VALUE_BAT_V].value = fp_float_to_fixed16_10to6(measurement);
+#endif
+        
+#if ENABLE_XBEE_T
         /*** Xbee3 temperature ***/
         /* Reset the Xbee buffer */
         xbee_rx_flush();
@@ -404,7 +456,9 @@ int main(void) {
                 wait_for_wdt_reset();
             }
         }
-
+#endif
+        
+#if ENABLE_XBEE_V
         /*** Xbee3 supply voltage ***/
         /* Reset the Xbee buffer */
         xbee_rx_flush();
@@ -413,15 +467,15 @@ int main(void) {
         if(xbee_cmd_get_vss(&measurement) == XBEE_RET_OK) {
             printf("... Xbee supply voltage: %.2f\n", measurement);
             /* Pack measurement into msg as fixed-point number */
-            msg.struc.values[MSG_VALUE_XBEE_VSS].type = SEN_MSG_TYPE_VSS_RADIO;
-            msg.struc.values[MSG_VALUE_XBEE_VSS].value = fp_float_to_fixed16_10to6(measurement);
+            msg.struc.values[MSG_VALUE_XBEE_V].type = SEN_MSG_TYPE_VSS_RADIO;
+            msg.struc.values[MSG_VALUE_XBEE_V].value = fp_float_to_fixed16_10to6(measurement);
             /* Decrement incident counter */
             if(inc_xbee > 0) {
                 inc_xbee--;
             }
         } else {
-            msg.struc.values[MSG_VALUE_XBEE_VSS].type = SEN_MSG_TYPE_IGNORE;
-            msg.struc.values[MSG_VALUE_XBEE_VSS].value = 0;
+            msg.struc.values[MSG_VALUE_XBEE_V].type = SEN_MSG_TYPE_IGNORE;
+            msg.struc.values[MSG_VALUE_XBEE_V].value = 0;
             printf("... Xbee temperature: FAILED!\n");
             /* Increment incident counter */
             if(inc_xbee < INCIDENT_SINGLE_MAX) {
@@ -431,8 +485,9 @@ int main(void) {
                 wait_for_wdt_reset();
             }
         }
-
-#if NODE_103JT_AVAILABLE
+#endif
+        
+#if ENABLE_103JT_T
         /*** 103JT thermistor (via ADC CH1) ***/
         /* Temperature in degree Celsius (°C) */
         measurement = jt103_get_temperature(adc_read_input(ADC_CH1));
@@ -441,6 +496,7 @@ int main(void) {
         msg.struc.values[MSG_VALUE_103JT_T].value = fp_float_to_fixed16_10to6(measurement);
 #endif
 
+#if ENABLE_TMP275_T
         /*** TMP275 ***/
         if(en_tmp275) {
             /* Temperature in degree Celsius (°C) */
@@ -465,8 +521,9 @@ int main(void) {
                 }
             }
         }
+#endif
 
-#if NODE_CONFIGURATION==0
+#if ENABLE_DS18B20_T
         /*** DS18B20 ***/
         if(en_ds18b20) {
             /* Temperature in degree Celsius (°C) */
@@ -491,7 +548,9 @@ int main(void) {
                 }
             }
         }
-
+#endif
+        
+#if ENABLE_STEMMA_H
         /*** STEMMA SOIL ***/
         if(en_stemma) {
             /* Relative humidity in percent (% RH) */
@@ -516,8 +575,10 @@ int main(void) {
                 }
             }
         }
-#elif NODE_CONFIGURATION==1
-        /*** AM2302 ***/
+#endif
+        
+#if ENABLE_AM2302_T
+        /*** AM2302 (T) ***/
         if(en_am2302) {
             /* Temperature in degree Celsius (°C) */
             if(dht_get_temperature(&am2302, &measurement) == DHT_RET_OK) {
@@ -540,6 +601,12 @@ int main(void) {
                     en_am2302 = 0;
                 }
             }
+        }
+#endif
+        
+#if ENABLE_AM2302_H
+        /*** AM2302 (H) ***/
+        if(en_am2302) {
             /* Relative humidity in percent (% RH) */
             if(dht_get_humidity(&am2302, &measurement) == DHT_RET_OK) {
                 printf("... AM2302 humidity: %.2f\n", measurement);
@@ -565,14 +632,32 @@ int main(void) {
 #endif
 
         /*** INCIDENT COUNTER ***/
-        inc_sum = inc_xbee + inc_tmp275 + inc_ds18b20 + inc_stemma + inc_am2302;
+        inc_sum = inc_xbee;
+#if ENABLE_TMP275_T
+        inc_sum += inc_tmp275;
+#endif
+#if ENABLE_DS18B20_T
+        inc_sum += inc_ds18b20;
+#endif
+#if ENABLE_STEMMA_H
+        inc_sum += inc_stemma;
+#endif
+#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+        inc_sum += inc_am2302;
+#endif
+
         printf("... INCIDENT COUNTER (ENABLE):\n");
         printf("    ... XBEE:    %d\n", inc_xbee);
+#if ENABLE_TMP275_T
         printf("    ... TMP275:  %d (%d)\n", inc_tmp275, en_tmp275);
-#if NODE_CONFIGURATION==0
+#endif
+#if ENABLE_DS18B20_T
         printf("    ... DS18B20: %d (%d)\n", inc_ds18b20, en_ds18b20);
+#endif
+#if ENABLE_STEMMA_H
         printf("    ... STEMMA:  %d (%d)\n", inc_stemma, en_stemma);
-#elif NODE_CONFIGURATION==1
+#endif
+#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
         printf("    ... AM2302:  %d (%d)\n", inc_am2302, en_am2302);
 #endif
         printf("    ... TOTAL:   %d\n", inc_sum);
@@ -638,8 +723,11 @@ int main(void) {
             wait_for_wdt_reset();
         }
         
+#if (ENABLE_ADC_SELF || ENABLE_MCU_V || ENABLE_BAT_V || ENABLE_103JT_T)
         /* Disable ADC */
         adc_disable();
+#endif
+        
         /* Enter power down mode */
         sleep_enable();
         sleep_bod_disable();

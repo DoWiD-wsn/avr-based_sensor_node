@@ -20,6 +20,7 @@
 /***** DEFINES ********************************************************/
 /* Number of sensor measurements per message */
 #ifndef SEN_MSG_NUM_MEASUREMENTS
+/* Default value is the maximum for the full demo (13 measurements) */
 #  define SEN_MSG_NUM_MEASUREMENTS            (13)
 #endif
 
