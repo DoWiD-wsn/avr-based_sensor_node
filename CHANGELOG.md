@@ -6,16 +6,16 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
-- Schematic/PCB: pull-down resistors for xbee sleep-request and sleep-indicator signals (active low)
+- Schematic/PCB: pull-up resistors for xbee sleep-request and sleep-indicator signals
 - Schematic/PCB: voltage divider connected to ADC2 for Vbat measurement (ratio 1:2)
 - Schematic/PCB: added PCF85263A RTC (10-pin) with solder-jumper connectors for INTA and TS lines
 - Schematic/PCB: added optional 2-pin header for Vin/Vbat connection
-- ASNX LIB: added comment to systick lib that it stops during certain sleep modes
 ### Changed
 - Schematic/PCB: thermistor balance resistor changed from 0.1% to 1% accuracy (sufficient)
 - PCB: updated and improved silk layer
 - PCB: unified header pads to circular (rectangle not recognizable after soldering)
 - ASNX LIB: use define in DHT library to decide whether to check last measurement time or not
+- ASNX LIB: updated MCU component libraries to better support sleep modes
 - DOCU: updated ASN(x) PCB docu and BOM; added Farnell part links
 ### Removed
 - N/A
