@@ -237,7 +237,9 @@ XBEE_RET_t xbee_cmd_get_temperature(float* temp);
 XBEE_RET_t xbee_cmd_get_vss(float* vss);
 
 /*** CIRCULAR BUFFER ***/
-void xbee_flush_rx(void);
-void xbee_flush_tx(void);
+void xbee_rx_flush(void);
+void xbee_tx_flush(void);
+uint8_t xbee_rx_cnt(void);
+uint8_t xbee_tx_cnt(void);
 
 #endif // _ASNX_XBEE_H_

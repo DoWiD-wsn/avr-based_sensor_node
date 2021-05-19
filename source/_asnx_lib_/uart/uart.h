@@ -78,12 +78,12 @@ int8_t uart1_gets(uint8_t* s, uint16_t len);
 /*** NON-BLOCKING ***/
 int8_t uart0_write(uint8_t* data, uint16_t len);
 int8_t uart1_write(uint8_t* data, uint16_t len);
-uint16_t uart0_read(uint8_t* data, uint16_t len);
-uint16_t uart1_read(uint8_t* data, uint16_t len);
-uint16_t uart0_rx_buffer_cnt(void);
-uint16_t uart1_rx_buffer_cnt(void);
-uint16_t uart0_tx_buffer_cnt(void);
-uint16_t uart1_tx_buffer_cnt(void);
+uint8_t uart0_read(uint8_t* data, uint16_t len);
+uint8_t uart1_read(uint8_t* data, uint16_t len);
+uint8_t uart0_rx_buffer_cnt(void);
+uint8_t uart1_rx_buffer_cnt(void);
+uint8_t uart0_tx_buffer_cnt(void);
+uint8_t uart1_tx_buffer_cnt(void);
 void uart0_rx_flush(void);
 void uart1_rx_flush(void);
 void uart0_tx_flush(void);

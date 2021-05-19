@@ -9,6 +9,7 @@
  * @date    $Date: 2021/05/10 $
  *
  * @todo    Implement better way for (asynchronous) response handling/matching
+ * @todo    Fix blocking (non-ISR) functions
  *****/
 
 /***** INCLUDES *******************************************************/
@@ -41,9 +42,9 @@ void xbee_init(uint32_t baud) {
     /* Initialize the UART interface */
     uart0_init();
     uart0_set_baudrate(baud);
+#if XBEE_WRITE_NONBLOCKING
     uart0_interrupt_enable();
-    /* Enable interrupts globally */
-    sei();
+#endif
 }
 
 
@@ -1368,7 +1369,7 @@ XBEE_RET_t xbee_cmd_get_vss(float* vss) {
 /***
  * Flush the receive buffer.
  ***/
-void xbee_flush_rx(void) {
+void xbee_rx_flush(void) {
     /* Flush the UART RX buffer */
     uart0_rx_flush();
 }
@@ -1377,7 +1378,27 @@ void xbee_flush_rx(void) {
 /***
  * Flush the transmit buffer.
  ***/
-void xbee_flush_tx(void) {
+void xbee_tx_flush(void) {
     /* Flush the UART TX buffer */
     uart0_tx_flush();
+}
+
+
+/***
+ * Get the number of bytes in the RX buffer.
+ *
+ * @return      Number of bytes in the RX buffer.
+ ***/
+uint8_t xbee_rx_cnt(void) {
+    return uart0_rx_buffer_cnt();
+}
+
+
+/***
+ * Get the number of bytes in the TX buffer.
+ *
+ * @return      Number of bytes in the TX buffer.
+ ***/
+uint8_t xbee_tx_cnt(void) {
+    return uart0_tx_buffer_cnt();
 }

@@ -494,9 +494,9 @@ int8_t uart1_write(uint8_t* data, uint16_t len) {
  *
  * @param[out]  data        Pointer to the data array to be read
  * @param[in]   len         Maximum number of bytes to be read
- * @return      OK in case of successful
+ * @return      Number of bytes read
  ***/
-uint16_t uart0_read(uint8_t* data, uint16_t len) {
+uint8_t uart0_read(uint8_t* data, uint16_t len) {
     uint16_t i=0;
     /* Get bytes from the RX buffer */
     for(i=0; i<len; i++) {
@@ -512,7 +512,7 @@ uint16_t uart0_read(uint8_t* data, uint16_t len) {
             break;
         }
     }
-    /* Return success */
+    /* Return number of bytes read */
     return i;
 }
 
@@ -522,9 +522,9 @@ uint16_t uart0_read(uint8_t* data, uint16_t len) {
  *
  * @param[out]  data        Pointer to the data array to be read
  * @param[in]   len         Maximum number of bytes to be read
- * @return      OK in case of successful
+ * @return      Number of bytes read
  ***/
-uint16_t uart1_read(uint8_t* data, uint16_t len) {
+uint8_t uart1_read(uint8_t* data, uint16_t len) {
     uint16_t i=0;
     /* Get bytes from the RX buffer */
     for(i=0; i<len; i++) {
@@ -540,7 +540,7 @@ uint16_t uart1_read(uint8_t* data, uint16_t len) {
             break;
         }
     }
-    /* Return success */
+    /* Return number of bytes read */
     return i;
 }
 
@@ -550,7 +550,7 @@ uint16_t uart1_read(uint8_t* data, uint16_t len) {
  *
  * @return      Number of bytes in the UART0 RX buffer
  ***/
-uint16_t uart0_rx_buffer_cnt(void) {
+uint8_t uart0_rx_buffer_cnt(void) {
     /* Return number of bytes in RX buffer */
     return uart0_cb_rx.cnt;
 }
@@ -561,7 +561,7 @@ uint16_t uart0_rx_buffer_cnt(void) {
  *
  * @return      Number of bytes in the UART1 RX buffer
  ***/
-uint16_t uart1_rx_buffer_cnt(void) {
+uint8_t uart1_rx_buffer_cnt(void) {
     /* Return number of bytes in RX buffer */
     return uart1_cb_rx.cnt;
 }
@@ -572,7 +572,7 @@ uint16_t uart1_rx_buffer_cnt(void) {
  *
  * @return      Number of bytes in the UART0 TX buffer
  ***/
-uint16_t uart0_tx_buffer_cnt(void) {
+uint8_t uart0_tx_buffer_cnt(void) {
     /* Return number of bytes in TX buffer */
     return uart0_cb_tx.cnt;
 }
@@ -583,7 +583,7 @@ uint16_t uart0_tx_buffer_cnt(void) {
  *
  * @return      Number of bytes in the UART1 TX buffer
  ***/
-uint16_t uart1_tx_buffer_cnt(void) {
+uint8_t uart1_tx_buffer_cnt(void) {
     /* Return number of bytes in TX buffer */
     return uart1_cb_tx.cnt;
 }

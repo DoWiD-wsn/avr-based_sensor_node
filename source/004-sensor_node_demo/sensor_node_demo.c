@@ -52,7 +52,7 @@
 #define MSG_VALUE_AM2302_T      (9)
 #define MSG_VALUE_AM2302_H      (10)
 #define MSG_VALUE_INCIDENT      (11)
-#define MSG_VALUE_REBOOOT       (12)
+#define MSG_VALUE_REBOOT        (12)
 
 /// TODO: move to xbee library (default pins)
 /* Xbee sleep-request pin */
@@ -142,7 +142,7 @@ int main(void) {
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
     /* Xbee sleep req & ind GPIO structures */
-    //hw_io_t xslp_req, xslp_ind;     /// TODO: move to xbee library!?
+    hw_io_t xslp_req, xslp_ind;     /// TODO: move to xbee library!?
     /* Temporary variable for sensor measurements */
     float measurement = 0.0, vcc = 0.0;
     uint16_t adcres = 0;
@@ -175,11 +175,11 @@ int main(void) {
     
     /// TODO: move to xbee library
     /*** Initialize the xbee sleep req & ind structures ***/
-    //hw_get_io(&xslp_req, &XBEE_SLEEP_REQ_DDR, &XBEE_SLEEP_REQ_PORT, &XBEE_SLEEP_REQ_PIN, XBEE_SLEEP_REQ_GPIO);
-    //hw_get_io(&xslp_ind, &XBEE_SLEEP_IND_DDR, &XBEE_SLEEP_IND_PORT, &XBEE_SLEEP_IND_PIN, XBEE_SLEEP_IND_GPIO);
-    //hw_set_output_low(&xslp_req);
-    //hw_set_output(&xslp_req);
-    //hw_set_input(&xslp_ind);
+    hw_get_io(&xslp_req, &XBEE_SLEEP_REQ_DDR, &XBEE_SLEEP_REQ_PORT, &XBEE_SLEEP_REQ_PIN, XBEE_SLEEP_REQ_GPIO);
+    hw_get_io(&xslp_ind, &XBEE_SLEEP_IND_DDR, &XBEE_SLEEP_IND_PORT, &XBEE_SLEEP_IND_PIN, XBEE_SLEEP_IND_GPIO);
+    hw_set_output_low(&xslp_req);
+    hw_set_output(&xslp_req);
+    hw_set_input(&xslp_ind);
     
     /*** Initialize the message structure ***/
     msg.struc.time = 0;
@@ -290,8 +290,8 @@ int main(void) {
     msg.struc.values[MSG_VALUE_INCIDENT].type = SEN_MSG_TYPE_INCIDENTS;
     msg.struc.values[MSG_VALUE_INCIDENT].value = 0;
     /* Reboot sources */
-    msg.struc.values[MSG_VALUE_REBOOOT].type = SEN_MSG_TYPE_REBOOT;
-    msg.struc.values[MSG_VALUE_REBOOOT].value = MCUSR_dump & 0x0F;
+    msg.struc.values[MSG_VALUE_REBOOT].type = SEN_MSG_TYPE_REBOOT;
+    msg.struc.values[MSG_VALUE_REBOOT].value = MCUSR_dump & 0x0F;
     
     /* 103JT thermistor */
 #if NODE_103JT_AVAILABLE
@@ -343,8 +343,8 @@ int main(void) {
 #endif
 
     /* Reset the Xbee buffer */
-    xbee_flush_rx();
-    xbee_flush_tx();
+    xbee_rx_flush();
+    xbee_tx_flush();
     /* Check Xbee module connection */
     uint32_t retries = 0;
     /* Check Xbee module connection */
@@ -367,20 +367,20 @@ int main(void) {
     /* Main routine ... */
     while(1) {
         /* Wake-up xbee */
-        //hw_set_output_low(&xslp_req);     // TODO: re-enable
-        //retries = 0;
-        //while(hw_read_input(&xslp_ind) == 0) {
-            ///* Check if timeout [s] has been reached (counter in [ms]) */
-            //if(retries >= XBEE_WAKE_TIMEOUT) {
-                //printf("Couldn't wake-up xbee ... aborting!\n");
-                ///* Wait for watchdog reset */
-                //wait_for_wdt_reset();
-            //} else {
-                ///* Wait for some time */
-                //retries += XBEE_WAKE_TIMEOUT_DELAY;
-                //_delay_ms(XBEE_WAKE_TIMEOUT_DELAY);
-            //}
-        //}
+        hw_set_output_low(&xslp_req);     // TODO: move to xbee library
+        retries = 0;
+        while(hw_read_input(&xslp_ind) == 0) {
+            /* Check if timeout [s] has been reached (counter in [ms]) */
+            if(retries >= XBEE_WAKE_TIMEOUT) {
+                printf("Couldn't wake-up xbee ... aborting!\n");
+                /* Wait for watchdog reset */
+                wait_for_wdt_reset();
+            } else {
+                /* Wait for some time */
+                retries += XBEE_WAKE_TIMEOUT_DELAY;
+                _delay_ms(XBEE_WAKE_TIMEOUT_DELAY);
+            }
+        }
         
         /*** ADC self-diagnosis (via ADC CH0) ***/
         /* Constant voltage divider (1:1) */
@@ -405,8 +405,8 @@ int main(void) {
 
         /*** Xbee3 temperature ***/
         /* Reset the Xbee buffer */
-        xbee_flush_rx();
-        xbee_flush_tx();
+        xbee_rx_flush();
+        xbee_tx_flush();
         /* Temperature in degree Celsius (°C) */
         if(xbee_cmd_get_temperature(&measurement) == XBEE_RET_OK) {
             printf("... Xbee temperature: %.2f\n", measurement);
@@ -432,8 +432,8 @@ int main(void) {
 
         /*** Xbee3 supply voltage ***/
         /* Reset the Xbee buffer */
-        xbee_flush_rx();
-        xbee_flush_tx();
+        xbee_rx_flush();
+        xbee_tx_flush();
         /* Supply voltage in volts (V) */
         if(xbee_cmd_get_vss(&measurement) == XBEE_RET_OK) {
             printf("... Xbee supply voltage: %.2f\n", measurement);
@@ -610,18 +610,16 @@ int main(void) {
         }
         
         /* Reset the Xbee buffer */
-        xbee_flush_rx();
-        xbee_flush_tx();
+        xbee_rx_flush();
+        xbee_tx_flush();
         /* Check Xbee module connection */
         retries = 0;
         while(xbee_is_connected() != XBEE_RET_OK) {
             /* Check if timeout [s] has been reached (counter in [ms]) */
             if(retries >= (XBEE_JOIN_TIMEOUT*1000)) {
                 printf("Couldn't re-connect to the network ... aborting!\n");
-                /* Run into endless loop and wait for watchdog reset */
-                led1_low();
-                led2_low();
-                while(1);
+                /* Wait for watchdog reset */
+                wait_for_wdt_reset();
             } else {
                 /* Wait for some time */
                 retries += XBEE_JOIN_TIMEOUT_DELAY;
@@ -631,9 +629,7 @@ int main(void) {
         
         /* Send the measurement to the CH */
         int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, msg.byte, SEN_MSG_SIZE, 0x00);
-        if(ret == XBEE_RET_OK) {
-            printf("Sensor value update sent! (#%d)\n",msg.struc.time);
-        } else {
+        if(ret != XBEE_RET_OK) {
             printf("ERROR sending message (%d)!\n",ret);
             /* Increment incident counter */
             if(inc_xbee < INCIDENT_SINGLE_MAX) {
@@ -644,13 +640,24 @@ int main(void) {
                 wait_for_wdt_reset();
             }
         }
-        
-        /* Increment consecutive message counter */
-        msg.struc.time++;
-        printf("\n");
+        /* Wait until the xbee/uart0 TX buffer is empty */
+        retries = 0;
+        while(xbee_tx_cnt()>0) {
+            /* Check if timeout has been reached */
+            if(retries >= 100) {
+                printf("UART0 TX buffer didn't become empty ... aborting!\n");
+                /* Wait for watchdog reset */
+                wait_for_wdt_reset();
+            } else {
+                /* Wait for some time */
+                retries++;
+                _delay_ms(1);
+            }
+        }
+        printf("Sensor value update sent! (#%d)\n\n",msg.struc.time++);
         
         /* Send xbee to sleep */
-        //hw_set_output_high(&xslp_req);        // TODO: re-enable
+        hw_set_output_high(&xslp_req);        // TODO: move to xbee library
         /* Disable ADC */
         adc_disable();
         

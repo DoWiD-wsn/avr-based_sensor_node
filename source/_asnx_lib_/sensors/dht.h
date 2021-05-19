@@ -24,7 +24,7 @@
 
 /***** DEFINES ********************************************************/
 /* Enable last-measurement time check (requires systick lib) */
-#define DHT_CHECK_LAST_MEAS     (1)
+#define DHT_CHECK_LAST_MEAS     (0)
 
 /* Timing-related */
 #define DHT_TIMING_MIN_INTERVAL 2000UL
