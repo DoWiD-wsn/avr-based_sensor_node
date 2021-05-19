@@ -388,6 +388,12 @@ int main(void) {
     
     /* Main routine ... */
     while(1) {
+        /* Stop RTC */
+        if(pcf85263_stop() != PCF85263_RET_OK) {
+            printf("Couldn't stop RTC ... aborting!\n");
+            wait_for_wdt_reset();
+        }
+        
         /* Wake-up xbee */
         if(xbee_sleep_disable() != XBEE_RET_OK) {
             printf("Couldn't wake-up xbee radio ... aborting!\n");
@@ -401,8 +407,14 @@ int main(void) {
         /* Enable ADC */
         adc_enable();
 #endif
+        
         /* Reset stop-watch time */
         pcf85263_set_stw_time(&time);
+        /* Start RTC */
+        if(pcf85263_start() != PCF85263_RET_OK) {
+            printf("Couldn't start RTC ... aborting!\n");
+            wait_for_wdt_reset();
+        }
         
 #if ENABLE_ADC_SELF
         /*** ADC self-diagnosis (via ADC CH0) ***/
