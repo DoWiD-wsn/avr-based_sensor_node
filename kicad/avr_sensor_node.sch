@@ -2023,7 +2023,7 @@ Text Label 6900 1400 0    50   ~ 0
 PB2
 Text Label 8900 5350 0    50   ~ 0
 PB2
-Text Label 8500 5650 2    50   ~ 0
+Text Label 8400 5700 2    50   ~ 0
 RTC_TS
 Text Label 8500 5300 2    50   ~ 0
 INT2
@@ -2044,17 +2044,6 @@ Connection ~ 8500 5350
 Wire Wire Line
 	8800 5350 8900 5350
 $Comp
-L Device:R R17
-U 1 1 60AF22B1
-P 8050 5700
-F 0 "R17" V 7950 5650 50  0000 L CNN
-F 1 "10k" V 8150 5650 50  0000 L CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" V 7980 5700 50  0001 C CNN
-F 3 "~" H 8050 5700 50  0001 C CNN
-	1    8050 5700
-	0    1    1    0   
-$EndComp
-$Comp
 L Jumper:SolderJumper_2_Bridged JP7
 U 1 1 60AF5016
 P 8650 5700
@@ -2065,16 +2054,6 @@ F 3 "~" H 8650 5700 50  0001 C CNN
 	1    8650 5700
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	7800 5350 7800 5700
-Wire Wire Line
-	7800 5700 7900 5700
-Connection ~ 7800 5350
-Wire Wire Line
-	8200 5700 8500 5700
-Wire Wire Line
-	8500 5700 8500 5650
-Connection ~ 8500 5700
 Wire Wire Line
 	8800 5700 8900 5700
 Wire Notes Line
@@ -2107,4 +2086,8 @@ $EndComp
 Wire Wire Line
 	1650 3100 1650 3200
 Connection ~ 1650 3200
+Wire Wire Line
+	8400 5700 8500 5700
+Text Notes 8150 5900 0    50   ~ 0
+TS has an internal pull-up
 $EndSCHEMATC
