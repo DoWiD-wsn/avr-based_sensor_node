@@ -5,16 +5,16 @@
  * periodically measures certain physical quantities and transmits the
  * data to a central cluster head via Zigbee (Xbee). After the sensor
  * value update the Xbee and the AVR are put to sleep and are woken
- * up after a defined period by the onboard RTC. In case of an error
- * that cannot be resolved, the WDT is started and the MCU waits for a
- * WDT reset.
+ * up after a defined period by the onboard RTC. Additionally, the 
+ * runtime of the active phase can be measure using the RTC's timestamp
+ * functionality with a granularity of tens of milliseconds. In case of
+ * an error that cannot be resolved, the WDT is started and the MCU
+ * waits for a WDT reset.
  *
  * @file    /004-sensor_node_demo/sensor_node_demo.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.2 $
+ * @version $Revision: 1.1.3 $
  * @date    $Date: 2021/05/19 $
- *
- * @todo    Add RTC timestamp functionality
  *****/
 
 
@@ -23,7 +23,7 @@
 #define ENABLE_DBG                  (1)
 
 /* Update interval [min] */
-#define UPDATE_INTERVAL             (10)
+#define UPDATE_INTERVAL             (2)
 
 /* Enable (1) or disable (0) measurements/sensors */
 #define ENABLE_ADC_SELF             (1)     /**< Enable the ADC self-test (via ADC) */
@@ -37,6 +37,7 @@
 #define ENABLE_STEMMA_H             (1)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
 #define ENABLE_AM2302_T             (0)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
 #define ENABLE_AM2302_H             (0)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
+#define ENABLE_RUNTIME              (1)     /**< Enable the transmission of the last runtime value */
 #define ENABLE_INCIDENT             (1)     /**< Enable the transmission of the cumulative incident counter */
 #define ENABLE_REBOOT               (1)     /**< Enable the transmission of the last reset source (MCUSR) */
 
@@ -60,11 +61,12 @@
 #define MSG_VALUE_STEMMA_H          (MSG_VALUE_DS18B20_T + ENABLE_STEMMA_H)
 #define MSG_VALUE_AM2302_T          (MSG_VALUE_STEMMA_H  + ENABLE_AM2302_T)
 #define MSG_VALUE_AM2302_H          (MSG_VALUE_AM2302_T  + ENABLE_AM2302_H)
-#define MSG_VALUE_INCIDENT          (MSG_VALUE_AM2302_H  + ENABLE_INCIDENT)
+#define MSG_VALUE_RUNTIME           (MSG_VALUE_AM2302_H  + ENABLE_RUNTIME)
+#define MSG_VALUE_INCIDENT          (MSG_VALUE_RUNTIME   + ENABLE_INCIDENT)
 #define MSG_VALUE_REBOOT            (MSG_VALUE_INCIDENT  + ENABLE_REBOOT)
 
 /* Derive number of sensor values to be transmitted (passed to sensor_msg.h) */
-#define SEN_MSG_NUM_MEASUREMENTS    (ENABLE_ADC_SELF + ENABLE_MCU_V + ENABLE_BAT_V + ENABLE_XBEE_T + ENABLE_XBEE_V + ENABLE_103JT_T + ENABLE_TMP275_T + ENABLE_DS18B20_T + ENABLE_STEMMA_H + ENABLE_AM2302_T + ENABLE_AM2302_H + ENABLE_INCIDENT + ENABLE_REBOOT)
+#define SEN_MSG_NUM_MEASUREMENTS    (ENABLE_ADC_SELF + ENABLE_MCU_V + ENABLE_BAT_V + ENABLE_XBEE_T + ENABLE_XBEE_V + ENABLE_103JT_T + ENABLE_TMP275_T + ENABLE_DS18B20_T + ENABLE_STEMMA_H + ENABLE_AM2302_T + ENABLE_AM2302_H + ENABLE_RUNTIME + ENABLE_INCIDENT + ENABLE_REBOOT)
 
 
 /***** INCLUDES *******************************************************/
@@ -94,22 +96,18 @@
 // TMP275
 #if ENABLE_TMP275_T
 #  include "sensors/tmp275.h"
-TMP275_t tmp275;
 #endif
 // DS18B20
 #if ENABLE_DS18B20_T
 #  include "sensors/ds18x20.h"
-DS18X20_t ds18b20;
 #endif
 // STEMMA
 #if ENABLE_STEMMA_H
 #  include "sensors/stemma_soil.h"
-STEMMA_t stemma;
 #endif
 // AM2302
 #if (ENABLE_AM2302_T || ENABLE_AM2302_H)
 #  include "sensors/dht.h"
-DHT_t am2302;
 #endif
 /* Misc */
 #include "util/fixed_point.h"
@@ -146,6 +144,26 @@ void wait_for_wdt_reset(void) {
 }
 
 
+/***
+ * Calculate milliseconds from a RTC time structure (max. 10,9 min).
+ *
+ * @param[in]   data        Pointer to the RTC time structure
+ * @return      Resulting number of tens of milliseconds (max. 10,9 min)
+ ***/
+uint16_t rtc_get_msec10_from_time(PCF85263_CNTTIME_t* data) {
+    uint32_t tmp = 0;
+    tmp += data->msec10;
+    tmp += data->seconds * 100UL;
+    if(data->minutes <= 10) {
+        tmp += data->minutes * 60 * 100UL;
+        return tmp;
+    } else {
+        /* Time too large -> invalid */
+        return 0;
+    }
+}
+
+
 /***** MAIN ***********************************************************/
 int main(void) {
     /*** Local variables ***/
@@ -158,24 +176,33 @@ int main(void) {
     /* Temporary variables */
     uint8_t reg = 0;
     uint8_t i = 0;
-    /* Incident counter(s) and enable */
+    /* Sensor/measurement-specific variables */
     uint16_t inc_xbee = 0;          /**< Incident counter for Xbee functions */
 #if ENABLE_TMP275_T
+    TMP275_t tmp275;                /**< TMP275 sensor device structure */
     uint16_t inc_tmp275 = 0;        /**< Incident counter for TMP275 functions */
     uint8_t en_tmp275 = 0;          /**< TMP275 is available (1) or has failed (0) */
 #endif
 #if ENABLE_DS18B20_T
+    DS18X20_t ds18b20;              /**< DS18B20 sensor device structure */
     uint16_t inc_ds18b20 = 0;       /**< Incident counter for DS18B20 functions */
     uint8_t en_ds18b20 = 0;         /**< DS18B20 is available (1) or has failed (0)  */
 #endif
 #if ENABLE_STEMMA_H
+    STEMMA_t stemma;                /**< STEMMA sensor device structure */
     uint16_t inc_stemma = 0;        /**< Incident counter for STEMMA SOIL functions */
     uint8_t en_stemma = 0;          /**< STEMMA is available (1) or has failed (0) */
     STEMMA_AVG_t avg_stemma = {0};  /**< Structure for the STEMMA floating average values */
 #endif
 #if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+    DHT_t am2302;                   /**< AM2302 sensor device structure */
     uint16_t inc_am2302 = 0;        /**< Incident counter for AM2302 functions */
     uint8_t en_am2302 = 0;          /**< AM2302 is available (1) or has failed (0) */
+#endif
+#if ENABLE_RUNTIME
+    hw_io_t rtc_ts;
+    uint8_t runtime_first = 1;      /**< Flag if its the first cycle (no runtime measure yet) */
+    uint16_t runtime;
 #endif
     uint16_t inc_sum = 0;           /**< Total incident counter (sum of others) */
     
@@ -238,8 +265,13 @@ int main(void) {
         printf("RTC: Battery switch configuration FAILED ... aborting!\n");
         wait_for_wdt_reset();
     }
+#if ENABLE_RUNTIME
+    /* Disable CLK pin; INTA output; TS input active LOW */
+    if(pcf85263_set_pin_io(PCF85263_CTL_CLKPM | PCF85263_CTL_INTAPM_INTA | PCF85263_CTL_TSL | PCF85263_CTL_TSPM_INPUT) != PCF85263_RET_OK) {
+#else
     /* Disable CLK pin; INTA output */
     if(pcf85263_set_pin_io(PCF85263_CTL_CLKPM | PCF85263_CTL_INTAPM_INTA) != PCF85263_RET_OK) {
+#endif
         printf("RTC: Battery switch configuration FAILED ... aborting!\n");
         wait_for_wdt_reset();
     }
@@ -259,8 +291,6 @@ int main(void) {
         printf("RTC: Alarm time configuration FAILED ... aborting!\n");
         wait_for_wdt_reset();
     }
-    /* Reset time structure for stop-watch reset below */
-    time.minutes = 0;
     /* Enable the alarm */
     if(pcf85263_set_stw_alarm_enables(PCF85263_RTC_ALARM_MIN_A1E) != PCF85263_RET_OK) {
         printf("RTC: Alarm enable configuration FAILED ... aborting!\n");
@@ -271,6 +301,18 @@ int main(void) {
         printf("RTC: Alarm enable configuration FAILED ... aborting!\n");
         wait_for_wdt_reset();
     }
+#if ENABLE_RUNTIME
+    /* Get a hw GPIO structure for TS pin */
+    hw_get_io(&rtc_ts, &PCF85263_TS_DDR, &PCF85263_TS_PORT, &PCF85263_TS_PIN, PCF85263_TS_GPIO);
+    /* Set TS pin to output and set it initial to high */
+    hw_set_output_high(&rtc_ts);
+    hw_set_output(&rtc_ts);
+    /* Enable timestamp1 in LE mode */
+    if(pcf85263_set_stw_timestamp_mode(PCF85263_TSR_TSR1M_LE) != PCF85263_RET_OK) {
+        printf("RTC: timestamp1 mode configuration FAILED ... aborting!\n");
+        wait_for_wdt_reset();
+    }
+#endif
     /* Start RTC */
     if(pcf85263_start() != PCF85263_RET_OK) {
         printf("Couldn't start RTC ... aborting!\n");
@@ -386,7 +428,8 @@ int main(void) {
     printf("... ZIGBEE connected (message size = %d bytes)\n", SEN_MSG_SIZE);
     printf("\n");
     
-    /* Main routine ... */
+
+    /***** MAIN ROUTINE ***********************************************/
     while(1) {
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
@@ -407,7 +450,31 @@ int main(void) {
         /* Enable ADC */
         adc_enable();
 #endif
-        
+
+#if ENABLE_RUNTIME
+        /* Check if it's the first cycle (no result yet) */
+        if(runtime_first == 1) {
+            msg.struc.values[MSG_VALUE_RUNTIME].type = SEN_MSG_TYPE_IGNORE;
+            msg.struc.values[MSG_VALUE_RUNTIME].value = 0;
+            runtime_first = 0;
+        /* There was at least one previous cycle */
+        } else {
+            /* Read last timestamp time */
+            if(pcf85263_get_stw_timestamp1(&time) != PCF85263_RET_OK) {
+                /* Reading failed -> invalid value */
+                msg.struc.values[MSG_VALUE_RUNTIME].type = SEN_MSG_TYPE_IGNORE;
+                msg.struc.values[MSG_VALUE_RUNTIME].value = 0;
+            } else {
+                /* Reading was successful -> valid value */
+                runtime = rtc_get_msec10_from_time(&time);
+                msg.struc.values[MSG_VALUE_RUNTIME].type = SEN_MSG_TYPE_CHK_RUNTIME;
+                msg.struc.values[MSG_VALUE_RUNTIME].value = runtime;
+                printf("... RTC runtime = %d0 msec\n",runtime);
+            }
+        }
+#endif
+        /* Reset time structure for stop-watch reset below */
+        pcf85263_clear_stw_time(&time);
         /* Reset stop-watch time */
         pcf85263_set_stw_time(&time);
         /* Start RTC */
@@ -738,6 +805,13 @@ int main(void) {
 #if (ENABLE_ADC_SELF || ENABLE_MCU_V || ENABLE_BAT_V || ENABLE_103JT_T)
         /* Disable ADC */
         adc_disable();
+#endif
+        
+#if ENABLE_RUNTIME
+        /* Pull RTC TS pin low for some time to trigger a timestamp */
+        hw_set_output_low(&rtc_ts);
+        _delay_ms(5);
+        hw_set_output_high(&rtc_ts);
 #endif
         
         /* Enter power down mode */

@@ -87,6 +87,7 @@ typedef enum {
     SEN_MSG_TYPE_CHK_RES        = 0xF0,     /**< RESERVED; uint16; 240 (dec) */
     SEN_MSG_TYPE_CHK_ADC        = 0xF1,     /**< ADC self check; uint16; 241 (dec) */
     SEN_MSG_TYPE_CHK_UART       = 0xF2,     /**< UART self check; uint16; 242 (dec) */
+    SEN_MSG_TYPE_CHK_RUNTIME    = 0xF3,     /**< RUNTIME self check; uint16; 243 (dec) */
 } SEN_TYPE_t;
 
 

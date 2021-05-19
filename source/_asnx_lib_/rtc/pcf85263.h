@@ -26,6 +26,12 @@
 /* Use 12h (0) or 24h (1) mode */
 #define PCF85263_24H_MODE_ENABLE            1
 
+/* TS signal pin (default) */
+#define PCF85263_TS_DDR                     (DDRB)
+#define PCF85263_TS_PORT                    (PORTB)
+#define PCF85263_TS_PIN                     (PINB)
+#define PCF85263_TS_GPIO                    (PB0)
+
 /*** RTC mode time registers (RTCM = 0) ***/
 /* RTC time and date registers */
 #define PCF85263_RTC_100TH_SECONDS          0x00        /**< RTC 100ths of seconds register (0-99 BCD) */
@@ -334,6 +340,9 @@ typedef struct {
 /*** General ***/
 /* Init */
 PCF85263_RET_t pcf85263_init(void);
+/* Datetime/time structure */
+void pcf85263_clear_rtc_datetime(PCF85263_DATETIME_t* data);
+void pcf85263_clear_stw_time(PCF85263_CNTTIME_t* data);
 /* Read/write register */
 PCF85263_RET_t pcf85263_read_reg(uint8_t reg, uint8_t* byte);
 PCF85263_RET_t pcf85263_write_reg(uint8_t reg, uint8_t byte);

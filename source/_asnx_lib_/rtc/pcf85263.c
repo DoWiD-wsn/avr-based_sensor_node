@@ -88,6 +88,45 @@ PCF85263_RET_t pcf85263_init(void) {
 
 
 /***
+ * Clear (reset) a given datetime structure (set all elements to 0).
+ * 
+ * @param[in]   data    Pointer to the datetime structure to be cleared.
+ ***/
+void pcf85263_clear_rtc_datetime(PCF85263_DATETIME_t* data) {
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10 = 0;
+#endif
+    data->seconds = 0;
+    data->minutes = 0;
+#if PCF85263_24H_MODE_ENABLE==1
+    data->hours = 0;
+#else
+    data->ampm = 0;
+    data->hours = 1;
+#endif
+    data->days = 1;
+    data->wday = 0;
+    data->months = 1;
+    data->years = 0;
+}
+
+
+/***
+ * Clear (reset) a given time structure (set all elements to 0).
+ * 
+ * @param[in]   data    Pointer to the time structure to be cleared.
+ ***/
+void pcf85263_clear_stw_time(PCF85263_CNTTIME_t* data){
+#if PCF85263_100TH_SECONDS_ENABLE==1
+    data->msec10 = 0;
+#endif
+    data->seconds = 0;
+    data->minutes = 0;
+    data->hours = 0;
+}
+
+
+/***
  * Read a byte value from a given register.
  * 
  * @param[in]   reg     Register address
