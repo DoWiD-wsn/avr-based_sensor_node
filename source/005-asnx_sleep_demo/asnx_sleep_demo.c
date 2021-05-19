@@ -71,6 +71,7 @@
 /* MCU */
 #include "adc/adc.h"
 #include "hw/led.h"
+#include "i2c/i2c.h"
 #include "timer/systick.h"
 #include "uart/uart.h"
 /* Radio */
