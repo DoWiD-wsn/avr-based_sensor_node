@@ -8,7 +8,7 @@ However, the major and minor number are used to express the version of the hardw
 ### Added
 - Schematic/PCB: pull-up resistors for xbee sleep-request and sleep-indicator signals
 - Schematic/PCB: voltage divider connected to ADC2 for Vbat measurement (ratio 1:2)
-- Schematic/PCB: added PCF85263A RTC (10-pin) with solder-jumper connectors for INTA and TS lines
+- Schematic/PCB: added PCF85263A RTC (10-pin) with solder-jumper and pull-up for INTA line
 - Schematic/PCB: added optional 2-pin header for Vin/Vbat connection
 ### Changed
 - Schematic/PCB: thermistor balance resistor changed from 0.1% to 1% accuracy (sufficient)

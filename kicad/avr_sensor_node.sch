@@ -1845,12 +1845,12 @@ $EndComp
 $Comp
 L Device:R R16
 U 1 1 6097997A
-P 8050 5350
-F 0 "R16" V 7950 5300 50  0000 L CNN
-F 1 "10k" V 8150 5300 50  0000 L CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" V 7980 5350 50  0001 C CNN
-F 3 "~" H 8050 5350 50  0001 C CNN
-	1    8050 5350
+P 8050 5550
+F 0 "R16" V 7950 5500 50  0000 L CNN
+F 1 "10k" V 8150 5500 50  0000 L CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 7980 5550 50  0001 C CNN
+F 3 "~" H 8050 5550 50  0001 C CNN
+	1    8050 5550
 	0    1    1    0   
 $EndComp
 Wire Wire Line
@@ -2001,12 +2001,12 @@ sleep_rq
 $Comp
 L Jumper:SolderJumper_2_Bridged JP6
 U 1 1 609FDA25
-P 8650 5350
-F 0 "JP6" H 8650 5450 50  0000 C CNN
-F 1 "Jumper_Bridged" H 8650 5250 50  0000 C CNN
-F 2 "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm" H 8650 5350 50  0001 C CNN
-F 3 "~" H 8650 5350 50  0001 C CNN
-	1    8650 5350
+P 8650 5550
+F 0 "JP6" H 8650 5650 50  0000 C CNN
+F 1 "Jumper_Bridged" H 8650 5450 50  0000 C CNN
+F 2 "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm" H 8650 5550 50  0001 C CNN
+F 3 "~" H 8650 5550 50  0001 C CNN
+	1    8650 5550
 	1    0    0    -1  
 $EndComp
 Text Label 8000 4650 2    50   ~ 0
@@ -2015,47 +2015,27 @@ Text Label 8700 1850 0    50   ~ 0
 PB0
 Text Label 6900 1200 0    50   ~ 0
 PB0
-Text Label 8900 5700 0    50   ~ 0
-PB0
 Text Label 8700 2050 0    50   ~ 0
 PB2
 Text Label 6900 1400 0    50   ~ 0
 PB2
-Text Label 8900 5350 0    50   ~ 0
+Text Label 8900 5550 0    50   ~ 0
 PB2
-Text Label 8400 5700 2    50   ~ 0
-RTC_TS
-Text Label 8500 5300 2    50   ~ 0
+Text Label 8500 5500 2    50   ~ 0
 INT2
 Wire Notes Line
 	7600 2550 7600 3350
 Wire Notes Line
 	7600 3450 7600 5950
 Wire Wire Line
-	7800 5000 7800 5350
+	7800 5550 7900 5550
 Wire Wire Line
-	7800 5350 7900 5350
-Connection ~ 7800 5000
+	8200 5550 8500 5550
 Wire Wire Line
-	8200 5350 8500 5350
+	8500 5500 8500 5550
+Connection ~ 8500 5550
 Wire Wire Line
-	8500 5300 8500 5350
-Connection ~ 8500 5350
-Wire Wire Line
-	8800 5350 8900 5350
-$Comp
-L Jumper:SolderJumper_2_Bridged JP7
-U 1 1 60AF5016
-P 8650 5700
-F 0 "JP7" H 8650 5800 50  0000 C CNN
-F 1 "Jumper_Bridged" H 8650 5600 50  0000 C CNN
-F 2 "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm" H 8650 5700 50  0001 C CNN
-F 3 "~" H 8650 5700 50  0001 C CNN
-	1    8650 5700
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	8800 5700 8900 5700
+	8800 5550 8900 5550
 Wire Notes Line
 	9350 5950 9350 3450
 Wire Notes Line
@@ -2086,8 +2066,15 @@ $EndComp
 Wire Wire Line
 	1650 3100 1650 3200
 Connection ~ 1650 3200
-Wire Wire Line
-	8400 5700 8500 5700
-Text Notes 8150 5900 0    50   ~ 0
-TS has an internal pull-up
+$Comp
+L power:+3V3 #PWR?
+U 1 1 60ADBCF1
+P 7800 5550
+F 0 "#PWR?" H 7800 5400 50  0001 C CNN
+F 1 "+3V3" H 7815 5723 50  0000 C CNN
+F 2 "" H 7800 5550 50  0001 C CNN
+F 3 "" H 7800 5550 50  0001 C CNN
+	1    7800 5550
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC

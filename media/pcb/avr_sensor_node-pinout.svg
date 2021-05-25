@@ -100,8 +100,8 @@
      fit-margin-right="0"
      fit-margin-bottom="0"
      inkscape:zoom="2"
-     inkscape:cx="243.64992"
-     inkscape:cy="191.60331"
+     inkscape:cx="143.64992"
+     inkscape:cy="189.60331"
      inkscape:window-x="0"
      inkscape:window-y="27"
      inkscape:window-maximized="1"
@@ -2009,7 +2009,7 @@
        y="26515.32"
        x="-34694.746"
        id="tspan5137"
-       sodipodi:role="line">RTC-TS_PB0</tspan></text>
+       sodipodi:role="line">GPIO_PB0</tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1849.32458496px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;text-align:end;letter-spacing:0px;word-spacing:0px;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:173.37417603"
