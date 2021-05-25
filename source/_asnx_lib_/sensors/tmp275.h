@@ -85,7 +85,6 @@ typedef enum {
  ***/
 typedef struct {
     uint8_t address;    /**< Sensors I2C address */
-    uint8_t config;     /**< Sensor configuration (TODO: to be added) */
 } TMP275_t;
 
 

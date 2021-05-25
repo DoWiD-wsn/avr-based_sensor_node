@@ -22,7 +22,7 @@
 #define ENABLE_DBG                  (1)
 
 /* Update interval [min] */
-#define UPDATE_INTERVAL             (2)
+#define UPDATE_INTERVAL             (1)
 
 /* Enable (1) or disable (0) measurements/sensors */
 #define ENABLE_ADC_SELF             (1)     /**< Enable the ADC self-test (via ADC) */
@@ -338,6 +338,13 @@ int main(void) {
         msg.struc.values[MSG_VALUE_TMP275_T].type = SEN_MSG_TYPE_IGNORE;
         msg.struc.values[MSG_VALUE_TMP275_T].value = 0;
         printf("Couldn't initialize TMP275!\n");
+    }
+    /* Configure the TMP275 sensor (SD; 10-bit mode) */
+    if(tmp275_set_config(&tmp275, 0x21) != TMP275_RET_OK) {
+        en_tmp275 = 0;
+        msg.struc.values[MSG_VALUE_TMP275_T].type = SEN_MSG_TYPE_IGNORE;
+        msg.struc.values[MSG_VALUE_TMP275_T].value = 0;
+        printf("Couldn't configure TMP275!\n");
     } else {
         en_tmp275 = 1;
         printf("... TMP275 ready\n");
@@ -414,8 +421,8 @@ int main(void) {
             msg.struc.values[MSG_VALUE_RUNTIME].type = SEN_MSG_TYPE_CHK_RUNTIME;
             msg.struc.values[MSG_VALUE_RUNTIME].value = runtime;
 #  if ENABLE_DBG
-            uint32_t runtime_us = runtime * 256UL;
-            printf("... TIMER1 runtime = %d:%03d:%03d us\n",(runtime_us/1000000),((runtime_us/1000)%1000),(runtime_us%1000));
+            uint32_t runtime_us = (uint32_t)(runtime) * 256UL;
+            printf("... TIMER1 runtime = %d:%03d:%03d us\n",(runtime_us/1000000UL),((runtime_us/1000UL)%1000UL),(runtime_us%1000UL));
 #  endif
         }
         /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16,78s] */
@@ -547,20 +554,35 @@ int main(void) {
 #if ENABLE_TMP275_T
         /*** TMP275 ***/
         if(en_tmp275) {
-            /* Temperature in degree Celsius (°C) */
-            if(tmp275_get_temperature(&tmp275, &measurement) == TMP275_RET_OK) {
-                printf("... TMP275 temperature: %.2f\n", measurement);
-                /* Pack measurement into msg as fixed-point number */
-                msg.struc.values[MSG_VALUE_TMP275_T].type = SEN_MSG_TYPE_TEMP_BOARD;
-                msg.struc.values[MSG_VALUE_TMP275_T].value = fp_float_to_fixed16_10to6(measurement);
-                /* Decrement incident counter */
-                if(inc_tmp275 > 0) {
-                    inc_tmp275--;
+            /* Start a single conversion */
+            if(tmp275_set_config(&tmp275, 0xA1) == TMP275_RET_OK) {
+                /* Wait for the conversion to finish (55ms) */
+                _delay_ms(60);
+                /* Get temperature in degree Celsius (°C) */
+                if(tmp275_get_temperature(&tmp275, &measurement) == TMP275_RET_OK) {
+                    printf("... TMP275 temperature: %.2f\n", measurement);
+                    /* Pack measurement into msg as fixed-point number */
+                    msg.struc.values[MSG_VALUE_TMP275_T].type = SEN_MSG_TYPE_TEMP_BOARD;
+                    msg.struc.values[MSG_VALUE_TMP275_T].value = fp_float_to_fixed16_10to6(measurement);
+                    /* Decrement incident counter */
+                    if(inc_tmp275 > 0) {
+                        inc_tmp275--;
+                    }
+                } else {
+                    msg.struc.values[MSG_VALUE_TMP275_T].type = SEN_MSG_TYPE_IGNORE;
+                    msg.struc.values[MSG_VALUE_TMP275_T].value = 0;
+                    printf("... TMP275 temperature: FAILED!\n");
+                    /* Increment incident counter */
+                    if(inc_tmp275 < INCIDENT_SINGLE_MAX) {
+                        inc_tmp275++;
+                    } else {
+                        en_tmp275 = 0;
+                    }
                 }
-            } else {
+            }  else {
                 msg.struc.values[MSG_VALUE_TMP275_T].type = SEN_MSG_TYPE_IGNORE;
                 msg.struc.values[MSG_VALUE_TMP275_T].value = 0;
-                printf("... TMP275 temperature: FAILED!\n");
+                printf("... TMP275 query one-shot (OS): FAILED!\n");
                 /* Increment incident counter */
                 if(inc_tmp275 < INCIDENT_SINGLE_MAX) {
                     inc_tmp275++;

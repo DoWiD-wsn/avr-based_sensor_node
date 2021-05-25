@@ -38,8 +38,6 @@ TMP275_RET_t tmp275_init(TMP275_t* dev, uint8_t address) {
    if(i2c_is_available(address) == I2C_RET_OK) {
         /* Device is available ... store address in device structure */
         dev->address = address;
-        /* Initially, set config to default value */
-        dev->config = 0x00;
         /* Return OK */
         return TMP275_RET_OK;
    } else {
