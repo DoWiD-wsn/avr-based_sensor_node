@@ -40,7 +40,7 @@ void systick_tick(void);
  ***/
 void systick_init(void) {
     /* Init timer0 to call the callback every 1ms */
-    timer0_start_ms(1, TIMER0_PRESCALER_64, systick_tick);
+    timer0_start_isr_ms(1, TIMER_PRESCALER_64, systick_tick);
 }
 
 
@@ -48,8 +48,8 @@ void systick_init(void) {
  * Deinitialization of the systick timer.
  ***/
 void systick_deinit(void) {
-    /* Deinitialize (stop) timer0 */
-    timer0_stop();
+    /* Deinitialize timer0 */
+    timer0_reset();
 }
 
 

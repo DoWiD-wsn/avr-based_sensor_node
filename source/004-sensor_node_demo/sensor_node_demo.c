@@ -6,15 +6,14 @@
  * data to a central cluster head via Zigbee (Xbee). After the sensor
  * value update the Xbee and the AVR are put to sleep and are woken
  * up after a defined period by the onboard RTC. Additionally, the 
- * runtime of the active phase can be measure using the RTC's timestamp
- * functionality with a granularity of tens of milliseconds. In case of
- * an error that cannot be resolved, the WDT is started and the MCU
- * waits for a WDT reset.
+ * runtime of the active phase can be measure using the MCU's timer1 
+ * unit. In case of an error that cannot be resolved, the WDT is
+ * started and the MCU waits for a WDT reset.
  *
  * @file    /004-sensor_node_demo/sensor_node_demo.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.3 $
- * @date    $Date: 2021/05/19 $
+ * @version $Revision: 1.1.4 $
+ * @date    $Date: 2021/05/25 $
  *****/
 
 
@@ -84,6 +83,9 @@
 #include "hw/led.h"
 #include "i2c/i2c.h"
 #include "uart/uart.h"
+#if ENABLE_RUNTIME
+#  include "timer/timer.h"
+#endif
 /* Radio */
 #include "xbee/xbee.h"
 /* RTC */
@@ -144,26 +146,6 @@ void wait_for_wdt_reset(void) {
 }
 
 
-/***
- * Calculate milliseconds from a RTC time structure (max. 10,9 min).
- *
- * @param[in]   data        Pointer to the RTC time structure
- * @return      Resulting number of tens of milliseconds (max. 10,9 min)
- ***/
-uint16_t rtc_get_msec10_from_time(PCF85263_CNTTIME_t* data) {
-    uint32_t tmp = 0;
-    tmp += data->msec10;
-    tmp += data->seconds * 100UL;
-    if(data->minutes <= 10) {
-        tmp += data->minutes * 60 * 100UL;
-        return tmp;
-    } else {
-        /* Time too large -> invalid */
-        return 0;
-    }
-}
-
-
 /***** MAIN ***********************************************************/
 int main(void) {
     /*** Local variables ***/
@@ -176,6 +158,9 @@ int main(void) {
     /* Temporary variables */
     uint8_t reg = 0;
     uint8_t i = 0;
+#if ENABLE_RUNTIME
+    uint16_t runtime = 0;
+#endif
     /* Sensor/measurement-specific variables */
     uint16_t inc_xbee = 0;          /**< Incident counter for Xbee functions */
 #if ENABLE_TMP275_T
@@ -199,15 +184,13 @@ int main(void) {
     uint16_t inc_am2302 = 0;        /**< Incident counter for AM2302 functions */
     uint8_t en_am2302 = 0;          /**< AM2302 is available (1) or has failed (0) */
 #endif
-#if ENABLE_RUNTIME
-    hw_io_t rtc_ts;
-    uint8_t runtime_first = 1;      /**< Flag if its the first cycle (no runtime measure yet) */
-    uint16_t runtime;
-#endif
     uint16_t inc_sum = 0;           /**< Total incident counter (sum of others) */
     
     /* Disable unused hardware modules */
-    PRR0 = _BV(PRTIM2) | _BV(PRTIM1) | _BV(PRTIM0) | _BV(PRSPI);
+    PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
+#if ENABLE_RUNTIME==0
+    PRR0 |= _BV(PRTIM1);
+#endif
     PRR1 = _BV(PRTIM3);
     
     /* Configure the sleep mode */
@@ -248,6 +231,11 @@ int main(void) {
     PRR0 |= _BV(PRUSART1);
 #endif
     
+#if ENABLE_RUNTIME
+    /* Reset timer1 registers */
+    timer1_reset();
+#endif
+    
     /* Initialize Xbee 3 (uses UART0) */
     xbee_init(9600UL);
     
@@ -265,13 +253,8 @@ int main(void) {
         printf("RTC: Battery switch configuration FAILED ... aborting!\n");
         wait_for_wdt_reset();
     }
-#if ENABLE_RUNTIME
-    /* Disable CLK pin; INTA output; TS input active LOW */
-    if(pcf85263_set_pin_io(PCF85263_CTL_CLKPM | PCF85263_CTL_INTAPM_INTA | PCF85263_CTL_TSL | PCF85263_CTL_TSPM_INPUT) != PCF85263_RET_OK) {
-#else
     /* Disable CLK pin; INTA output */
     if(pcf85263_set_pin_io(PCF85263_CTL_CLKPM | PCF85263_CTL_INTAPM_INTA) != PCF85263_RET_OK) {
-#endif
         printf("RTC: Battery switch configuration FAILED ... aborting!\n");
         wait_for_wdt_reset();
     }
@@ -301,18 +284,6 @@ int main(void) {
         printf("RTC: Alarm enable configuration FAILED ... aborting!\n");
         wait_for_wdt_reset();
     }
-#if ENABLE_RUNTIME
-    /* Get a hw GPIO structure for TS pin */
-    hw_get_io(&rtc_ts, &PCF85263_TS_DDR, &PCF85263_TS_PORT, &PCF85263_TS_PIN, PCF85263_TS_GPIO);
-    /* Set TS pin to output and set it initial to high */
-    hw_set_output_high(&rtc_ts);
-    hw_set_output(&rtc_ts);
-    /* Enable timestamp1 in LE mode */
-    if(pcf85263_set_stw_timestamp_mode(PCF85263_TSR_TSR1M_LE) != PCF85263_RET_OK) {
-        printf("RTC: timestamp1 mode configuration FAILED ... aborting!\n");
-        wait_for_wdt_reset();
-    }
-#endif
     /* Start RTC */
     if(pcf85263_start() != PCF85263_RET_OK) {
         printf("Couldn't start RTC ... aborting!\n");
@@ -427,10 +398,30 @@ int main(void) {
     /* Print status message */
     printf("... ZIGBEE connected (message size = %d bytes)\n", SEN_MSG_SIZE);
     printf("\n");
-    
 
     /***** MAIN ROUTINE ***********************************************/
     while(1) {
+#if ENABLE_RUNTIME
+        /* Reset timer1 counter value to 0 */
+        timer1_set_tcnt(0);
+        /* Check if it's the first cycle (no result yet) */
+        if(runtime == 0) {
+            /* First cycle -> no measurement yet */
+            msg.struc.values[MSG_VALUE_RUNTIME].type = SEN_MSG_TYPE_IGNORE;
+            msg.struc.values[MSG_VALUE_RUNTIME].value = 0;
+        } else {
+            /* Subsequent cycle -> measurement available */
+            msg.struc.values[MSG_VALUE_RUNTIME].type = SEN_MSG_TYPE_CHK_RUNTIME;
+            msg.struc.values[MSG_VALUE_RUNTIME].value = runtime;
+#  if ENABLE_DBG
+            uint32_t runtime_us = runtime * 256UL;
+            printf("... TIMER1 runtime = %d:%03d:%03d us\n",(runtime_us/1000000),((runtime_us/1000)%1000),(runtime_us%1000));
+#  endif
+        }
+        /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16,78s] */
+        timer1_start(TIMER_PRESCALER_1024);
+#endif
+        
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
             printf("Couldn't stop RTC ... aborting!\n");
@@ -451,28 +442,6 @@ int main(void) {
         adc_enable();
 #endif
 
-#if ENABLE_RUNTIME
-        /* Check if it's the first cycle (no result yet) */
-        if(runtime_first == 1) {
-            msg.struc.values[MSG_VALUE_RUNTIME].type = SEN_MSG_TYPE_IGNORE;
-            msg.struc.values[MSG_VALUE_RUNTIME].value = 0;
-            runtime_first = 0;
-        /* There was at least one previous cycle */
-        } else {
-            /* Read last timestamp time */
-            if(pcf85263_get_stw_timestamp1(&time) != PCF85263_RET_OK) {
-                /* Reading failed -> invalid value */
-                msg.struc.values[MSG_VALUE_RUNTIME].type = SEN_MSG_TYPE_IGNORE;
-                msg.struc.values[MSG_VALUE_RUNTIME].value = 0;
-            } else {
-                /* Reading was successful -> valid value */
-                runtime = rtc_get_msec10_from_time(&time);
-                msg.struc.values[MSG_VALUE_RUNTIME].type = SEN_MSG_TYPE_CHK_RUNTIME;
-                msg.struc.values[MSG_VALUE_RUNTIME].value = runtime;
-                printf("... RTC runtime = %d0 msec\n",runtime);
-            }
-        }
-#endif
         /* Reset time structure for stop-watch reset below */
         pcf85263_clear_stw_time(&time);
         /* Reset stop-watch time */
@@ -808,10 +777,10 @@ int main(void) {
 #endif
         
 #if ENABLE_RUNTIME
-        /* Pull RTC TS pin low for some time to trigger a timestamp */
-        hw_set_output_low(&rtc_ts);
-        _delay_ms(5);
-        hw_set_output_high(&rtc_ts);
+        /* Stop timer1 to save runtime measurement */
+        timer1_stop();
+        /* Save timer1 counter value */
+        runtime = timer1_get_tcnt();
 #endif
         
         /* Enter power down mode */
