@@ -422,7 +422,7 @@ int main(void) {
             msg.struc.values[MSG_VALUE_RUNTIME].value = runtime;
 #  if ENABLE_DBG
             uint32_t runtime_us = (uint32_t)(runtime) * 256UL;
-            printf("... TIMER1 runtime = %d:%03d:%03d us\n",(runtime_us/1000000UL),((runtime_us/1000UL)%1000UL),(runtime_us%1000UL));
+            printf("... TIMER1 runtime = %d.%03d.%03d us\n",(uint16_t)(runtime_us/1000000UL),(uint16_t)((runtime_us/1000UL)%1000),(uint16_t)(runtime_us%1000));
 #  endif
         }
         /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16,78s] */
