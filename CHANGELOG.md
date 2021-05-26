@@ -6,6 +6,14 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
+- N/A
+### Changed
+- N/A
+### Removed
+- N/A
+
+## [1.1.0] - 2021-05-26
+### Added
 - Schematic/PCB: pull-up resistors for xbee sleep-request and sleep-indicator signals
 - Schematic/PCB: voltage divider connected to ADC2 for Vbat measurement (ratio 1:2)
 - Schematic/PCB: added PCF85263A RTC (10-pin) with solder-jumper and pull-up for INTA line
@@ -17,8 +25,6 @@ However, the major and minor number are used to express the version of the hardw
 - ASNX LIB: use define in DHT library to decide whether to check last measurement time or not
 - ASNX LIB: updated MCU component libraries to better support sleep modes
 - DOCU: updated ASN(x) PCB docu and BOM; added Farnell part links
-### Removed
-- N/A
 
 ## [1.0.0] - 2021-03-12
 ### Added
