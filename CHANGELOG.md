@@ -6,9 +6,9 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
-- N/A
+- Added solder-jumper (bridged) for ADC2 input
 ### Changed
-- N/A
+- Switched ADC1 and ADC2 input (thermistor <-> Vbat)
 ### Removed
 - N/A
 
