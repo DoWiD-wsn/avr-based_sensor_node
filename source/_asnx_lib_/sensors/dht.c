@@ -6,8 +6,8 @@
  *
  * @file    /_asnx_lib_/sensors/dht.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
+ * @version $Revision: 1.1.1 $
+ * @date    $Date: 2021/05/18 $
  * @see     http://davidegironi.blogspot.com/2013/02/reading-temperature-and-humidity-on-avr.html
  *****/
 
@@ -21,10 +21,6 @@
 #if DHT_CHECK_LAST_MEAS
 #  include "timer/systick.h"
 #endif
-
-
-/***** LOCAL FUNCTION PROTOTYPES **************************************/
-static DHT_RET_t _read(DHT_t* dev);
 
 
 /***** FUNCTIONS **************************************************************/
@@ -46,6 +42,8 @@ void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatil
     dev->gpio.portpin = portpin;
     /* Set the sensor type */
     dev->type = type;
+    /* Set valid flag initially to false */
+    dev->valid = 0;
     /* Get a pointer to the HW GPIO structure */
     hw_io_t* gpio = &(dev->gpio);
     /* Setup the hardware (pin) */
@@ -60,7 +58,7 @@ void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatil
  * @param[in]   dev     Pointer to the device structure
  * @return      OK* in case of success; ERROR* otherwise
  ***/
-static DHT_RET_t _read(DHT_t* dev) {
+DHT_RET_t dht_read(DHT_t* dev) {
     /* Get a pointer to the HW GPIO structure */
     hw_io_t* gpio = &(dev->gpio);
     /* Temporary counter variables */
@@ -108,6 +106,7 @@ static DHT_RET_t _read(DHT_t* dev) {
             break;
         default:
             /* Unsupported sensor type */
+            dev->valid = 0;
             return DHT_RET_ERROR_TYPE;
     }
     /* Release the data line */
@@ -117,11 +116,13 @@ static DHT_RET_t _read(DHT_t* dev) {
     
     /* Check start condition high level */
     if(HW_GPIO_READ(gpio)) {
+        dev->valid = 0;
         return DHT_RET_ERROR_START;
     }
     _delay_us(80);
     /* Check start condition low level */
     if(!HW_GPIO_READ(gpio)) {
+        dev->valid = 0;
         return DHT_RET_ERROR_START;
     }
     _delay_us(80);
@@ -139,6 +140,7 @@ static DHT_RET_t _read(DHT_t* dev) {
 				cnt++;
                 /* Check if timeout has been reached */
 				if(cnt > DHT_TIMING_TIMEOUT) {
+                    dev->valid = 0;
 					return DHT_RET_ERROR_TIMEOUT;
 				}
 			}
@@ -155,6 +157,7 @@ static DHT_RET_t _read(DHT_t* dev) {
 				cnt++;
                 /* Check if timeout has been reached */
 				if(cnt > DHT_TIMING_TIMEOUT) {
+                    dev->valid = 0;
 					return DHT_RET_ERROR_TIMEOUT;
 				}
 			}
@@ -175,12 +178,14 @@ static DHT_RET_t _read(DHT_t* dev) {
     /* Check if the received CRC matches the data */
     if(dev->data[4] == ((dev->data[0] + dev->data[1] + dev->data[2] + dev->data[3]) & 0xFF)) {
         /* Reading was successful */
+        dev->valid = 1;
         return DHT_RET_OK;
     } else {
         /* Reading failed */
 #if DHT_CHECK_LAST_MEAS
         lasttime = 0;
 #endif
+        dev->valid = 0;
         return DHT_RET_ERROR_CRC;
     }
 }
@@ -195,40 +200,38 @@ static DHT_RET_t _read(DHT_t* dev) {
  ***/
 DHT_RET_t dht_get_temperature(DHT_t* dev, float* temperature) {
     float tmp;
-    /* Perform a low level read from the sensor */
-    DHT_RET_t ret = _read(dev);
-    if(ret >= DHT_RET_OK) {
-        /* Reading format depends on sensor type */
-        switch(dev->type) {
-            case DHT_DEV_DHT11:
-                tmp = dev->data[2];
-                if (dev->data[3] & 0x80) {
-                    tmp = -1 - tmp;
-                }
-                tmp += (dev->data[3] & 0x0F) * 0.1;
-                break;
-            case DHT_DEV_DHT12:
-                tmp = dev->data[2];
-                tmp += (dev->data[3] & 0x0F) * 0.1;
-                if (dev->data[2] & 0x80) {
-                    tmp *= -1;
-                }
-                break;
-            case DHT_DEV_DHT21:
-            case DHT_DEV_DHT22:
-                tmp = ((int16_t)(dev->data[2] & 0x7F) << 8) | dev->data[3];
-                tmp *= 0.1;
-                if (dev->data[2] & 0x80) {
-                    tmp *= -1;
-                }
-                break;
-            default:
-                /* Unsupported/unknown sensor device */
-                return DHT_RET_ERROR_TYPE;
-        }
-    } else {
-        /* Reading the sensor failed */
-        return ret;
+    /* Check if a valid reading was previously performed */
+    if(dev->valid==0) {
+        /* No reading -> no result */
+        return DHT_RET_ERROR_NOREADING;
+    }
+    /* Reading format depends on sensor type */
+    switch(dev->type) {
+        case DHT_DEV_DHT11:
+            tmp = dev->data[2];
+            if (dev->data[3] & 0x80) {
+                tmp = -1 - tmp;
+            }
+            tmp += (dev->data[3] & 0x0F) * 0.1;
+            break;
+        case DHT_DEV_DHT12:
+            tmp = dev->data[2];
+            tmp += (dev->data[3] & 0x0F) * 0.1;
+            if (dev->data[2] & 0x80) {
+                tmp *= -1;
+            }
+            break;
+        case DHT_DEV_DHT21:
+        case DHT_DEV_DHT22:
+            tmp = ((int16_t)(dev->data[2] & 0x7F) << 8) | dev->data[3];
+            tmp *= 0.1;
+            if (dev->data[2] & 0x80) {
+                tmp *= -1;
+            }
+            break;
+        default:
+            /* Unsupported/unknown sensor device */
+            return DHT_RET_ERROR_TYPE;
     }
     /* Return the acquired temperature with success */
     *temperature = tmp;
@@ -245,27 +248,25 @@ DHT_RET_t dht_get_temperature(DHT_t* dev, float* temperature) {
  ***/
 DHT_RET_t dht_get_humidity(DHT_t* dev, float* humidity) {
     float tmp;
-    /* Perform a low level read from the sensor */
-    DHT_RET_t ret = _read(dev);
-    if(ret >= DHT_RET_OK) {
-        /* Reading format depends on sensor type */
-        switch(dev->type) {
-            case DHT_DEV_DHT11:
-            case DHT_DEV_DHT12:
-                tmp = dev->data[0] + dev->data[1] * 0.1;
-                break;
-            case DHT_DEV_DHT21:
-            case DHT_DEV_DHT22:
-                tmp = ((int16_t)(dev->data[0]) << 8) | dev->data[1];
-                tmp *= 0.1;
-                break;
-            default:
-                /* Unsupported/unknown sensor device */
-                return DHT_RET_ERROR_TYPE;
-        }
-    } else {
-        /* Reading the sensor failed */
-        return ret;
+    /* Check if a valid reading was previously performed */
+    if(dev->valid==0) {
+        /* No reading -> no result */
+        return DHT_RET_ERROR_NOREADING;
+    }
+    /* Reading format depends on sensor type */
+    switch(dev->type) {
+        case DHT_DEV_DHT11:
+        case DHT_DEV_DHT12:
+            tmp = dev->data[0] + dev->data[1] * 0.1;
+            break;
+        case DHT_DEV_DHT21:
+        case DHT_DEV_DHT22:
+            tmp = ((int16_t)(dev->data[0]) << 8) | dev->data[1];
+            tmp *= 0.1;
+            break;
+        default:
+            /* Unsupported/unknown sensor device */
+            return DHT_RET_ERROR_TYPE;
     }
     /* Return the acquired humidity with success */
     *humidity = tmp;

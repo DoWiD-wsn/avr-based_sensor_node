@@ -647,6 +647,27 @@ int main(void) {
         }
 #endif
         
+#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+        /*** AM2302 ***/
+        if(en_am2302) {
+            /* Update sensor readings */
+            if(dht_read(&am2302) == DHT_RET_OK) {
+                /* Decrement incident counter */
+                if(inc_am2302 > 0) {
+                    inc_am2302--;
+                }
+            } else {
+                printf("... AM2302 update: FAILED!\n");
+                /* Increment incident counter */
+                if(inc_am2302 < INCIDENT_SINGLE_MAX) {
+                    inc_am2302++;
+                } else {
+                    en_am2302 = 0;
+                }
+            }
+        }
+#endif
+
 #if ENABLE_AM2302_T
         /*** AM2302 (T) ***/
         if(en_am2302) {
