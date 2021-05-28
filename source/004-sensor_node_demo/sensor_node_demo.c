@@ -328,7 +328,7 @@ int main(void) {
 #if ENABLE_REBOOT
     /* Reboot sources */
     msg.struc.values[MSG_VALUE_REBOOT].type = SEN_MSG_TYPE_REBOOT;
-    msg.struc.values[MSG_VALUE_REBOOT].value = MCUSR_dump & 0x0F;
+    msg.struc.values[MSG_VALUE_REBOOT].value = 0;
 #endif
 
 #if ENABLE_TMP275_T
@@ -722,35 +722,36 @@ int main(void) {
         }
 #endif
 
+#if ENABLE_INCIDENT
         /*** INCIDENT COUNTER ***/
         inc_sum = inc_xbee;
-#if ENABLE_TMP275_T
+#  if ENABLE_TMP275_T
         inc_sum += inc_tmp275;
-#endif
-#if ENABLE_DS18B20_T
+#  endif
+#  if ENABLE_DS18B20_T
         inc_sum += inc_ds18b20;
-#endif
-#if ENABLE_STEMMA_H
+#  endif
+#  if ENABLE_STEMMA_H
         inc_sum += inc_stemma;
-#endif
-#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+#  endif
+#  if (ENABLE_AM2302_T || ENABLE_AM2302_H)
         inc_sum += inc_am2302;
-#endif
+#  endif
 
         printf("... INCIDENT COUNTER (ENABLE):\n");
         printf("    ... XBEE:    %d\n", inc_xbee);
-#if ENABLE_TMP275_T
+#  if ENABLE_TMP275_T
         printf("    ... TMP275:  %d (%d)\n", inc_tmp275, en_tmp275);
-#endif
-#if ENABLE_DS18B20_T
+#  endif
+#  if ENABLE_DS18B20_T
         printf("    ... DS18B20: %d (%d)\n", inc_ds18b20, en_ds18b20);
-#endif
-#if ENABLE_STEMMA_H
+#  endif
+#  if ENABLE_STEMMA_H
         printf("    ... STEMMA:  %d (%d)\n", inc_stemma, en_stemma);
-#endif
-#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+#  endif
+#  if (ENABLE_AM2302_T || ENABLE_AM2302_H)
         printf("    ... AM2302:  %d (%d)\n", inc_am2302, en_am2302);
-#endif
+#  endif
         printf("    ... TOTAL:   %d\n", inc_sum);
         /* Counter value between 0 and defined threshold */
         msg.struc.values[MSG_VALUE_INCIDENT].value = inc_sum;
@@ -759,6 +760,14 @@ int main(void) {
             /* Wait for watchdog reset */
             wait_for_wdt_reset();
         }
+#endif
+        
+#if ENABLE_REBOOT
+        /* Last reboot source */
+        msg.struc.values[MSG_VALUE_REBOOT].value = MCUSR_dump & 0x0F;
+        /* Reset reboot source */
+        MCUSR_dump = 0;
+#endif
         
         /* Reset the Xbee buffer */
         xbee_rx_flush();
