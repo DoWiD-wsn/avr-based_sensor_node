@@ -90,7 +90,7 @@ An interactive BOM can be found in the `/kicad/bom/` directory (see [here](../ki
 | FB1       | -     | Device   | Ferrite_Bead | Inductor_SMD      | L_0805_2012Metric | [Farnell](https://at.farnell.com/laird/mi0805k400r-10/ferritperle-2012-100mhz-40r/dp/2292459) |
 | R9-R10    | 560ohm | Device        | R      | Resistor_SMD      | R_0603_1608Metric | [Farnell](https://at.farnell.com/yageo/ac0603fr-07560rl/dickschichtwiderstand-560r-1-0/dp/3495281) |
 | R1,R4-R8,R11,R16 | 10k | Device        | R      | Resistor_SMD      | R_0603_1608Metric | [Farnell](https://at.farnell.com/yageo/ac0603fr-0710kl/dickschichtwiderstand-10k-1-0/dp/3495224) |
-| R2-R3,R14-R15 | 1M  | Device         | R      | Resistor_SMD      | R_0603_1608Metric | [Farnell](https://at.farnell.com/yageo/ac0603fr-071ml/dickschichtwiderstand-1m-1-0-1w/dp/3495239) |
+| R2-R3,R14-R15 | 1M  | Device         | R      | Resistor_SMD      | R_0603_1608Metric | [Farnell](https://at.farnell.com/yageo/rc0603fr-071ml/dickschichtwiderstand-1m-1-0-1w/dp/9238840) |
 | D1-D2     | green | Device         | LED    | LED_SMD           | LED_0805_2012Metric | [Farnell](https://at.farnell.com/kingbright/kp-2012lsgc/led-gr-n-0-8mcd-568nm-smd/dp/2463991) |
 | D3        | schottky | Device  | D_Schottky | Diode_SMD         | D_SOD-123         | [Farnell](https://at.farnell.com/stmicroelectronics/stps0520z/schottky-diode-2a-20v-smd/dp/1467545) |
 | U1        | -     | *mycomponents*`*` | TMP275 | Package_SO | VSSOP-8_3.0x3.0mm_P0.65mm | [Farnell](https://at.farnell.com/texas-instruments/tmp275aidgkr/temperature-sensor-0-0625deg-c/dp/3009081) |
