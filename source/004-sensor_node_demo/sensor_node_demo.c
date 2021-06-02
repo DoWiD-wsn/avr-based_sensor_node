@@ -19,10 +19,10 @@
 
 /*** DEMO CONFIGURATION ***/
 /* Enable debug output via UART1 (9600 BAUD) */
-#define ENABLE_DBG                  (1)
+#define ENABLE_DBG                  (0)
 
 /* Update interval [min] */
-#define UPDATE_INTERVAL             (1)
+#define UPDATE_INTERVAL             (10)
 
 /* Enable (1) or disable (0) measurements/sensors */
 #define ENABLE_ADC_SELF             (1)     /**< Enable the ADC self-test (via ADC) */
@@ -50,19 +50,19 @@
 
 /* Measurement message data indices (derived from enable value above) */
 #define MSG_VALUE_ADC_SELF          (0)
-#define MSG_VALUE_MCU_V             (MSG_VALUE_ADC_SELF  + ENABLE_MCU_V)
-#define MSG_VALUE_BAT_V             (MSG_VALUE_MCU_V     + ENABLE_BAT_V)
-#define MSG_VALUE_XBEE_T            (MSG_VALUE_BAT_V     + ENABLE_XBEE_T)
-#define MSG_VALUE_XBEE_V            (MSG_VALUE_XBEE_T    + ENABLE_XBEE_V)
-#define MSG_VALUE_103JT_T           (MSG_VALUE_XBEE_V    + ENABLE_103JT_T)
-#define MSG_VALUE_TMP275_T          (MSG_VALUE_103JT_T   + ENABLE_TMP275_T)
-#define MSG_VALUE_DS18B20_T         (MSG_VALUE_TMP275_T  + ENABLE_DS18B20_T)
-#define MSG_VALUE_STEMMA_H          (MSG_VALUE_DS18B20_T + ENABLE_STEMMA_H)
-#define MSG_VALUE_AM2302_T          (MSG_VALUE_STEMMA_H  + ENABLE_AM2302_T)
-#define MSG_VALUE_AM2302_H          (MSG_VALUE_AM2302_T  + ENABLE_AM2302_H)
-#define MSG_VALUE_RUNTIME           (MSG_VALUE_AM2302_H  + ENABLE_RUNTIME)
-#define MSG_VALUE_INCIDENT          (MSG_VALUE_RUNTIME   + ENABLE_INCIDENT)
-#define MSG_VALUE_REBOOT            (MSG_VALUE_INCIDENT  + ENABLE_REBOOT)
+#define MSG_VALUE_MCU_V             (MSG_VALUE_ADC_SELF  + ENABLE_ADC_SELF)
+#define MSG_VALUE_BAT_V             (MSG_VALUE_MCU_V     + ENABLE_MCU_V)
+#define MSG_VALUE_XBEE_T            (MSG_VALUE_BAT_V     + ENABLE_BAT_V)
+#define MSG_VALUE_XBEE_V            (MSG_VALUE_XBEE_T    + ENABLE_XBEE_T)
+#define MSG_VALUE_103JT_T           (MSG_VALUE_XBEE_V    + ENABLE_XBEE_V)
+#define MSG_VALUE_TMP275_T          (MSG_VALUE_103JT_T   + ENABLE_103JT_T)
+#define MSG_VALUE_DS18B20_T         (MSG_VALUE_TMP275_T  + ENABLE_TMP275_T)
+#define MSG_VALUE_STEMMA_H          (MSG_VALUE_DS18B20_T + ENABLE_DS18B20_T)
+#define MSG_VALUE_AM2302_T          (MSG_VALUE_STEMMA_H  + ENABLE_STEMMA_H)
+#define MSG_VALUE_AM2302_H          (MSG_VALUE_AM2302_T  + ENABLE_AM2302_T)
+#define MSG_VALUE_RUNTIME           (MSG_VALUE_AM2302_H  + ENABLE_AM2302_H)
+#define MSG_VALUE_INCIDENT          (MSG_VALUE_RUNTIME   + ENABLE_RUNTIME)
+#define MSG_VALUE_REBOOT            (MSG_VALUE_INCIDENT  + ENABLE_INCIDENT)
 
 /* Derive number of sensor values to be transmitted (passed to sensor_msg.h) */
 #define SEN_MSG_NUM_MEASUREMENTS    (ENABLE_ADC_SELF + ENABLE_MCU_V + ENABLE_BAT_V + ENABLE_XBEE_T + ENABLE_XBEE_V + ENABLE_103JT_T + ENABLE_TMP275_T + ENABLE_DS18B20_T + ENABLE_STEMMA_H + ENABLE_AM2302_T + ENABLE_AM2302_H + ENABLE_RUNTIME + ENABLE_INCIDENT + ENABLE_REBOOT)
@@ -153,8 +153,13 @@ int main(void) {
     SEN_MSG_u msg;
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
+#if (ENABLE_BAT_V || ENABLE_XBEE_T || ENABLE_XBEE_V || ENABLE_103JT_T || ENABLE_TMP275_T || ENABLE_DS18B20_T || ENABLE_STEMMA_H || ENABLE_AM2302_T || ENABLE_AM2302_H)
     /* Temporary variable for sensor measurements */
-    float measurement = 0.0, vcc = 0.0;
+    float measurement = 0.0;
+#endif
+#if (ENABLE_MCU_V || ENABLE_BAT_V)
+    float vcc = 0.0;
+#endif
     /* Temporary variables */
     uint8_t reg = 0;
     uint8_t i = 0;
@@ -184,7 +189,9 @@ int main(void) {
     uint16_t inc_am2302 = 0;        /**< Incident counter for AM2302 functions */
     uint8_t en_am2302 = 0;          /**< AM2302 is available (1) or has failed (0) */
 #endif
+#if ENABLE_INCIDENT
     uint16_t inc_sum = 0;           /**< Total incident counter (sum of others) */
+#endif
     
     /* Disable unused hardware modules */
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
@@ -465,7 +472,7 @@ int main(void) {
         msg.struc.values[MSG_VALUE_ADC_SELF].value = adc_read_input(ADC_CH0);
         printf("... ADC self-diagnosis: %d\n", msg.struc.values[MSG_VALUE_ADC_SELF].value);
 #endif
-        
+       
 #if ENABLE_MCU_V
         /*** MCU supply voltage (via ADC) ***/
         /* Supply voltage in volts (V) */
@@ -477,6 +484,10 @@ int main(void) {
         
 #if ENABLE_BAT_V
         /*** Battery voltage (via ADC) ***/
+#  if ENABLE_MCU_V==0
+        /* Supply voltage in volts (V) */
+        vcc = adc_read_vcc();
+#  endif
         /* Calculate voltage from value (voltage divider 1:1) */
         measurement = 2.0 * (adc_read_input(ADC_CH2) * (vcc / 1023.0));
         printf("... Battery voltage: %.2f\n", measurement);
