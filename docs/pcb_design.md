@@ -82,10 +82,9 @@ An interactive BOM can be found in the `/kicad/bom/` directory (see [here](../ki
 |-----------|-------|----------------|--------|-------------------|-----------|---------|
 | C7-C8     | 18pF  | Device         | C      | Capacitor_SMD     | C_0603_1608Metric | [Farnell](https://at.farnell.com/kemet/c0603c180k5ractu/kondensator-18pf-50v-10-x7r-0603/dp/2821151) |
 | C9        | 220pF | Device         | C      | Capacitor_SMD     | C_0603_1608Metric | [Farnell](https://at.farnell.com/wurth-elektronik/885012206055/kondensator-220pf-25v-10-x7r-0603/dp/2812352) |
-| C5        | 10nF  | Device         | C      | Capacitor_SMD     | C_0603_1608Metric | [Farnell](https://at.farnell.com/kemet/c0603c103m5ractu/kondensator-0-01-f-50v-20-x7r/dp/2581043) |
-| C1-C3,C6,C10-C12,C16  | 100nF | Device | C      | Capacitor_SMD     | C_0603_1608Metric | [Farnell](https://at.farnell.com/kemet/c0603c104m5ractu/kondensator-0-1-f-50v-20-x7r-0603/dp/2581046) |
-| C13-C15,C17-C18   | 10uF  | Device         | C      | Capacitor_SMD     | C_0805_2012Metric | [Farnell](https://at.farnell.com/kemet/c0805c106m8racauto/kondensator-10-f-10v-20-x7r-0805/dp/2776883) |
-| C4        | 100uF | Device         | C      | Capacitor_SMD     | CP_Elec_6.3x7.7   | [Farnell](https://at.farnell.com/panasonic/eeefk1e101xp/kondensator-100-f-25v-radial-smd/dp/1850109) |
+| C1-C3,C5-C6,C10-C12,C16  | 100nF | Device | C      | Capacitor_SMD     | C_0603_1608Metric | [Farnell](https://at.farnell.com/kemet/c0603c104m5ractu/kondensator-0-1-f-50v-20-x7r-0603/dp/2581046) |
+| C13-C15,C17-C18   | 10uF  | Device         | C      | Capacitor_SMD     | C_0805_2012Metric | [Farnell](https://at.farnell.com/murata/grm21br71a106ka73l/kondensator-10-f-10v-10-x7r-0805/dp/2611944) |
+| C4        | 100uF | Device         | C      | Capacitor_SMD     | CP_Elec_6.3x7.7   | [Farnell](https://at.farnell.com/kemet/edk107m016a9gaa/kondensator-100-f-16v-radial-smd/dp/2068653) |
 | L1        | 1.5uH | Device         | L      | *myfootprint*`*`  | L_Coilcraft_LPS3015 | [Farnell](https://at.farnell.com/coilcraft/lps3015-152mrb/induktivit-t-1-5uh-20-1-3a-gesch/dp/2408018?st=1.5) |
 | FB1       | -     | Device   | Ferrite_Bead | Inductor_SMD      | L_0805_2012Metric | [Farnell](https://at.farnell.com/laird/mi0805k400r-10/ferritperle-2012-100mhz-40r/dp/2292459) |
 | R9-R10    | 560ohm | Device        | R      | Resistor_SMD      | R_0603_1608Metric | [Farnell](https://at.farnell.com/yageo/ac0603fr-07560rl/dickschichtwiderstand-560r-1-0/dp/3495281) |
@@ -105,7 +104,7 @@ An interactive BOM can be found in the `/kicad/bom/` directory (see [here](../ki
 | J4-J5     | - | Connector_Generic | Conn_01x04 | Connector_PinHeader_2.54mm | PinHeader_1x04_P2.54mm_Vertical | [Farnell](https://at.farnell.com/wurth-elektronik/61304011121/stiftleiste-2-54mm-tht-vertikal/dp/2356175) |
 | J7-J8     | - | Connector_Generic | Conn_01x14 | Connector_PinHeader_2.54mm | PinHeader_1x14_P2.54mm_Vertical | [Farnell](https://at.farnell.com/wurth-elektronik/61304011121/stiftleiste-2-54mm-tht-vertikal/dp/2356175) |
 | J3        | - | Connector | AVR-ISP-6 | Connector_PinHeader_2.54mm | PinHeader_2x03_P2.54mm_Vertical | [Farnell](https://at.farnell.com/wurth-elektronik/61304021121/stiftleiste-2-54mm-tht-vertikal/dp/2356148) |
-| JP1       | Xbee | *mycomponents*`*` | Xbee3 | *myfootprint*`*` | XBEE-20_THT       | [Farnell](https://at.farnell.com/harwin/m22-7131042/buchsenleiste-vert-geschlossen/dp/1109732) |
+| JP1       | Xbee | *mycomponents*`*` | Xbee3 | *myfootprint*`*` | XBEE-20_THT       | [Farnell](https://at.farnell.com/te-connectivity/1-2314878-0/buchsenleiste-10pos-1-reihe-2mm/dp/3289695) |
 | JP2-JP3,JP6-JP7 | bridged | Jumper | SolderJumper_2_Bridged | Jumper | SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm | - |
 | JP4-JP5   | open | Jumper | SolderJumper_2_Open | Jumper | SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm | - |
 | H1-H4     | - | Mechanical | MountingHole  | MountingHole | MountingHole_2.7mm_M2.5 | - |
