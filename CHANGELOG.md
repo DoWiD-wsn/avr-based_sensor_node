@@ -11,9 +11,10 @@ However, the major and minor number are used to express the version of the hardw
 - Switched ADC1 and ADC2 input (thermistor <-> Vbat)
 - Changed voltage-divider resistors (Vmcu & Vbat) to 1MOhm and added 10nF capacitor for smoothing
 - Changed TPS63031DSKR (DC/DC) PS pin to GND to enable low-power operation
-- General PCB update: take care of better use of GND planes
+- General PCB update: take care of better use of GND planes; improved silk layer
 ### Removed
 - Removed Xbee sleep pin pull-up resistors (Xbee has internal pull-ups)
+- Removed Xbee reset pin pull-up resistors (reset not used)
 
 ## [1.1.0] - 2021-05-26
 ### Added
