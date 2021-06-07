@@ -27,8 +27,8 @@ kicad/
 
 ## Costs
 
-The cost of one *ASN(x)* is around 20€ for the components (2021-05; [Farnell](https://www.farnell.com/)) and around 10€ for the PCB ([PCB Pool / Beta Layout](https://eu.beta-layout.com/pcb/)).
-Thus, the total costs of one *ASN(x)* are around **30€**.
+The cost of one *ASN(x)* is around 20€ for the components (2021-05; [Farnell](https://www.farnell.com/)), around 10€ for the PCB ([PCB Pool / Beta Layout](https://eu.beta-layout.com/pcb/)), and around 20€ for the Xbee 3 radio (normal version, not pro).
+Thus, the total costs of one *ASN(x)* are around **50€**.
 Depending on the supplier and quantities ordered, the costs may vary.
 
 
