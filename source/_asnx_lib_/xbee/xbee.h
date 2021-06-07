@@ -1,15 +1,13 @@
-/*****
- * @brief   ASN(x) Xbee 3 library
+/*!
+ * @brief   ASN(x) Xbee 3 library -- header file
  *
  * Library to the Xbee 3 module accessible via UART.
  *
  * @file    /_asnx_lib_/xbee/xbee.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *
- * @todo    Implement better way for (asynchronous) response handling/matching
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 #ifndef _ASNX_XBEE_H_
 #define _ASNX_XBEE_H_
@@ -19,8 +17,8 @@
 
 
 /***** DEFINES ********************************************************/
-/* Use UART blocking (0) or non-blocking (1) functions */
-/* @note    Use non-blocking mode for now; blocking mode needs major rework */
+/*! Use UART blocking (0) or non-blocking (1) functions
+ * @note    Use non-blocking mode for now; blocking mode needs major rework */
 #define XBEE_WRITE_NONBLOCKING              (1)
 
 /* Xbee sleep-request pin (default) */
@@ -34,27 +32,29 @@
 #define XBEE_SLEEP_IND_PIN                  (PINC)
 #define XBEE_SLEEP_IND_GPIO                 (PC7)
 
-/* Join network timeout [s] */
+/*! Join network timeout [s] */
 #define XBEE_JOIN_TIMEOUT                   (120L)
-/* Join network delay between tries [ms] */
+/*! Join network delay between tries [ms] */
 #define XBEE_JOIN_TIMEOUT_DELAY             (1000UL)
 
-/* Wake-up timeout [ms] */
+/*! Wake-up timeout [ms] */
 #define XBEE_WAKE_TIMEOUT                   (500)
-/* Wake-up delay between tries [ms] */
+/*! Wake-up delay between tries [ms] */
 #define XBEE_WAKE_TIMEOUT_DELAY             (5)
 
-/* RX timeout [ms] */
+/*! RX timeout [ms] */
 #define XBEE_RX_TIMEOUT                     (5000UL)
-/* RX delay between tries [ms] */
+/*! RX delay between tries [ms] */
 #define XBEE_RX_TIMEOUT_DELAY               (100)
 
-/* Maximum Number of Transmission Bytes (for transparent mode) */
+/*! Maximum Number of Transmission Bytes (for transparent mode) */
 #define XBEE_CONF_NP                        (54)
-/* Unicast transmission maximum payload size.
+/*!
+ * Unicast transmission maximum payload size.
  * XBee Zigbee firmware supports fragmentation that allows a single
  * large data packet to be broken up into multiple RF transmissions and
- * reassembled by the receiver before sending data out its serial port. */
+ * reassembled by the receiver before sending data out its serial port.
+ */
 #define XBEE_CONF_PAYLOAD_MAX               (84)
 
 /* Network source 64-bit addressing */
@@ -99,26 +99,26 @@
 
 
 /***** ENUMERATION ****************************************************/
-/* Enumeration for the Xbee function returns values */
+/*! Enumeration for the Xbee function returns values */
 typedef enum {
-    XBEE_RET_OK                         = 0,
-    XBEE_RET_ERROR                      = -1,
-    XBEE_RET_INVALID_CMD                = -2,
-    XBEE_RET_INVALID_PARAM              = -3,
-    XBEE_RET_FAILED_TRANSMISSION        = -4,
-    XBEE_RET_NOT_SECURE                 = -5,
-    XBEE_RET_ENCRYPTION_ERROR           = -6,
-    XBEE_RET_CMD_NOT_SECURE             = -7,
-    XBEE_RET_INVALID_CRC                = -8,
-    XBEE_RET_INVALID_FRAME              = -9,
-    XBEE_RET_PAYLOAD_SIZE_EXCEEDED      = -10,
-    XBEE_RET_FID_NOT_MATCH              = -11,
-    XBEE_RET_MAC_NOT_MATCH              = -12,
-    XBEE_RET_ADDR_NOT_MATCH             = -13,
-    XBEE_RET_TIMEOUT                    = -14
+    XBEE_RET_OK                         = 0,    /**< SUCCESS */
+    XBEE_RET_ERROR                      = -1,   /**< ERROR: general error */
+    XBEE_RET_INVALID_CMD                = -2,   /**< ERROR: invalid command given */
+    XBEE_RET_INVALID_PARAM              = -3,   /**< ERROR: invalid parameter given */
+    XBEE_RET_FAILED_TRANSMISSION        = -4,   /**< ERROR: transmission failed */
+    XBEE_RET_NOT_SECURE                 = -5,   /**< ERROR: no secure connection */
+    XBEE_RET_ENCRYPTION_ERROR           = -6,   /**< ERROR: encryption error */
+    XBEE_RET_CMD_NOT_SECURE             = -7,   /**< ERROR: command not secure */
+    XBEE_RET_INVALID_CRC                = -8,   /**< ERROR: CRC check failed */
+    XBEE_RET_INVALID_FRAME              = -9,   /**< ERROR: invalid frame given */
+    XBEE_RET_PAYLOAD_SIZE_EXCEEDED      = -10,  /**< ERROR: maximum payload size exceeded */
+    XBEE_RET_FID_NOT_MATCH              = -11,  /**< ERROR: returned FID does not match */
+    XBEE_RET_MAC_NOT_MATCH              = -12,  /**< ERROR: returned MAC does not match */
+    XBEE_RET_ADDR_NOT_MATCH             = -13,  /**< ERROR: returned address does not match */
+    XBEE_RET_TIMEOUT                    = -14   /**< ERROR: timeout */
 } XBEE_RET_t;
 
-/* Enumeration for the Xbee frame and response types */
+/*! Enumeration for the Xbee frame and response types */
 typedef enum {
     XBEE_FRAME_ATCMD_LOCAL              = 0x08, /**< Local AT Command Request (0x08) */
     XBEE_FRAME_ATCMD_LOCAL_QUEUE        = 0x09, /**< Queue Local AT Command Request (0x09) */
@@ -146,10 +146,10 @@ typedef enum {
     XBEE_FRAME_BLE_UNLOCK_RESP          = 0xAC, /**< BLE Unlock Response (0xAC) */
     XBEE_FRAME_SEC_SESSION_RESP         = 0xAE, /**< Secure Session Response (0xAE) */
 } XBEE_FRAME_t;
-/* Defines for double values */
+/*! Defines for double values */
 #define XBEE_FRAME_REGISTER_STATUS      XBEE_FRAME_REGISTER_DEVICE
 
-/* Enumeration for the Xbee modem statuses */
+/*! Enumeration for the Xbee modem statuses */
 typedef enum {
     XBEE_MODEM_STATUS_HW_RESET          = 0x00, /**< Hardware reset or power up (0x00) */
     XBEE_MODEM_STATUS_WD_RESTE          = 0x01, /**< Watchdog timer reset (0x01) */
@@ -172,7 +172,7 @@ typedef enum {
     /* 0x80-0xFF = Stack error */
 } XBEE_MODEM_STATUS_t;
 
-/* Enumeration for the association indication response statuses */
+/*! Enumeration for the association indication response statuses */
 typedef enum {
     XBEE_AI_RET_SUCCESS                 = 0x00, /**< Successfully formed or joined a Zigbee network (0x00) */
     XBEE_AI_RET_NO_PAN                  = 0x21, /**< Scan found no PANs (0x21) */
@@ -191,7 +191,7 @@ typedef enum {
     XBEE_AI_RET_INIT                    = 0xFF, /**< Initialization time; no association status has been determined yet (0xFF) */
 } XBEE_AI_RET_t;
 
-/* Enumeration for the extended transmit status codes */
+/*! Enumeration for the extended transmit status codes */
 typedef enum {
     XBEE_TRANSMIT_STAT_DEL_OK           = 0x00, /**< Success () */
     XBEE_TRANSMIT_STAT_DEL_MAC_ACK_FAIL = 0x01, /**< MAC ACK failure (0x01) */

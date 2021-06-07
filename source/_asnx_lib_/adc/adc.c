@@ -1,13 +1,13 @@
-/*****
- * @brief   ASN(x) ADC library
+/*!
+ * @brief   ASN(x) ADC library -- source file
  *
  * Library to support the use of the ADC.
  *
  * @file    /_asnx_lib_/adc/adc.c
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 /***** INCLUDES *******************************************************/
 #include "adc.h"
@@ -21,12 +21,12 @@ void adc_dummy_conversion(void);
 
 
 /***** FUNCTIONS ******************************************************/
-/***
+/*!
  * Initialize the ADC.
  *
  * @param[in]   prescaler   The ADC clock prescaler option
  * @param[in]   reference   The ADC reference source option
- ***/
+ */
 void adc_init(ADC_PRESCALER_t prescaler, ADC_AREF_t reference) {
     /* Initially, select input CH0 */
     adc_set_input(ADC_CH0);
@@ -41,9 +41,9 @@ void adc_init(ADC_PRESCALER_t prescaler, ADC_AREF_t reference) {
 }
 
 
-/***
+/*!
  * De-initialize the ADC.
- ***/
+ */
 void adc_deinit(void) {
     /* Clear the ADC's internal multiplexer */
     ADMUX = 0x00;
@@ -52,62 +52,62 @@ void adc_deinit(void) {
 }
 
 
-/***
+/*!
  * Enable the ADC peripheral.
- ***/
+ */
 void adc_enable(void) {
     /* Enable the ADC */
     ADCSRA |= _BV(ADEN);
 }
 
 
-/***
+/*!
  * Disable the ADC peripheral.
- ***/
+ */
 void adc_disable(void) {
     /* Disable the ADC */
     ADCSRA &= ~_BV(ADEN);
 }
 
 
-/***
+/*!
  * Select the ADC input.
  *
  * @param[in]   input       The input to be used
- ***/
+ */
 void adc_set_input(ADC_INPUT_t input) {
     /* Select desired input with internal multiplexer */
     ADMUX = ((ADMUX & 0xE0) | (input & 0x0F));
 }
 
 
-/***
+/*!
  * Select the ADC prescaler.
  *
  * @param[in]   prescaler   The prescaler to be used
- ***/
+ */
 void adc_set_prescaler(ADC_PRESCALER_t prescaler) {
     /* Select desired prescaler */
     ADCSRA = ((ADCSRA & 0xF8) | (prescaler & 0x07));
 }
 
 
-/***
+/*!
  * Select the ADC reference source.
  *
  * @param[in]   reference   The reference source to be used
- ***/
+ */
 void adc_set_reference(ADC_AREF_t reference) {
     /* Select desired reference */
     ADMUX = ((ADMUX & 0x2F) | ((reference & 0x03) << 6));
 }
 
 
-/***
+/*!
  * Read the currently selected input of the ADC.
  *
  * @return      10-bit conversion result (stored in 16-bit right aligned)
- ***/
+ */
 uint16_t adc_read(void) {
     /* Start a single conversion */
     ADCSRA |= _BV(ADSC);
@@ -120,12 +120,12 @@ uint16_t adc_read(void) {
 }
 
 
-/***
+/*!
  * Read the given input of the ADC.
  *
  * @param[in]   input       The input to be read
  * @return      10-bit conversion result (stored in 16-bit right aligned)
- ***/
+ */
 uint16_t adc_read_input(ADC_INPUT_t input) {
     /* Set the given input */
     adc_set_input(input);
@@ -134,16 +134,16 @@ uint16_t adc_read_input(ADC_INPUT_t input) {
 }
 
 
-/***
+/*!
  * Perform a dummy conversion.
- ***/
+ */
 void adc_dummy_conversion(void) {
     /* Perform a conversion but neglect the result */
     (void)adc_read();
 }
 
 
-/***
+/*!
  * Measure the MCU's supply voltage internally.
  * Set the reference voltage to Vcc and read the VBG (1.1V) input.
  * The voltage is then calculated with:
@@ -151,7 +151,7 @@ void adc_dummy_conversion(void) {
  * @see http://ww1.microchip.com/downloads/en/Appnotes/00002447A.pdf
  *
  * @return      Supply voltage in volts (V)
- ***/
+ */
 float adc_read_vcc(void) {
     /* Save the current ADMUX configuration */
     uint8_t reg = ADMUX;

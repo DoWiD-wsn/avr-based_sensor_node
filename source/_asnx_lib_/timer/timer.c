@@ -1,13 +1,13 @@
-/*****
- * @brief   ASN(x) timer/counter library
+/*!
+ * @brief   ASN(x) timer library -- source file
  *
  * Library to support the use of the timer/counter module.
  *
  * @file    /_asnx_lib_/timer/timer.c
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 
 /***** INCLUDES *******************************************************/
@@ -22,28 +22,28 @@
 /***** GLOBAL VARIABLES ***********************************************/
 /* Callback function pointer for ISR */
 #if TIMER0_ENABLED
-void (*_timer0_callback)() = NULL;
+void (*_timer0_callback)() = NULL;        /**< timer0 function callback */
 #endif
 #if TIMER1_ENABLED
-void (*_timer1_callback)() = NULL;
+void (*_timer1_callback)() = NULL;        /**< timer1 function callback */
 #endif
 #if TIMER2_ENABLED
-void (*_timer2_callback)() = NULL;
+void (*_timer2_callback)() = NULL;        /**< timer2 function callback */
 #endif
 #if TIMER3_ENABLED
-void (*_timer3_callback)() = NULL;
+void (*_timer3_callback)() = NULL;        /**< timer3 function callback */
 #endif
 
 
 /***** FUNCTIONS **************************************************************/
 #if TIMER0_ENABLED
-/***
+/*!
  * Calculate the ticks for TIMER0 for a time in microseconds (us).
  *
  * @param[in]   us          Desired time in microseconds (us)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @return      Resulting number of ticks (nearest)
- ***/
+ */
 uint8_t timer0_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler) {
     uint32_t timer;
     /* Get the peripheral clock */
@@ -83,13 +83,13 @@ uint8_t timer0_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler) {
 }
 
 
-/***
+/*!
  * Calculate the ticks for TIMER0 for a time in milliseconds (ms).
  *
  * @param[in]   ms          Desired time in milliseconds (ms)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @return      Resulting number of ticks (nearest)
- ***/
+ */
 uint8_t timer0_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler) {
     uint32_t timer;
     /* Get the peripheral clock */
@@ -129,18 +129,18 @@ uint8_t timer0_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler) {
 }
 
 
-/***
+/*!
  * Stop the TIMER0 module.
- ***/
+ */
 void timer0_stop(void) {
     /* Stop the module */
     TCCR0B = (TCCR0B & 0xF8);
 }
 
 
-/***
+/*!
  * Reset the TIMER0 module.
- ***/
+ */
 void timer0_reset(void) {
     /* Reset all registers */
     TCCR0A = 0x00;
@@ -154,44 +154,44 @@ void timer0_reset(void) {
 }
 
 
-/***
+/*!
  * Start TIMER0 with a given prescaler.
  *
  * @param[in]   prescaler   TIMER prescaler configuration
- ***/
+ */
 void timer0_start(TIMER_PRESCALER_t prescaler) {
     /* Set the prescaler and start timer */
     TCCR0B = prescaler;
 }
 
 
-/***
+/*!
  * Set the TCNT0 value.
  *
  * @param[in]   value       TCNT0 value to be set
- ***/
+ */
 void timer0_set_tcnt(uint8_t value) {
     TCNT0 = value;
 }
 
 
-/***
+/*!
  * Get the TCNT0 value.
  *
  * @return      TCNT0 value read
- ***/
+ */
 uint8_t timer0_get_tcnt(void) {
     return TCNT0;
 }
 
 
-/***
+/*!
  * Call a function after a defined number of ticks on TIMER0.
  *
  * @param[in]   ticks       Desired number of ticks
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer0_start_isr(uint8_t ticks, TIMER_PRESCALER_t prescaler, void (*func)()) {
     /* Check if a positive ticks value was given */
     if (ticks == 0) {
@@ -214,13 +214,13 @@ void timer0_start_isr(uint8_t ticks, TIMER_PRESCALER_t prescaler, void (*func)()
 }
 
 
-/***
+/*!
  * Call a function after a defined time in microseconds (us) on TIMER0.
  *
  * @param[in]   us          Desired time in microseconds (us)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer0_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)()) {
     /* Get the ticks from time */
     uint8_t ticks = timer0_get_ticks_from_us(us, prescaler);
@@ -229,13 +229,13 @@ void timer0_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)(
 }
 
 
-/***
+/*!
  * Call a function after a defined time in milliseconds (ms) on TIMER0.
  *
  * @param[in]   ms          Desired time in milliseconds (ms)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer0_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)()) {
     /* Get the ticks from time */
     uint8_t ticks = timer0_get_ticks_from_ms(ms, prescaler);
@@ -244,14 +244,10 @@ void timer0_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)(
 }
 
 
-/***
+/*!
  * TIMER0 compare match interrupt.
- ***/
-#  if defined(__DOXYGEN__)
-void TIMER0_COMPA_vect(void) {
-#  else
+ */
 ISR(TIMER0_COMPA_vect) {
-#  endif
     /* If a callback is defined */
     if(_timer0_callback != NULL) {
         /* Call the callback function */
@@ -262,13 +258,13 @@ ISR(TIMER0_COMPA_vect) {
 
 
 #if TIMER1_ENABLED
-/***
+/*!
  * Calculate the ticks for TIMER1 for a time in microseconds (us).
  *
  * @param[in]   us          Desired time in microseconds (us)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @return      Resulting number of ticks (nearest)
- ***/
+ */
 uint16_t timer1_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler) {
     uint32_t timer;
     /* Get the peripheral clock */
@@ -308,13 +304,13 @@ uint16_t timer1_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler) {
 }
 
 
-/***
+/*!
  * Calculate the ticks for TIMER1 for a time in milliseconds (ms).
  *
  * @param[in]   ms          Desired time in milliseconds (ms)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @return      Resulting number of ticks (nearest)
- ***/
+ */
 uint16_t timer1_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler) {
     uint32_t timer;
     /* Get the peripheral clock */
@@ -354,18 +350,18 @@ uint16_t timer1_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler) {
 }
 
 
-/***
+/*!
  * Stop the TIMER1 module.
- ***/
+ */
 void timer1_stop(void) {
     /* Stop the module */
     TCCR1B = (TCCR1B & 0xF8);
 }
 
 
-/***
+/*!
  * Reset the TIMER1 module.
- ***/
+ */
 void timer1_reset(void) {
     /* Reset all registers */
     TCCR1A = 0x00;
@@ -381,44 +377,44 @@ void timer1_reset(void) {
 }
 
 
-/***
+/*!
  * Start TIMER1 with a given prescaler.
  *
  * @param[in]   prescaler   TIMER prescaler configuration
- ***/
+ */
 void timer1_start(TIMER_PRESCALER_t prescaler) {
     /* Set the prescaler and start timer */
     TCCR1B = prescaler;
 }
 
 
-/***
+/*!
  * Set the TCNT1 value.
  *
  * @param[in]   value       TCNT1 value to be set
- ***/
+ */
 void timer1_set_tcnt(uint16_t value) {
     TCNT1 = value;
 }
 
 
-/***
+/*!
  * Get the TCNT1 value.
  *
  * @return      TCNT1 value read
- ***/
+ */
 uint16_t timer1_get_tcnt(void) {
     return TCNT1;
 }
 
 
-/***
+/*!
  * Call a function after a defined number of ticks on TIMER1.
  *
  * @param[in]   ticks       Desired number of ticks
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer1_start_isr(uint16_t ticks, TIMER_PRESCALER_t prescaler, void (*func)()) {
     /* Check if a positive ticks value was given */
     if (ticks == 0) {
@@ -442,13 +438,13 @@ void timer1_start_isr(uint16_t ticks, TIMER_PRESCALER_t prescaler, void (*func)(
 }
 
 
-/***
+/*!
  * Call a function after a defined time in microseconds (us) on TIMER1.
  *
  * @param[in]   us          Desired time in microseconds (us)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer1_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)()) {
     /* Get the ticks from time */
     uint16_t ticks = timer1_get_ticks_from_us(us, prescaler);
@@ -457,13 +453,13 @@ void timer1_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)(
 }
 
 
-/***
+/*!
  * Call a function after a defined time in milliseconds (ms) on TIMER1.
  *
  * @param[in]   ms          Desired time in milliseconds (ms)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer1_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)()) {
     /* Get the ticks from time */
     uint16_t ticks = timer1_get_ticks_from_ms(ms, prescaler);
@@ -472,14 +468,10 @@ void timer1_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)(
 }
 
 
-/***
+/*!
  * TIMER1 compare match interrupt.
- ***/
-#  if defined(__DOXYGEN__)
-void TIMER1_COMPA_vect(void) {
-#  else
+ */
 ISR(TIMER1_COMPA_vect) {
-#  endif
     /* If a callback is defined */
     if(_timer1_callback != NULL) {
         /* Call the callback function */
@@ -490,13 +482,13 @@ ISR(TIMER1_COMPA_vect) {
 
 
 #if TIMER2_ENABLED
-/***
+/*!
  * Calculate the ticks for TIMER2 for a time in microseconds (us).
  *
  * @param[in]   us          Desired time in microseconds (us)
  * @param[in]   prescaler   TIMER2 prescaler configuration
  * @return      Resulting number of ticks (nearest)
- ***/
+ */
 uint8_t timer2_get_ticks_from_us(uint16_t us, TIMER2_PRESCALER_t prescaler) {
     uint32_t timer;
     /* Get the peripheral clock */
@@ -544,13 +536,13 @@ uint8_t timer2_get_ticks_from_us(uint16_t us, TIMER2_PRESCALER_t prescaler) {
 }
 
 
-/***
+/*!
  * Calculate the ticks for TIMER2 for a time in milliseconds (ms).
  *
  * @param[in]   ms          Desired time in milliseconds (ms)
  * @param[in]   prescaler   TIMER2 prescaler configuration
  * @return      Resulting number of ticks (nearest)
- ***/
+ */
 uint8_t timer2_get_ticks_from_ms(uint16_t ms, TIMER2_PRESCALER_t prescaler) {
     uint32_t timer;
     /* Get the peripheral clock */
@@ -598,18 +590,18 @@ uint8_t timer2_get_ticks_from_ms(uint16_t ms, TIMER2_PRESCALER_t prescaler) {
 }
 
 
-/***
+/*!
  * Stop the TIMER2 module.
- ***/
+ */
 void timer2_stop(void) {
     /* Stop the module */
     TCCR2B = (TCCR2B & 0xF8);
 }
 
 
-/***
+/*!
  * Reset the TIMER2 module.
- ***/
+ */
 void timer2_reset(void) {
     /* Reset all registers */
     TCCR2A = 0x00;
@@ -624,44 +616,44 @@ void timer2_reset(void) {
 }
 
 
-/***
+/*!
  * Start TIMER2 with a given prescaler.
  *
  * @param[in]   prescaler   TIMER2 prescaler configuration
- ***/
+ */
 void timer2_start(TIMER2_PRESCALER_t prescaler) {
     /* Set the prescaler and start timer */
     TCCR2B = prescaler;
 }
 
 
-/***
+/*!
  * Set the TCNT2 value.
  *
  * @param[in]   value       TCNT2 value to be set
- ***/
+ */
 void timer2_set_tcnt(uint8_t value) {
     TCNT2 = value;
 }
 
 
-/***
+/*!
  * Get the TCNT2 value.
  *
  * @return      TCNT2 value read
- ***/
+ */
 uint8_t timer2_get_tcnt(void) {
     return TCNT2;
 }
 
 
-/***
+/*!
  * Call a function after a defined number of ticks on TIMER2.
  *
  * @param[in]   ticks       Desired number of ticks
  * @param[in]   prescaler   TIMER2 prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer2_start_isr(uint8_t ticks, TIMER2_PRESCALER_t prescaler, void (*func)()) {
     /* Check if a positive ticks value was given */
     if (ticks == 0) {
@@ -686,13 +678,13 @@ void timer2_start_isr(uint8_t ticks, TIMER2_PRESCALER_t prescaler, void (*func)(
 }
 
 
-/***
+/*!
  * Call a function after a defined time in microseconds (us) on TIMER2.
  *
  * @param[in]   us          Desired time in microseconds (us)
  * @param[in]   prescaler   TIMER2 prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer2_start_isr_us(uint16_t us, TIMER2_PRESCALER_t prescaler, void (*func)()) {
     /* Get the ticks from time */
     uint8_t ticks = timer2_get_ticks_from_us(us, prescaler);
@@ -701,13 +693,13 @@ void timer2_start_isr_us(uint16_t us, TIMER2_PRESCALER_t prescaler, void (*func)
 }
 
 
-/***
+/*!
  * Call a function after a defined time in milliseconds (ms) on TIMER2.
  *
  * @param[in]   ms          Desired time in milliseconds (ms)
  * @param[in]   prescaler   TIMER2 prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer2_start_isr_ms(uint16_t ms, TIMER2_PRESCALER_t prescaler, void (*func)()) {
     /* Get the ticks from time */
     uint8_t ticks = timer2_get_ticks_from_ms(ms, prescaler);
@@ -716,14 +708,10 @@ void timer2_start_isr_ms(uint16_t ms, TIMER2_PRESCALER_t prescaler, void (*func)
 }
 
 
-/***
+/*!
  * TIMER2 compare match interrupt.
- ***/
-#  if defined(__DOXYGEN__)
-void TIMER2_COMPA_vect(void) {
-#  else
+ */
 ISR(TIMER2_COMPA_vect) {
-#  endif
     /* If a callback is defined */
     if(_timer2_callback != NULL) {
         /* Call the callback function */
@@ -734,13 +722,13 @@ ISR(TIMER2_COMPA_vect) {
 
 
 #if TIMER3_ENABLED
-/***
+/*!
  * Calculate the ticks for TIMER3 for a time in microseconds (us).
  *
  * @param[in]   us          Desired time in microseconds (us)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @return      Resulting number of ticks (nearest)
- ***/
+ */
 uint16_t timer3_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler) {
     uint32_t timer;
     /* Get the peripheral clock */
@@ -780,13 +768,13 @@ uint16_t timer3_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler) {
 }
 
 
-/***
+/*!
  * Calculate the ticks for TIMER3 for a time in milliseconds (ms).
  *
  * @param[in]   ms          Desired time in milliseconds (ms)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @return      Resulting number of ticks (nearest)
- ***/
+ */
 uint16_t timer3_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler) {
     uint32_t timer;
     /* Get the peripheral clock */
@@ -826,18 +814,18 @@ uint16_t timer3_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler) {
 }
 
 
-/***
+/*!
  * Stop the TIMER0 module.
- ***/
+ */
 void timer3_stop(void) {
     /* Stop the module */
     TCCR3B = (TCCR3B & 0xF8);
 }
 
 
-/***
+/*!
  * Reset the TIMER0 module.
- ***/
+ */
 void timer3_reset(void) {
     /* Reset all registers */
     TCCR3A = 0x00;
@@ -851,44 +839,44 @@ void timer3_reset(void) {
 }
 
 
-/***
+/*!
  * Start TIMER3 with a given prescaler.
  *
  * @param[in]   prescaler   TIMER prescaler configuration
- ***/
+ */
 void timer3_start(TIMER_PRESCALER_t prescaler) {
     /* Set the prescaler and start timer */
     TCCR1B = prescaler;
 }
 
 
-/***
+/*!
  * Set the TCNT3 value.
  *
  * @param[in]   value       TCNT3 value to be set
- ***/
+ */
 void timer3_set_tcnt(uint16_t value) {
     TCNT3 = value;
 }
 
 
-/***
+/*!
  * Get the TCNT3 value.
  *
  * @return      TCNT3 value read
- ***/
+ */
 uint16_t timer3_get_tcnt(void) {
     return TCNT3;
 }
 
 
-/***
+/*!
  * Call a function after a defined number of ticks on TIMER3.
  *
  * @param[in]   ticks       Desired number of ticks
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer3_start_isr(uint16_t ticks, TIMER_PRESCALER_t prescaler, void (*func)()) {
     /* Check if a positive ticks value was given */
     if (ticks == 0) {
@@ -911,13 +899,13 @@ void timer3_start_isr(uint16_t ticks, TIMER_PRESCALER_t prescaler, void (*func)(
 }
 
 
-/***
+/*!
  * Call a function after a defined time in microseconds (us) on TIMER3.
  *
  * @param[in]   us          Desired time in microseconds (us)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer3_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)()) {
     /* Get the ticks from time */
     uint8_t ticks = timer3_get_ticks_from_us(us, prescaler);
@@ -926,13 +914,13 @@ void timer3_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)(
 }
 
 
-/***
+/*!
  * Call a function after a defined time in milliseconds (ms) on TIMER3.
  *
  * @param[in]   ms          Desired time in milliseconds (ms)
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
- ***/
+ */
 void timer3_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)()) {
     /* Get the ticks from time */
     uint8_t ticks = timer3_get_ticks_from_ms(ms, prescaler);
@@ -941,14 +929,10 @@ void timer3_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)(
 }
 
 
-/***
- * TIMER0 compare match interrupt.
- ***/
-#  if defined(__DOXYGEN__)
-void TIMER3_COMPA_vect(void) {
-#  else
+/*!
+ * TIMER3 compare match interrupt.
+ */
 ISR(TIMER3_COMPA_vect) {
-#  endif
     /* If a callback is defined */
     if(_timer3_callback != NULL) {
         /* Call the callback function */

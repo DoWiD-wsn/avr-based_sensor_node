@@ -1,13 +1,13 @@
-/*****
- * @brief   ASN(x) I2C/TWI library
+/*!
+ * @brief   ASN(x) I2C (TWI) library -- header file
  *
- * Library to support the use of the I2C/TWI module.
+ * Library to support the use of the I2C module.
  *
  * @file    /_asnx_lib_/i2c/i2c.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 #ifndef _ASNX_I2C_H_
 #define _ASNX_I2C_H_
@@ -19,29 +19,29 @@
 
 
 /***** DEFINES ********************************************************/
-/*** CPU frequency (F_CPU) ***/
+/*! CPU frequency (F_CPU) */
 #ifndef F_CPU
 # warning "F_CPU not defined for \"i2c.h\""
 # define F_CPU 4000000UL
 #endif
-/* I2C speed */
+/*! I2C speed */
 #define I2C_SCL_CLK         (100000UL)
-/* I2C timeout */
+/*! I2C timeout */
 #define I2C_WAIT_TIMEOUT    (250)
-/* Delay between write and read [ms] */
+/*! Delay between write and read [ms] */
 #define I2C_WR_DELAY        (100)
 
 
 /***** ENUMERATION ****************************************************/
-/* Enumeration for the I2C function return values */
+/*! Enumeration for the I2C function return values */
 typedef enum {
-    I2C_RET_ERROR = -1,
-    I2C_RET_OK = 0
+    I2C_RET_ERROR = -1,     /**< ERROR return value */
+    I2C_RET_OK = 0          /**< OK return value */
 } I2C_RET_t;
-/* Enumeration for the I2C data direction */
+/*! Enumeration for the I2C data direction */
 typedef enum {
-    I2C_READ = 1,
-    I2C_WRITE = 0
+    I2C_READ = 1,           /**< READ access */
+    I2C_WRITE = 0           /**< WRITE access */
 } I2C_DIR_t;
 
 

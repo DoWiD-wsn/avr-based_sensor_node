@@ -1,16 +1,16 @@
-/*****
- * @brief   ASN(x) one-wire interface (OWI) library
+/*!
+ * @brief   ASN(x) one-wire interface (OWI) library -- source file
  *
  * Library to support one-wire interface (OWI) modules.
  * Globally deactivates interrupts during time-critical sections.
  *
  * @file    /_asnx_lib_/owi/owi.c
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
  * @see     https://github.com/szszoke/atmega328p/blob/master/onewire/
  * @see     https://hacksterio.s3.amazonaws.com/uploads/attachments/229743/OneWire.zip
- *****/
+ */
 
 
 /***** INCLUDES *******************************************************/
@@ -26,7 +26,7 @@
 
 
 /***** FUNCTIONS ******************************************************/
-/***
+/*!
  * Get a HW structure with the register values of a given GPIO.
  *
  * @param[out]  gpio    Pointer to the structure to be filled
@@ -35,7 +35,7 @@
  * @param[in]   port    Pointer to the GPIO's PORTx register
  * @param[in]   pin     Pointer to the GPIO's PINx register
  * @param[in]   portpin Index of the GPIO pin
- ***/
+ */
 void owi_get(hw_io_t* gpio, OWI_DATA_t* data, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
     /* Call the respective HW function */
     hw_get_io(gpio, ddr, port, pin, portpin);
@@ -50,14 +50,14 @@ void owi_get(hw_io_t* gpio, OWI_DATA_t* data, volatile uint8_t* ddr, volatile ui
 }
 
 
-/***
+/*!
  * Perform a OWI reset.
  * Wait up to 250us for the bus to come high, if it doesn't, then it
  * is broken or shorted and we return a 0;
  *
  * @param[in]   gpio    Pointer to the GPIO structure
  * @return      State of the OWI GPIO pin after reset
- ***/
+ */
 uint8_t owi_reset(hw_io_t* gpio) {
     uint8_t ret = 0xFF;
     uint8_t retries = OWI_TIMEOUT;
@@ -101,24 +101,24 @@ uint8_t owi_reset(hw_io_t* gpio) {
 }
 
 
-/***
+/*!
  * Stop forcing power onto the OWI line.
  * Only needed if the 'power' flag to write is used.
  *
  * @param[in]   gpio    Pointer to the GPIO structure
- ***/
+ */
 void owi_depower(hw_io_t* gpio) {
     /* Release bus */
     HW_GPIO_INPUT(gpio);
 }
 
 
-/***
+/*!
  * Write a bit on the OWI line.
  *
  * @param[in]   gpio    Pointer to the GPIO structure
  * @param[in]   value   Bit value to be written (0 or 1)
- ***/
+ */
 void owi_write_bit(hw_io_t* gpio, uint8_t value) {
     /* Disable interrupts */
     cli();
@@ -143,12 +143,12 @@ void owi_write_bit(hw_io_t* gpio, uint8_t value) {
 }
 
 
-/***
+/*!
  * Read a bit from the OWI line.
  *
  * @param[in]   gpio    Pointer to the GPIO structure
  * @return      Bit value read from the line
- ***/
+ */
 uint8_t owi_read_bit(hw_io_t* gpio) {
     uint8_t ret = 0;
 
@@ -177,13 +177,13 @@ uint8_t owi_read_bit(hw_io_t* gpio) {
 }
 
 
-/***
+/*!
  * Write a data byte on the OWI line.
  *
  * @param[in]   gpio    Pointer to the GPIO structure
  * @param[in]   data    Data byte to be written (0 or 1)
  * @param[in]   power   Parasite power enable (0 or 1)
- ***/
+ */
 void owi_write_byte(hw_io_t* gpio, uint8_t data, OWI_POWER_t power) {
     uint8_t offset;
     
@@ -202,14 +202,14 @@ void owi_write_byte(hw_io_t* gpio, uint8_t data, OWI_POWER_t power) {
 }
 
 
-/***
+/*!
  * Write several data bytes on the OWI line.
  *
  * @param[in]   gpio    Pointer to the GPIO structure
  * @param[in]   data    Data byte to be written (0 or 1)
  * @param[in]   len     Number of data bytes to be written
  * @param[in]   power   Parasite power enable (0 or 1)
- ***/
+ */
 void owi_write(hw_io_t* gpio, const uint8_t *data, uint16_t len, OWI_POWER_t power) {
     uint16_t i;
     /* Write the given amount of bytes */
@@ -227,12 +227,12 @@ void owi_write(hw_io_t* gpio, const uint8_t *data, uint16_t len, OWI_POWER_t pow
 }
 
 
-/***
+/*!
  * Read a data byte from the OWI line.
  *
  * @param[in]   gpio    Pointer to the GPIO structure
  * @return      Data byte value read from the line
- ***/
+ */
 uint8_t owi_read_byte(hw_io_t* gpio) {
     uint8_t offset;
     uint8_t ret = 0;
@@ -250,13 +250,13 @@ uint8_t owi_read_byte(hw_io_t* gpio) {
 }
 
 
-/***
+/*!
  * Read several data bytes from the OWI line.
  *
  * @param[in]   gpio    Pointer to the GPIO structure
  * @param[out]  data    Data byte memory location
  * @param[in]   len     Number of data bytes to be read
- ***/
+ */
 void owi_read(hw_io_t* gpio, uint8_t *data, uint16_t len) {
     uint16_t i;
     /* Read the given amount of bytes */
@@ -267,12 +267,12 @@ void owi_read(hw_io_t* gpio, uint8_t *data, uint16_t len) {
 }
 
 
-/***
+/*!
  * Issue a OWI ROM select command.
  *
  * @param[in]   gpio    Pointer to the GPIO structure
  * @param[in]   rom     ROM data bytes
- ***/
+ */
 void owi_select(hw_io_t* gpio, uint8_t *addr) {
     uint8_t i;
     /* Write the "select" ROM address */
@@ -285,20 +285,20 @@ void owi_select(hw_io_t* gpio, uint8_t *addr) {
 }
 
 
-/***
+/*!
  * Issue a OWI ROM skip command.
  *
  * @param[in]   gpio    Pointer to the GPIO structure
- ***/
+ */
 void owi_skip(hw_io_t* gpio) {
     /* Write the "skip" ROM address */
     owi_write_byte(gpio, OWI_ROM_SKIP, OWI_PARASITE_ON);
 }
 
 
-/***
+/*!
  * Clear the search state so that it will start from the beginning again.
- ***/
+ */
 void owi_search_reset(OWI_DATA_t* data) {
     uint8_t i;
     /* Reset the search state */
@@ -312,11 +312,11 @@ void owi_search_reset(OWI_DATA_t* data) {
 }
 
 
-/***
+/*!
  * Search the device type 'family_code' on the next call to owi_search() if it is present.
  *
  * @param[in]   family_code     Device family code to be found
- ***/
+ */
 void owi_search_target(OWI_DATA_t* data, uint8_t family_code) {
     uint8_t i;
     /* Set the search state to find devices with the given family code */
@@ -332,13 +332,13 @@ void owi_search_target(OWI_DATA_t* data, uint8_t family_code) {
 }
 
 
-/***
+/*!
  * Perform a search for devices on the OWI line.
  *
  * @param[in]   gpio    Pointer to the GPIO structure
  * @param[out]  addr    Address of a matching device (if found)
  * @return      FOUND in case of success; NOT_FOUND otherwise
- ***/
+ */
 OWI_SEARCH_t owi_search(hw_io_t* gpio, OWI_DATA_t* data, uint8_t *addr) {
     uint8_t i;
     /* Temporary and intermediate variables */
@@ -463,7 +463,7 @@ OWI_SEARCH_t owi_search(hw_io_t* gpio, OWI_DATA_t* data, uint8_t *addr) {
  * "Understanding and Using Cyclic Redundancy Checks with Maxim iButton Products" */
 #if OWI_CRC
 #if OWI_CRC8_TABLE
-/* This table comes from Dallas sample code where it is freely reusable,
+/*! This table comes from Dallas sample code where it is freely reusable,
  * though Copyright (C) 2000 Dallas Semiconductor Corporation */
 static const uint8_t PROGMEM dscrc_table[] = {
       0, 94,188,226, 97, 63,221,131,194,156,126, 32,163,253, 31, 65,
@@ -484,13 +484,13 @@ static const uint8_t PROGMEM dscrc_table[] = {
     116, 42,200,150, 21, 75,169,247,182,232, 10, 84,215,137,107, 53};
 
 
-/***
+/*!
  * Get the 8-bit CRC from the lookup table.
  *
  * @param[in]   addr    Device family code to be found
  * @param[in]   len     Memory space size
  * @return      8-bit CRC value from the LUT
- ***/
+ */
 uint8_t owi_crc8(const uint8_t *addr, uint8_t len) {
     uint16_t i;
     /* Intermediate CRC value */
@@ -506,13 +506,13 @@ uint8_t owi_crc8(const uint8_t *addr, uint8_t len) {
 
 
 #else
-/***
+/*!
  * Calculate the 8-bit CRC.
  *
  * @param[in]   addr    Device family code to be found
  * @param[in]   len     Memory space size
  * @return      Calculated 8-bit CRC value
- ***/
+ */
 uint8_t owi_crc8(const uint8_t *addr, uint8_t len) {
     uint16_t i;
     uint8_t j;
@@ -536,14 +536,14 @@ uint8_t owi_crc8(const uint8_t *addr, uint8_t len) {
 
 
 #if OWI_CRC16
-/***
+/*!
  * Calculate the 16-bit CRC.
  *
  * @param[in]   data    Array of bytes to checksum.
  * @param[in]   len     Number of data bytes
  * @param[in]   crc     The CRC starting value
  * @return      Calculated 16-bit CRC value
- ***/
+ */
 uint16_t owi_crc16(const uint8_t* data, uint16_t len, uint16_t crc) {
     uint16_t i;
     /* Odd parity bits lookup table */
@@ -570,7 +570,7 @@ uint16_t owi_crc16(const uint8_t* data, uint16_t len, uint16_t crc) {
 }
 
 
-/***
+/*!
  * Check a given 16-bit CRC.
  *
  * @param[in]   data    Array of bytes to checksum.
@@ -578,7 +578,7 @@ uint16_t owi_crc16(const uint8_t* data, uint16_t len, uint16_t crc) {
  * @param[in]   crc_i   The two CRC16 bytes in the received data.
  * @param[in]   crc     The CRC starting value
  * @return      1 if CRC matches; 0 otherwise
- ***/
+ */
 uint8_t owi_crc16_check(const uint8_t* input, uint16_t len, const uint8_t* crc_i, uint16_t crc) {
     /* Get the inverted 16-bit CRC */
     crc = ~owi_crc16(input,len,crc);

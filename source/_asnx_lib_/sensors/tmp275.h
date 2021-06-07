@@ -1,15 +1,13 @@
-/*****
- * @brief   ASN(x) TMP275 temperature sensor library
+/*!
+ * @brief   ASN(x) TMP275 temperature sensor library -- header file
  *
  * Library to support the TMP275 temperature sensor.
  *
  * @file    /_asnx_lib_/sensors/tmp275.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *
- * @todo    Add more device functionality (i.e., configuration)
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 #ifndef _ASNX_TMP275_H_
 #define _ASNX_TMP275_H_
@@ -21,7 +19,7 @@
 
 
 /***** DEFINES ********************************************************/
-/* Default I2C address */
+/*! I2C default address */
 #define TMP275_I2C_ADDRESS              0x48
 #define TMP275_I2C_ADDRESS_A0           (1<<0)
 #define TMP275_I2C_ADDRESS_A1           (1<<1)
@@ -47,14 +45,14 @@
 
 
 /***** ENUMERATION ****************************************************/
-/* Enumeration for the LM75 function return values */
+/*! Enumeration for the LM75 function return values */
 typedef enum {
     TMP275_RET_ERROR_NODEV  = -2,
     TMP275_RET_ERROR        = -1,
     TMP275_RET_OK           = 0
 } TMP275_RET_t;
 
-/* Enumeration for the I2C register addresses */
+/*! Enumeration for the I2C register addresses */
 typedef enum {
     TMP275_REG_TEMP         = 0x00,     /**< Temperature register */
     TMP275_REG_CONF         = 0x01,     /**< Configuration register */
@@ -62,7 +60,7 @@ typedef enum {
     TMP275_REG_THIGH        = 0x03      /**< High limit register */
 } TMP275_REG_t;
 
-/* Enumeration for the fault queue modes */
+/*! Enumeration for the fault queue modes */
 typedef enum {
     TMP275_CONF_FX_1        = 0x00,     /**< 1 consecutive fault */
     TMP275_CONF_FX_2        = 0x01,     /**< 2 consecutive faults */
@@ -70,7 +68,7 @@ typedef enum {
     TMP275_CONF_FX_6        = 0x03      /**< 6 consecutive faults */
 } TMP275_CONF_FX_t;
 
-/* Enumeration for the resolution modes */
+/*! Enumeration for the resolution modes */
 typedef enum {
     TMP275_CONF_RX_9        = 0x00,     /**< 9-bit; 27.5 ms conversion time */
     TMP275_CONF_RX_10       = 0x01,     /**< 10-bit; 55 ms conversion time */
@@ -80,9 +78,9 @@ typedef enum {
 
 
 /***** STRUCTURES *****************************************************/
-/***
+/*!
  * A structure to store the TMP275 module properties.
- ***/
+ */
 typedef struct {
     uint8_t address;    /**< Sensors I2C address */
 } TMP275_t;

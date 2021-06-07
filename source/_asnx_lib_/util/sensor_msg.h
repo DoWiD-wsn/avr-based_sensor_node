@@ -1,13 +1,13 @@
-/*****
- * @brief   ASN(x) sensor network message library
+/*!
+ * @brief   ASN(x) sensor network message library -- header file
  *
  * Library for functionality regarding the messaging of sensor values.
  *
  * @file    /_asnx_lib_/util/sensor_msg.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 #ifndef _ASNX_MSG_H_
 #define _ASNX_MSG_H_
@@ -18,9 +18,9 @@
 
 
 /***** DEFINES ********************************************************/
-/* Number of sensor measurements per message */
+/*! Number of sensor measurements per message */
 #ifndef SEN_MSG_NUM_MEASUREMENTS
-/* Default value is the maximum for the full demo (13 measurements) */
+/*! Default value is the maximum for the full demo (13 measurements) */
 #  define SEN_MSG_NUM_MEASUREMENTS            (13)
 #endif
 
@@ -28,10 +28,10 @@
 #define SEN_MSG_MAC_SH(mac)                 ((uint32_t)((mac>>32) & 0xFFFFFFFF))
 #define SEN_MSG_MAC_SL(mac)                 ((uint32_t)(mac & 0xFFFFFFFF))
 
-/***
- * Sensor node IDs (DW's testbed)
- * @todo    Update with your own Xbee MACs
- ***/
+/*!
+ * Sensor node IDs (DoWiD's testbed)
+ * @note    Update with your own Xbee MACs
+ */
 /* Full 64-bit MACs */
 #define SEN_MSG_MAC_CH                      (0x0013A20041B9DCDC)
 #define SEN_MSG_MAC_SN1                     (0x0013A20041B9F805)
@@ -57,7 +57,7 @@
 
 
 /***** ENUMERATION ****************************************************/
-/* Enumeration for the DS18x20 function return values */
+/*! Enumeration for the DS18x20 function return values */
 typedef enum {
     /* Special */
     SEN_MSG_TYPE_IGNORE         = 0x00,     /**< Ignore value; uint16; 0 (dec) */
@@ -92,17 +92,17 @@ typedef enum {
 
 
 /***** STRUCTURES *****************************************************/
-/***
+/*!
  * A structure to store a sensor type and value pair.
- ***/
+ */
 typedef struct {
     uint8_t type;           /**< Sensor type (derived from SEN_TYPE_t) */
     uint16_t value;         /**< Sensor value (either uint16 or fixed16) */
 } SEN_VALUE_t;
 
-/***
+/*!
  * A structure to store the sensor message data.
- ***/
+ */
 typedef struct {
     uint16_t time;          /**< timestamp (2 byte) */
     uint8_t cnt;            /**< Number of sensor values (1 byte) */
@@ -111,14 +111,14 @@ typedef struct {
 
 
 /***** UNIONS *********************************************************/
-/***
+/*!
  * A union to access the sensor message via the structure or as byte array.
- ***/
+ */
 /* Define for the message size [bytes] */
 #define SEN_MSG_SIZE    (sizeof(uint16_t)+sizeof(uint8_t)+SEN_MSG_NUM_MEASUREMENTS*sizeof(SEN_VALUE_t))
 typedef union {
-    SEN_MSG_t struc;
-    uint8_t byte[SEN_MSG_SIZE];
+    SEN_MSG_t struc;            /**< Access the message as a structure */
+    uint8_t byte[SEN_MSG_SIZE]; /**< Access the message as a byte array */
 } SEN_MSG_u;
 
 

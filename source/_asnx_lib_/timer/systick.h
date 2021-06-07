@@ -1,15 +1,15 @@
-/*****
- * @brief   ASN(x) systick library
+/*!
+ * @brief   ASN(x) systick library -- header file
  *
  * Library to enable a systick timer based on the TIMER0 module.
  *
  * @file    /_asnx_lib_/timer/systick.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
  *
  * @note    The systick timer is stopped when the MCU enters specific sleep modes!
- *****/
+ */
 
 #ifndef _ASNX_SYSTICK_H_
 #define _ASNX_SYSTICK_H_
@@ -20,9 +20,9 @@
 
 
 /***** STRUCTURES *****************************************************/
-/***
+/*!
  * A structure to store the elapsed time of the systick timer.
- ***/
+ */
 typedef struct {
     uint16_t msec;      /**< Elapsed milliseconds (ms) */
     uint8_t sec;        /**< Elapsed seconds (sec) */
@@ -33,7 +33,7 @@ typedef struct {
 
 
 /***** GLOBAL VARIABLES ***********************************************/
-/* Global struct for the elapsed time of the systick timer */
+/*! Global struct for the elapsed time of the systick timer */
 extern systick_t systime;
 
 

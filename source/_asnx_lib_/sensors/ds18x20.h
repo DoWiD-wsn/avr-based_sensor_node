@@ -1,14 +1,15 @@
-/*****
- * @brief   ASN(x) DS18X20 temperature sensor library
+/*!
+ * @brief   ASN(x) DS18X20 temperature sensor library -- header file
  *
  * Library to support the DS18X20 temperature sensor.
  *
  * @file    /_asnx_lib_/sensors/ds18x20.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ *
  * @see     https://create.arduino.cc/projecthub/TheGadgetBoy/ds18b20-digital-temperature-sensor-and-arduino-9cc806
- *****/
+ */
 
 #ifndef _ASNX_DS18X20_H_
 #define _ASNX_DS18X20_H_
@@ -22,7 +23,7 @@
 
 
 /***** DEFINES ********************************************************/
-/* Conversion delay [ms] */
+/*! Conversion delay [ms] */
 #define DS18X20_CONV_DELAY              (1000)
 /* ROM commands */
 #define DS18X20_COM_ROM_SEARCH          (0xF0)
@@ -40,7 +41,7 @@
 
 
 /***** ENUMERATION ****************************************************/
-/* Enumeration for the DS18x20 function return values */
+/*! Enumeration for the DS18x20 function return values */
 typedef enum {
     DS18X20_RET_ERROR_CRC       = -4,   /**< CRC check failed */
     DS18X20_RET_ERROR_DEV       = -3,   /**< Unsupported device */
@@ -49,7 +50,7 @@ typedef enum {
     DS18X20_RET_OK              = 0     /**< Successful */
 } DS18X20_RET_t;
 
-/* Enumeration for the DS18x20 device types */
+/*! Enumeration for the DS18x20 device types */
 typedef enum {
     DS18X20_DEV_NA              = 0,
     DS18X20_DEV_DS18S20         = 1,
@@ -57,7 +58,7 @@ typedef enum {
     DS18X20_DEV_DS1822          = 3
 } DS18X20_DEV_t;
 
-/* Enumeration for the DS18x20 resolution configuration */
+/*! Enumeration for the DS18x20 resolution configuration */
 typedef enum {
     DS18X20_CONF_9BIT           = 0x00,
     DS18X20_CONF_10BIT          = 0x20,
@@ -67,9 +68,9 @@ typedef enum {
 
 
 /***** STRUCTURES *****************************************************/
-/***
+/*!
  * A structure to store the DS18X20 module properties.
- ***/
+ */
 typedef struct {
     hw_io_t gpio;       /**< OWI GPIO handle */
     uint8_t addr[8];    /**< Sensor address */

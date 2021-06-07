@@ -1,15 +1,16 @@
-/*****
- * @brief   ASN(x) BME280 environmental sensor library
+/*!
+ * @brief   ASN(x) BME280 environmental sensor library -- header file
  *
  * Library to support the BME280 environmental sensor.
  *
  * @file    /_asnx_lib_/sensors/bme280.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ *
  * @see     https://github.com/bitbank2/bme280
  * @see     https://github.com/BoschSensortec/BME280_driver
- *****/
+ */
 
 #ifndef _ASNX_BME280_H_
 #define _ASNX_BME280_H_
@@ -21,11 +22,11 @@
 
 
 /***** DEFINES ********************************************************/
-/* I2C address */
+/*! I2C default address */
 #define BME280_I2C_ADDRESS              0x76
-/* Timeour for sensor readings [ms] */
+/*! Timeour for sensor readings [ms] */
 #define BME280_READ_TIMEOUT             500
-/* Configuration register reset value */
+/*! Configuration register reset value */
 #define BME280_RESET_VALUE              0xB6
 /* Status codes */
 #define BME280_STATUS_MEASURING         0x08
@@ -33,14 +34,14 @@
 
 
 /***** ENUMERATION ****************************************************/
-/* Enumeration for the BME280 function return values */
+/*! Enumeration for the BME280 function return values */
 typedef enum {
     BME280_RET_ERROR_NODEV  = -2,
     BME280_RET_ERROR        = -1,
     BME280_RET_OK           = 0
 } BME280_RET_t;
 
-/* Enumeration for the I2C register addresses */
+/*! Enumeration for the I2C register addresses */
 typedef enum {
     BME280_REG_CHIPID       = 0xD0,
     BME280_REG_RESET        = 0xE0,
@@ -80,7 +81,7 @@ typedef enum {
     BME280_REG_DIG_H7       = 0xE7
 } BME280_REG_t;
 
-/* Enumeration for the BME280 sampling modes */
+/*! Enumeration for the BME280 sampling modes */
 typedef enum {
     BME280_SAMPLE_NONE      = 0,
     BME280_SAMPLE_1         = 1,
@@ -90,14 +91,14 @@ typedef enum {
     BME280_SAMPLE_16        = 5
 } BME280_SAMPLE_t;
 
-/* Enumeration for the BME280 operation modes */
+/*! Enumeration for the BME280 operation modes */
 typedef enum {
     BME280_MODE_SLEEP       = 0,
     BME280_MODE_FORCED      = 1,
     BME280_MODE_NORMAL      = 2
 } BME280_MODE_t;
 
-/* Enumeration for the BME280 standby settings */
+/*! Enumeration for the BME280 standby settings */
 typedef enum {
     BME280_STANDBY_0_5      = 0,
     BME280_STANDBY_62_5     = 1,
@@ -109,7 +110,7 @@ typedef enum {
     BME280_STANDBY_20       = 7
 } BME280_STANDBY_t;
 
-/* Enumeration for the BME280 filter settings */
+/*! Enumeration for the BME280 filter settings */
 typedef enum {
     BME280_FILTER_OFF       = 0,
     BME280_FILTER_2         = 1,
@@ -118,7 +119,7 @@ typedef enum {
     BME280_FILTER_16        = 4
 } BME280_FILTER_t;
 
-/* Enumeration for the BME280 SPI settings */
+/*! Enumeration for the BME280 SPI settings */
 typedef enum {
     BME280_SPI_OFF          = 0,
     BME280_SPI_ON           = 1
@@ -126,9 +127,9 @@ typedef enum {
 
 
 /***** STRUCTURES *****************************************************/
-/***
+/*!
  * A structure to store the BME280 calibration values.
- ***/
+ */
 typedef struct {
     /* temperature */
     uint16_t dig_T1;
@@ -153,19 +154,11 @@ typedef struct {
     int8_t dig_H6;
 } BME280_CALIB_t;
 
-/***
+/*!
  * A structure to store the BME280 sensor configuration.
- *
- * @todo    Make sure the structure values are read in init() and updated
- ***/
+ */
 typedef struct {
     uint8_t address;        /**< I2C address */
-    uint8_t mode;           /**< operating mode */
-    uint8_t t_sample;       /**< temperature sampling mode */
-    uint8_t p_sample;       /**< pressure sampling mode */
-    uint8_t h_sample;       /**< humidity sampling mode */
-    uint8_t standby;        /**< standby mode */
-    uint8_t filter;         /**< filter mode */
     int32_t t_fine;         /**< temperature fine reading */
     BME280_CALIB_t calib;   /**< sensor calibration values */
 } BME280_t;

@@ -128,9 +128,11 @@ doc:
 
 clean:
 	rm -rf $(BUILDDIR)
+
+distclean: clean
 	rm -rf doc/
 
 ###
 .DEFAULT_GOAL := all
-.PHONY: all elf hex size flash defaultfuses erase clean doc
+.PHONY: all elf hex size flash defaultfuses erase clean distclean doc
 .SUFFIXES:

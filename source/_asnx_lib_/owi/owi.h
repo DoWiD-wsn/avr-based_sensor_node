@@ -1,16 +1,16 @@
-/*****
- * @brief   ASN(x) one-wire interface (OWI) library
+/*!
+ * @brief   ASN(x) one-wire interface (OWI) library -- header file
  *
  * Library to support one-wire interface (OWI) modules.
  * Globally deactivates interrupts during time-critical sections.
  *
  * @file    /_asnx_lib_/owi/owi.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
  * @see     https://github.com/szszoke/atmega328p/blob/master/onewire/
  * @see     https://hacksterio.s3.amazonaws.com/uploads/attachments/229743/OneWire.zip
- *****/
+ */
 
 #ifndef _ASNX_OWI_H_
 #define _ASNX_OWI_H_
@@ -25,43 +25,43 @@
 
 /***** DEFINES ********************************************************/
 /*** Enable/disable functionality ***/
-/* Exclude CRC checks by setting to (0) */
+/*! Exclude CRC checks by setting to (0) */
 #define OWI_CRC                     (1)
-/* Select table-lookup for 8-bit CRC (1)
+/*! Select table-lookup for 8-bit CRC (1)
  * or use the comparably slower algorithm (0) */
 #define OWI_CRC8_TABLE              (1)
-/* Allow 16-bit CRC checks by setting to (1) */
+/*! Allow 16-bit CRC checks by setting to (1) */
 #define OWI_CRC16                   (1)
 
-/* ROM size in bytes */
+/*! ROM size in bytes */
 #define OWI_ROM_SIZE                (8)
 
-/*** Timeouts ***/
+/*! OWI timeout (s) */
 #define OWI_TIMEOUT                 (125)
 
 /*** Delays (see application note AVR318) ***/
-#define OWI_DELAY_A                 (6)
-#define OWI_DELAY_B                 (64)
-#define OWI_DELAY_C                 (60)
-#define OWI_DELAY_D                 (10)
-#define OWI_DELAY_E                 (9)
-#define OWI_DELAY_F                 (55)
-#define OWI_DELAY_G                 (0)
-#define OWI_DELAY_H                 (480)
-#define OWI_DELAY_I                 (70)
-#define OWI_DELAY_J                 (410)
+#define OWI_DELAY_A                 (6)     /**< AVR318 delay A: 6ms */
+#define OWI_DELAY_B                 (64)    /**< AVR318 delay B: 64ms */
+#define OWI_DELAY_C                 (60)    /**< AVR318 delay C: 60ms */
+#define OWI_DELAY_D                 (10)    /**< AVR318 delay D: 10ms */
+#define OWI_DELAY_E                 (9)     /**< AVR318 delay E: 9ms */
+#define OWI_DELAY_F                 (55)    /**< AVR318 delay F: 55ms */
+#define OWI_DELAY_G                 (0)     /**< AVR318 delay G: 0ms */
+#define OWI_DELAY_H                 (480)   /**< AVR318 delay H: 480ms */
+#define OWI_DELAY_I                 (70)    /**< AVR318 delay I: 70ms */
+#define OWI_DELAY_J                 (410)   /**< AVR318 delay J: 410ms */
 
 /*** ROM-specific addresses ***/
-#define OWI_ROM_SELECT              (0x55)
-#define OWI_ROM_SKIP                (0xCC)
-#define OWI_ROM_SEARCH              (0xF0)
+#define OWI_ROM_SELECT              (0x55)  /**< OWI ROM select address */
+#define OWI_ROM_SKIP                (0xCC)  /**< OWI ROM skip address */
+#define OWI_ROM_SEARCH              (0xF0)  /**< OWI ROM search address */
 
 
 
 /***** STRUCTURES *****************************************************/
-/***
+/*!
  * A structure to store the search properties.
- ***/
+ */
 typedef struct {
     uint8_t ROM_NO[OWI_ROM_SIZE];       /**< ROM data */
     uint8_t last_discrepancy;           /**< Flag for last discrepancy */
@@ -71,13 +71,13 @@ typedef struct {
 
 
 /***** ENUMERATION ****************************************************/
-/* Enumeration for the OWI search return values */
+/*! Enumeration for the OWI search return values */
 typedef enum {
     OWI_SEARCH_NOT_FOUND    = 0,
     OWI_SEARCH_FOUND        = 1
 } OWI_SEARCH_t;
 
-/* Enumeration for the OWI parasitic power mode */
+/*! Enumeration for the OWI parasitic power mode */
 typedef enum {
     OWI_PARASITE_OFF        = 0,
     OWI_PARASITE_ON         = 1
@@ -115,9 +115,6 @@ uint16_t owi_crc16(const uint8_t* input, uint16_t len, uint16_t crc);
 uint8_t owi_crc16_check(const uint8_t* input, uint16_t len, const uint8_t* crc_i, uint16_t crc);
 #endif
 #endif
-
-
-/***** INLINE FUNCTIONS *******************************************************/
 
 
 #endif // _ASNX_OWI_H_

@@ -1,15 +1,13 @@
-/*****
- * @brief   ASN(x) LM75 temperature sensor library
+/*!
+ * @brief   ASN(x) LM75 temperature sensor library -- header file
  *
  * Library to support the LM75 temperature sensor.
  *
  * @file    /_asnx_lib_/sensors/lm75.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *
- * @todo    Add more device functionality (i.e., configuration)
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 #ifndef _ASNX_LM75_H_
 #define _ASNX_LM75_H_
@@ -21,16 +19,16 @@
 
 
 /***** DEFINES ********************************************************/
-/* I2C address */
+/*! I2C default address */
 #define LM75_I2C_ADDRESS                0x48
 #define LM75_I2C_ADDRESS_A0             (1<<0)
 #define LM75_I2C_ADDRESS_A1             (1<<1)
 #define LM75_I2C_ADDRESS_A2             (1<<2)
-/* Shutdown configuration */
+/*! Shutdown configuration */
 #define LM75_CONF_SHUTDOWN              0
-/* Comparator/interrupt configuration */
+/*! Comparator/interrupt configuration */
 #define LM75_CONF_COMP                  1
-/* OS polarity configuration */
+/*! OS polarity configuration */
 #define LM75_CONF_POL                   2
 /* Fault queue configuration */
 #define LM75_CONF_QUEUE                 3
@@ -42,14 +40,14 @@
 
 
 /***** ENUMERATION ****************************************************/
-/* Enumeration for the LM75 function return values */
+/*! Enumeration for the LM75 function return values */
 typedef enum {
     LM75_RET_ERROR_NODEV    = -2,
     LM75_RET_ERROR          = -1,
     LM75_RET_OK             = 0
 } LM75_RET_t;
 
-/* Enumeration for the I2C register addresses */
+/*! Enumeration for the I2C register addresses */
 typedef enum {
     LM75_REG_TEMP           = 0x00,
     LM75_REG_CONF           = 0x01,
@@ -59,9 +57,9 @@ typedef enum {
 
 
 /***** STRUCTURES *****************************************************/
-/***
+/*!
  * A structure to store the LM75 module properties.
- ***/
+ */
 typedef struct {
     uint8_t address;    /**< Sensors I2C address */
     uint8_t config;     /**< Sensor configuration (TODO: to be added) */

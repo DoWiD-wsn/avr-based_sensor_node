@@ -1,4 +1,4 @@
-/****
+/*!
  * @brief   Demo application for a full sensor node incl. AVR/xbee sleep.
  *
  * Demo application for an environmental monitoring sensor node that
@@ -11,20 +11,17 @@
  * started and the MCU waits for a WDT reset.
  *
  * @file    /004-sensor_node_demo/sensor_node_demo.c
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.4 $
- * @date    $Date: 2021/05/25 $
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 
 /*** DEMO CONFIGURATION ***/
-/* Enable debug output via UART1 (9600 BAUD) */
-#define ENABLE_DBG                  (1)
+#define ENABLE_DBG                  (1)     /**< Enable debug output via UART1 (9600 BAUD) */
+#define UPDATE_INTERVAL             (1)     /**< Update interval [min] */
 
-/* Update interval [min] */
-#define UPDATE_INTERVAL             (1)
-
-/* Enable (1) or disable (0) measurements/sensors */
+/*** Enable (1) or disable (0) measurements/sensors ***/
 #define ENABLE_ADC_SELF             (1)     /**< Enable the ADC self-test (via ADC) */
 #define ENABLE_MCU_V                (1)     /**< Enable the MCU supply voltage (V) measurement (via ADC) */
 #define ENABLE_BAT_V                (1)     /**< Enable the battery voltage (V) measurement (via ADC) */
@@ -40,15 +37,15 @@
 #define ENABLE_INCIDENT             (1)     /**< Enable the transmission of the cumulative incident counter */
 #define ENABLE_REBOOT               (1)     /**< Enable the transmission of the last reset source (MCUSR) */
 
-/* MAC address of the destination */
+/*! MAC address of the destination */
 #define XBEE_DESTINATION_MAC        SEN_MSG_MAC_CH
 
-/* Incident counter total threshold */
+/*! Incident counter total threshold */
 #define INCIDENT_TOTAL_MAX          (100)
-/* Incident counter single threshold */
+/*! Incident counter single threshold */
 #define INCIDENT_SINGLE_MAX         (10)
 
-/* Measurement message data indices (derived from enable value above) */
+/*** Measurement message data indices (derived from enable value above) */  // TODO: will be removed
 #define MSG_VALUE_ADC_SELF          (0)
 #define MSG_VALUE_MCU_V             (MSG_VALUE_ADC_SELF  + ENABLE_MCU_V)
 #define MSG_VALUE_BAT_V             (MSG_VALUE_MCU_V     + ENABLE_BAT_V)
@@ -63,8 +60,7 @@
 #define MSG_VALUE_RUNTIME           (MSG_VALUE_AM2302_H  + ENABLE_RUNTIME)
 #define MSG_VALUE_INCIDENT          (MSG_VALUE_RUNTIME   + ENABLE_INCIDENT)
 #define MSG_VALUE_REBOOT            (MSG_VALUE_INCIDENT  + ENABLE_REBOOT)
-
-/* Derive number of sensor values to be transmitted (passed to sensor_msg.h) */
+/*** Derive number of sensor values to be transmitted (passed to sensor_msg.h) */
 #define SEN_MSG_NUM_MEASUREMENTS    (ENABLE_ADC_SELF + ENABLE_MCU_V + ENABLE_BAT_V + ENABLE_XBEE_T + ENABLE_XBEE_V + ENABLE_103JT_T + ENABLE_TMP275_T + ENABLE_DS18B20_T + ENABLE_STEMMA_H + ENABLE_AM2302_T + ENABLE_AM2302_H + ENABLE_RUNTIME + ENABLE_INCIDENT + ENABLE_REBOOT)
 
 
@@ -122,11 +118,15 @@
 
 
 /***** LOCAL FUNCTIONS ************************************************/
-/***
+/*!
+ * Put a MCUSR register dump into the .noinit section.
+ * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
+ */
+uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
+/*!
  * Turn off the WDT as early in the startup process as possible.
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
- ***/
-uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
+ */
 void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
 void get_mcusr(void) {
   MCUSR_dump = MCUSR;
@@ -135,9 +135,9 @@ void get_mcusr(void) {
 }
 
 
-/***
+/*!
  * Activate WDT with minimal delay and wait for reset.
- ***/
+ */
 void wait_for_wdt_reset(void) {
     /* Enable Watchdog (time: 15ms) */
     wdt_enable(WDTO_15MS);
@@ -146,7 +146,9 @@ void wait_for_wdt_reset(void) {
 }
 
 
-/***** MAIN ***********************************************************/
+/*!
+ * Main function of the demo application.
+ */
 int main(void) {
     /*** Local variables ***/
     /* Message data structure */
@@ -162,29 +164,29 @@ int main(void) {
     uint16_t runtime = 0;
 #endif
     /* Sensor/measurement-specific variables */
-    uint16_t inc_xbee = 0;          /**< Incident counter for Xbee functions */
+    uint16_t inc_xbee = 0;          /* Incident counter for Xbee functions */
 #if ENABLE_TMP275_T
-    TMP275_t tmp275;                /**< TMP275 sensor device structure */
-    uint16_t inc_tmp275 = 0;        /**< Incident counter for TMP275 functions */
-    uint8_t en_tmp275 = 0;          /**< TMP275 is available (1) or has failed (0) */
+    TMP275_t tmp275;                /* TMP275 sensor device structure */
+    uint16_t inc_tmp275 = 0;        /* Incident counter for TMP275 functions */
+    uint8_t en_tmp275 = 0;          /* TMP275 is available (1) or has failed (0) */
 #endif
 #if ENABLE_DS18B20_T
-    DS18X20_t ds18b20;              /**< DS18B20 sensor device structure */
-    uint16_t inc_ds18b20 = 0;       /**< Incident counter for DS18B20 functions */
-    uint8_t en_ds18b20 = 0;         /**< DS18B20 is available (1) or has failed (0)  */
+    DS18X20_t ds18b20;              /* DS18B20 sensor device structure */
+    uint16_t inc_ds18b20 = 0;       /* Incident counter for DS18B20 functions */
+    uint8_t en_ds18b20 = 0;         /* DS18B20 is available (1) or has failed (0)  */
 #endif
 #if ENABLE_STEMMA_H
-    STEMMA_t stemma;                /**< STEMMA sensor device structure */
-    uint16_t inc_stemma = 0;        /**< Incident counter for STEMMA SOIL functions */
-    uint8_t en_stemma = 0;          /**< STEMMA is available (1) or has failed (0) */
-    STEMMA_AVG_t avg_stemma = {0};  /**< Structure for the STEMMA floating average values */
+    STEMMA_t stemma;                /* STEMMA sensor device structure */
+    uint16_t inc_stemma = 0;        /* Incident counter for STEMMA SOIL functions */
+    uint8_t en_stemma = 0;          /* STEMMA is available (1) or has failed (0) */
+    STEMMA_AVG_t avg_stemma = {0};  /* Structure for the STEMMA floating average values */
 #endif
 #if (ENABLE_AM2302_T || ENABLE_AM2302_H)
-    DHT_t am2302;                   /**< AM2302 sensor device structure */
-    uint16_t inc_am2302 = 0;        /**< Incident counter for AM2302 functions */
-    uint8_t en_am2302 = 0;          /**< AM2302 is available (1) or has failed (0) */
+    DHT_t am2302;                   /* AM2302 sensor device structure */
+    uint16_t inc_am2302 = 0;        /* Incident counter for AM2302 functions */
+    uint8_t en_am2302 = 0;          /* AM2302 is available (1) or has failed (0) */
 #endif
-    uint16_t inc_sum = 0;           /**< Total incident counter (sum of others) */
+    uint16_t inc_sum = 0;           /* Total incident counter (sum of others) */
     
     /* Disable unused hardware modules */
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
@@ -196,7 +198,7 @@ int main(void) {
     /* Configure the sleep mode */
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     
-    /*** Initialize the message structure ***/
+    /* Initialize the message structure ***/
     msg.struc.time = 0;
     msg.struc.cnt = SEN_MSG_NUM_MEASUREMENTS;
     for(i=0; i<SEN_MSG_NUM_MEASUREMENTS; i++) {
@@ -204,7 +206,6 @@ int main(void) {
         msg.struc.values[i].value = 0;
     }
     
-    /*** Initialize the hardware ***/
     /* Initialize the user LEDs and disable both by default */
     led_init();
     led1_high();
@@ -242,7 +243,6 @@ int main(void) {
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
     
-    /*** Setup the RTC as wake-up source for MCU ***/
     /* Initialize the RTC */
     if(pcf85263_init() != PCF85263_RET_OK) {
         printf("Couldn't initialize RTC ... aborting!\n");
@@ -299,7 +299,6 @@ int main(void) {
     /* Enable interrupts globally */
     sei();
     
-    /*** Initialization of sensors and message value fields ***/
 #if ENABLE_ADC_SELF
     /* ADC self check */
     msg.struc.values[MSG_VALUE_ADC_SELF].type = SEN_MSG_TYPE_CHK_ADC;
@@ -815,7 +814,9 @@ int main(void) {
 }
 
 
-/***** ISR ************************************************************/
+/*!
+ * INT2 external interrupt 2 interrupt.
+ */
 ISR(INT2_vect) {
     /* Actually not needed, but still ... */
     sleep_disable();

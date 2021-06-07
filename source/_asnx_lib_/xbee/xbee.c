@@ -1,16 +1,17 @@
-/*****
- * @brief   ASN(x) Xbee 3 library
+/*!
+ * @brief   ASN(x) Xbee 3 library -- source file
  *
  * Library to the Xbee 3 module accessible via UART.
  *
  * @file    /_asnx_lib_/xbee/xbee.c
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.1 $
- * @date    $Date: 2021/05/10 $
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
  *
  * @todo    Implement better way for (asynchronous) response handling/matching
  * @todo    Fix blocking (non-ISR) functions (not really possible now)
- *****/
+ */
+
 
 /***** INCLUDES *******************************************************/
 #include "xbee.h"
@@ -23,8 +24,10 @@
 
 
 /***** GLOBAL VARIABLES ***********************************************/
-hw_io_t xbee_sleep_req;     /**< Xbee sleep request pin GPIO structure */
-hw_io_t xbee_sleep_ind;     /**< Xbee sleep indicator pin GPIO structure */
+/*! Xbee sleep request pin GPIO structure */
+hw_io_t xbee_sleep_req;
+/*! Xbee sleep indicator pin GPIO structure */
+hw_io_t xbee_sleep_ind;
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
@@ -39,11 +42,11 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
 
 
 /***** FUNCTIONS ******************************************************/
-/***
+/*!
  * Initialize the UART interface for Xbee communication.
  *
  * @param[in]   baud        BAUD rate to be used.
- ***/
+ */
 void xbee_init(uint32_t baud) {
     /* Initialize the UART interface */
     uart0_init();
@@ -61,39 +64,39 @@ void xbee_init(uint32_t baud) {
 }
 
 
-/***
+/*!
  * Set the sleep request gpio (SLEEP_RQ) in case not the default shall be used.
  *
  * @param[in]   ddr     Pointer to the GPIO's DDRx register
  * @param[in]   port    Pointer to the GPIO's PORTx register
  * @param[in]   pin     Pointer to the GPIO's PINx register
  * @param[in]   portpin Index of the GPIO pin
- ***/
+ */
 void xbee_set_sleep_request_gpio(volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
     /* Call the respective HW function */
     hw_get_io(&xbee_sleep_req, ddr, port, pin, portpin);
 }
 
 
-/***
+/*!
  * Set the sleep indicator gpio (SLEEP) in case not the default shall be used.
  *
  * @param[in]   ddr     Pointer to the GPIO's DDRx register
  * @param[in]   port    Pointer to the GPIO's PORTx register
  * @param[in]   pin     Pointer to the GPIO's PINx register
  * @param[in]   portpin Index of the GPIO pin
- ***/
+ */
 void xbee_set_sleep_indicator_gpio(volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
     /* Call the respective HW function */
     hw_get_io(&xbee_sleep_ind, ddr, port, pin, portpin);
 }
 
 
-/***
+/*!
  * Request the xbee to enter sleep mode
  *
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_sleep_enable(void) {
     /* Request xbee sleep */
     hw_set_output_high(&xbee_sleep_req);
@@ -115,11 +118,11 @@ XBEE_RET_t xbee_sleep_enable(void) {
 }
 
 
-/***
+/*!
  * Request the xbee to wake-up from sleep mode
  *
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_sleep_disable(void) {
     /* Request xbee wake-up */
     hw_set_output_low(&xbee_sleep_req);
@@ -141,14 +144,14 @@ XBEE_RET_t xbee_sleep_disable(void) {
 }
 
 
-/***
+/*!
  * Write a local AT command.
  *
  * @param[in]   command     AT command (two character)
  * @param[in]   value       Value to be assigned
  * @param[in]   fid         Frame ID.
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 static XBEE_RET_t _at_local_write(char* command, uint64_t value, uint8_t fid) {
     /* Temporary variables for frame length (depends on value) */
     uint16_t len;
@@ -235,13 +238,13 @@ static XBEE_RET_t _at_local_write(char* command, uint64_t value, uint8_t fid) {
 }
 
 
-/***
+/*!
  * Query a local AT command.
  *
  * @param[in]   command     AT command (two character)
  * @param[in]   fid         Frame ID.
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 static XBEE_RET_t _at_local_query(char* command, uint8_t fid) {
     /* Data array for the frame (length: 8 bytes) */
     uint8_t data[8] = {0};
@@ -279,13 +282,13 @@ static XBEE_RET_t _at_local_query(char* command, uint8_t fid) {
 }
 
 
-/***
+/*!
  * Get the response to a local AT command.
  *
  * @param[out]  value       Value returned by the command
  * @param[out]  fid         Frame ID returned.
  * @return      Size of the command value in case of success; ERROR otherwise
- ***/
+ */
 static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
     /* Data array for the frame (max. length: 17 bytes) */
     uint8_t data[17] = {0};
@@ -493,14 +496,14 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
 }
 
 
-/***
+/*!
  * Write a local AT command and check the response.
  *
  * @param[in]   command     AT command (two character)
  * @param[in]   value       Value for the command
  * @param[in]   fid         Frame ID.
  * @return      Size of the command value in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value, uint8_t fid){
     int8_t ret;
     uint8_t fid_ret;
@@ -532,14 +535,14 @@ XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value, uint8_t fid){
 }
 
 
-/***
+/*!
  * Read the response to a local AT command.
  *
  * @param[in]   command     AT command (two character)
  * @param[out]  value       Value returned by the command
  * @param[in]   fid         Frame ID.
  * @return      Size of the command value in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value, uint8_t fid) {
     int8_t ret;
     uint8_t fid_ret;
@@ -568,7 +571,7 @@ XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value, uint8_t fid) {
 }
 
 
-/***
+/*!
  * Write a remote AT command.
  * Remote target specified by MAC or 16-bit address.
  *
@@ -578,7 +581,7 @@ XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value, uint8_t fid) {
  * @param[in]   value       Value for the command
  * @param[in]   fid         Frame ID.
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 static XBEE_RET_t _at_remote_write(uint64_t mac, uint16_t addr, char* command, uint64_t value, uint8_t fid) {
     uint8_t i=0;
     /* Temporary variables for frame length (depends on value) */
@@ -681,7 +684,7 @@ static XBEE_RET_t _at_remote_write(uint64_t mac, uint16_t addr, char* command, u
 }
 
 
-/***
+/*!
  * Query a remote AT command.
  * Remote target specified by MAC or 16-bit address.
  *
@@ -690,7 +693,7 @@ static XBEE_RET_t _at_remote_write(uint64_t mac, uint16_t addr, char* command, u
  * @param[in]   command     AT command (two character)
  * @param[in]   fid         Frame ID.
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 static XBEE_RET_t _at_remote_query(uint64_t mac, uint16_t addr, char* command, uint8_t fid) {
     uint8_t i=0;
     /* Data array for the frame (max. length: 23 bytes) */
@@ -737,7 +740,7 @@ static XBEE_RET_t _at_remote_query(uint64_t mac, uint16_t addr, char* command, u
 }
 
 
-/***
+/*!
  * Get the response to a remote AT command.
  * Remote target specified by MAC or 16-bit address.
  *
@@ -746,7 +749,7 @@ static XBEE_RET_t _at_remote_query(uint64_t mac, uint16_t addr, char* command, u
  * @param[out]  value       Value for the command
  * @param[out]  fid         Frame ID returned.
  * @return      Size of the command value in case of success; ERROR otherwise
- ***/
+ */
 static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* value, uint8_t* fid) {
     uint8_t i=0;
     /* Data array for the frame (max. length: 27 bytes) */
@@ -974,7 +977,7 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
 }
 
 
-/***
+/*!
  * Write a remote AT command and check the response.
  *
  * @param[in]   mac         MAC address
@@ -983,7 +986,7 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
  * @param[in]   value       Value for the command
  * @param[in]   fid         Frame ID.
  * @return      Size of the command value in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, uint64_t value, uint8_t fid) {
     uint8_t fid_ret;
     uint16_t addr_ret;
@@ -1033,7 +1036,7 @@ XBEE_RET_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, 
 }
 
 
-/***
+/*!
  * Read the response to a remote AT command.
  *
  * @param[in]   mac         MAC address
@@ -1042,7 +1045,7 @@ XBEE_RET_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, 
  * @param[out]  value       Value returned by the command
  * @param[in]   fid         Frame ID.
  * @return      Size of the command value in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_at_remote_cmd_read(uint64_t mac, uint16_t addr, char* command, uint64_t* value, uint8_t fid) {
     uint8_t fid_ret;
     uint16_t addr_ret;
@@ -1089,7 +1092,7 @@ XBEE_RET_t xbee_at_remote_cmd_read(uint64_t mac, uint16_t addr, char* command, u
 }
 
 
-/***
+/*!
  * Transmit a specified number of bytes to the destination.
  * Destination target specified by MAC or 16-bit address.
  *
@@ -1099,7 +1102,7 @@ XBEE_RET_t xbee_at_remote_cmd_read(uint64_t mac, uint16_t addr, char* command, u
  * @param[in]   cnt         Number of payload bytes
  * @param[in]   fid         Frame ID.
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_transmit(uint64_t mac, uint16_t addr, uint8_t* payload, uint16_t cnt, uint8_t fid) {
     uint8_t i=0;
     /* Temporary variables for frame length (depends on cnt) */
@@ -1157,12 +1160,12 @@ XBEE_RET_t xbee_transmit(uint64_t mac, uint16_t addr, uint8_t* payload, uint16_t
 }
 
 
-/***
+/*!
  * Get the transmit response status.
  *
  * @param[out]  delivery    Delivery response status
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
     /* Data array for the frame (max. length: 23 bytes) */
     uint8_t data[11] = {0};
@@ -1222,7 +1225,7 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
 }
 
 
-/***
+/*!
  * Get the extended transmit status.
  *
  * @param[out]  addr        16-bit address received
@@ -1231,7 +1234,7 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
  * @param[out]  discovery   Discovery status received
  * @param[out]  fid         Frame ID received
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* delivery, uint8_t* discovery, uint8_t* fid) {
     /* Data array for the frame (max. length: 23 bytes) */
     uint8_t data[11] = {0};
@@ -1299,13 +1302,13 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
 }
 
 
-/***
+/*!
  * Get the CRC value of a given frame.
  *
  * @param[in]   data        Frame data
  * @param[in]   len         Number of bytes in frame.
  * @return      Calculated CRC
- ***/
+ */
 uint8_t xbee_get_crc(uint8_t* data, uint8_t len) {
     uint16_t checksum = 0;
     uint8_t i;
@@ -1321,14 +1324,14 @@ uint8_t xbee_get_crc(uint8_t* data, uint8_t len) {
 }
 
 
-/***
+/*!
  * Check the CRC value of a frame.
  *
  * @param[in]   data        Frame data
  * @param[in]   len         Number of bytes in frame.
  * @param[in]   crc         Received CRC.
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_check_crc(uint8_t* data, uint8_t len, uint8_t crc) {
     uint16_t checksum = 0;
     uint8_t i;
@@ -1349,20 +1352,20 @@ XBEE_RET_t xbee_check_crc(uint8_t* data, uint8_t len, uint8_t crc) {
 }
 
 
-/***
+/*!
  * Transmit a specified number of bytes via broadcast.
  *
  * @param[in]   payload     Payload data to be transmitted
  * @param[in]   cnt         Number of payload bytes
  * @param[in]   fid         Frame ID.
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 inline XBEE_RET_t xbee_transmit_broadcast(uint8_t* payload, uint16_t cnt, uint8_t fid) {
     return xbee_transmit(XBEE_ADDR64_BROADCAST, XBEE_ADDR16_ALL_DEVICES, payload, cnt, fid);
 }
 
 
-/***
+/*!
  * Transmit a specified number of bytes via unicast to a specific destination.
  *
  * @param[in]   mac         MAC address of the destination
@@ -1370,17 +1373,17 @@ inline XBEE_RET_t xbee_transmit_broadcast(uint8_t* payload, uint16_t cnt, uint8_
  * @param[in]   cnt         Number of payload bytes
  * @param[in]   fid         Frame ID.
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 inline XBEE_RET_t xbee_transmit_unicast(uint64_t mac, uint8_t* payload, uint16_t cnt, uint8_t fid) {
     return xbee_transmit(mac, XBEE_ADDR16_USE64, payload, cnt, fid);
 }
 
 
-/***
+/*!
  * Check if the device has successfully joined a network.
  *
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_is_connected(void) {
     uint64_t response;
     /* Check Xbee connection status (need 1 return byte) */
@@ -1395,11 +1398,11 @@ XBEE_RET_t xbee_is_connected(void) {
 }
 
 
-/***
+/*!
  * Wait until the device has successfully joined a network.
  *
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_wait_for_connected(uint8_t timeout) {
     uint32_t time = 0;
     /* Check Xbee module connection */
@@ -1417,12 +1420,12 @@ XBEE_RET_t xbee_wait_for_connected(uint8_t timeout) {
 }
 
 
-/***
+/*!
  * Read the current device temperature.
  *
  * @param[out]  temp        Device temperature read
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_cmd_get_temperature(float* temp) {
     int8_t ret;
     uint64_t retval;
@@ -1438,12 +1441,12 @@ XBEE_RET_t xbee_cmd_get_temperature(float* temp) {
 }
 
 
-/***
+/*!
  * Read the current supply voltage level.
  *
  * @param[out]  vss         Device supply voltage level
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 XBEE_RET_t xbee_cmd_get_vss(float* vss) {
     int8_t ret;
     uint64_t retval;
@@ -1459,39 +1462,39 @@ XBEE_RET_t xbee_cmd_get_vss(float* vss) {
 }
 
 
-/***
+/*!
  * Flush the receive buffer.
- ***/
+ */
 void xbee_rx_flush(void) {
     /* Flush the UART RX buffer */
     uart0_rx_flush();
 }
 
 
-/***
+/*!
  * Flush the transmit buffer.
- ***/
+ */
 void xbee_tx_flush(void) {
     /* Flush the UART TX buffer */
     uart0_tx_flush();
 }
 
 
-/***
+/*!
  * Get the number of bytes in the RX buffer.
  *
  * @return      Number of bytes in the RX buffer.
- ***/
+ */
 uint8_t xbee_rx_cnt(void) {
     return uart0_rx_buffer_cnt();
 }
 
 
-/***
+/*!
  * Get the number of bytes in the TX buffer.
  *
  * @return      Number of bytes in the TX buffer.
- ***/
+ */
 uint8_t xbee_tx_cnt(void) {
     return uart0_tx_buffer_cnt();
 }

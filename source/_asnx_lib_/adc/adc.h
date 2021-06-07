@@ -1,13 +1,13 @@
-/*****
- * @brief   ASN(x) ADC library
+/*!
+ * @brief   ASN(x) ADC library -- header file
  *
  * Library to support the use of the ADC.
  *
  * @file    /_asnx_lib_/adc/adc.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 #ifndef _ASNX_ADC_H_
 #define _ASNX_ADC_H_
@@ -18,12 +18,12 @@
 
 
 /***** MACROS *****************************************************************/
-/* Delay after changing the reference source [ms] */
+/*! Delay after changing the reference source [ms] */
 #define ADC_DELAY_CHANGE_REFERENCE      (25)
 
 
 /***** ENUMERATION ************************************************************/
-/* Enumeration for the available ADC input options */
+/*! Enumeration for the available ADC input options */
 typedef enum {
     /* Single ended input */
     ADC_CH0             = 0x00,     /**< Single ended input ADC0 */
@@ -64,7 +64,7 @@ typedef enum {
 } ADC_INPUT_t;
 
 
-/* Enumeration for the available ADC prescaler options */
+/*! Enumeration for the available ADC prescaler options */
 typedef enum {
     ADC_ADPS_2          = 0x00,     /**< Division factor 2 */
     ADC_ADPS_4          = 0x02,     /**< Division factor 4 */
@@ -75,7 +75,7 @@ typedef enum {
     ADC_ADPS_128        = 0x07      /**< Division factor 128 */
 } ADC_PRESCALER_t;
 
-/* Enumeration for the available ADC reference voltage options */
+/*! Enumeration for the available ADC reference voltage options */
 typedef enum {
     ADC_REFS_AREF       = 0x00,     /**< AREF, internal Vref turned off */
     ADC_REFS_VCC        = 0x01,     /**< AVCC with external capacitor at AREF pin */

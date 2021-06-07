@@ -1,13 +1,13 @@
-/*****
- * @brief   ASN(x) timer library
+/*!
+ * @brief   ASN(x) timer library -- header file
  *
  * Library to support the use of the timer modules.
  *
  * @file    /_asnx_lib_/timer/timer.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 #ifndef _ASNX_TIMER_H_
 #define _ASNX_TIMER_H_
@@ -18,21 +18,21 @@
 
 
 /***** DEFINES ********************************************************/
-/*** CPU frequency (F_CPU) ***/
+/*! CPU frequency (F_CPU) */
 #ifndef F_CPU
 # warning "F_CPU not defined for \"timer.h\""
 # define F_CPU 4000000UL
 #endif
 /*** Enable (1) or disable (0) timer modules ***/
-#define TIMER0_ENABLED           (1)
-#define TIMER1_ENABLED           (1)
-#define TIMER2_ENABLED           (1)
-#define TIMER3_ENABLED           (1)
+#define TIMER0_ENABLED           (1)        /**< Enable timer0 */
+#define TIMER1_ENABLED           (1)        /**< Enable timer1 */
+#define TIMER2_ENABLED           (1)        /**< Enable timer2 */
+#define TIMER3_ENABLED           (1)        /**< Enable timer3 */
 
 
 /***** ENUMERATION ****************************************************/
 #if (TIMER0_ENABLED || TIMER1_ENABLED || TIMER3_ENABLED)
-/* Enumeration for the available TIMER0 prescaler */
+/*! Enumeration for the available TIMER0 prescaler */
 typedef enum {
     TIMER_PRESCALER_NONE        = 0x00,     /**< Deactivated */
     TIMER_PRESCALER_1           = 0x01,     /**< No prescaler */
@@ -46,7 +46,7 @@ typedef enum {
 #endif
 
 #if TIMER2_ENABLED
-/* Enumeration for the available TIMER2 prescaler */
+/*! Enumeration for the available TIMER2 prescaler */
 typedef enum {
     TIMER2_PRESCALER_NONE       = 0x00,     /**< Deactivated */
     TIMER2_PRESCALER_1          = 0x01,     /**< No prescaler */

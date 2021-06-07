@@ -1,13 +1,13 @@
-/*****
- * @brief   ASN(x) fixed-point arithmetic library
+/*!
+ * @brief   ASN(x) fixed-point arithmetic library -- header file
  *
  * Library to support the use of fixed point variables.
  *
  * @file    /_asnx_lib_/util/fixed_point.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 #ifndef _ASNX_FP_H_
 #define _ASNX_FP_H_
@@ -18,7 +18,7 @@
 
 
 /***** DEFINES ********************************************************/
-/* Default number of fractional bits (10.6 / 26.6 format) */
+/*! Default number of fractional bits (10.6 / 26.6 format) */
 #define FP_FRACTIONAL_BITS_DEFAULT      6
 
 
