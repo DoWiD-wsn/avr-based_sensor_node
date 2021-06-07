@@ -12,11 +12,6 @@
 
 /***** INCLUDES *******************************************************/
 #include "timer.h"
-/*** STD ***/
-#include <stddef.h>
-/*** AVR ***/
-#include <avr/io.h>
-#include <avr/interrupt.h>
 
 
 /***** GLOBAL VARIABLES ***********************************************/

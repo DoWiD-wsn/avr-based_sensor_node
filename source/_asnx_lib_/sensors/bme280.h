@@ -17,8 +17,11 @@
 
 /***** INCLUDES *******************************************************/
 /*** STD ***/
-#include <stdio.h>
 #include <stdint.h>
+/*** AVR ***/
+#include <util/delay.h>
+/*** ASNX LIB ***/
+#include "i2c/i2c.h"
 
 
 /***** DEFINES ********************************************************/

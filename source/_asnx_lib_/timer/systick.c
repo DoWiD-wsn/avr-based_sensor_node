@@ -14,10 +14,6 @@
 
 /***** INCLUDES *******************************************************/
 #include "systick.h"
-/*** STD ***/
-#include <stddef.h>
-/*** ASNX LIB ***/
-#include "timer/timer.h"
 
 
 /***** GLOBAL VARIABLES ***********************************************/

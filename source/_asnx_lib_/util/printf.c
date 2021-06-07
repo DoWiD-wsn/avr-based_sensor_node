@@ -14,12 +14,6 @@
 
 /***** INCLUDES *******************************************************/
 #include "printf.h"
-/*** STD ***/
-#include <stdbool.h>
-#include <stdint.h>
-#include <float.h>
-/*** ASNX LIB ***/
-#include "uart/uart.h"
 
 
 /***** STRUCTURES *****************************************************/

@@ -13,7 +13,14 @@
 #define _ASNX_XBEE_H_
 
 /***** INCLUDES *******************************************************/
+/*** STD ***/
 #include <stdint.h>
+/*** AVR ***/
+#include <avr/interrupt.h>
+#include <util/delay.h>
+/*** ASNX LIB ***/
+#include "uart/uart.h"
+#include "hw/hw.h"
 
 
 /***** DEFINES ********************************************************/

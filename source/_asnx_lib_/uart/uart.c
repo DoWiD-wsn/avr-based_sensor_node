@@ -14,13 +14,6 @@
 
 /***** INCLUDES *******************************************************/
 #include "uart.h"
-/*** STD ***/
-#include <stddef.h>
-/*** AVR ***/
-#include <avr/io.h>
-#include <avr/interrupt.h>
-/*** ASNX LIB ***/
-#include "util/cbuffer.h"
 
 
 /***** DEFINES ********************************************************/

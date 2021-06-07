@@ -11,9 +11,6 @@
 
 /***** INCLUDES *******************************************************/
 #include "adc.h"
-/*** AVR ***/
-#include <avr/io.h>
-#include <util/delay.h>
 
 
 /***** FUNCTION PROTOTYPES ********************************************/

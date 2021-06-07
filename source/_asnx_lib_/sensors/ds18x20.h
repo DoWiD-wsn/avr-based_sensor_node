@@ -17,6 +17,8 @@
 /***** INCLUDES *******************************************************/
 /*** STD ***/
 #include <stdint.h>
+/*** AVR ***/
+#include <util/delay.h>
 /*** ASNX LIB ***/
 #include "owi/owi.h"
 

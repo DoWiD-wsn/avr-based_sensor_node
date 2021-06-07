@@ -19,8 +19,14 @@
 /*** STD ***/
 #include <stdio.h>
 #include <stdint.h>
+/*** AVR ***/
+#include <avr/interrupt.h>
+#include <util/delay.h>
 /*** ASNX LIB ***/
 #include "hw/hw.h"
+#if DHT_CHECK_LAST_MEAS
+#  include "timer/systick.h"
+#endif
 
 
 /***** DEFINES ********************************************************/

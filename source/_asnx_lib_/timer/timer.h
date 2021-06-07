@@ -15,6 +15,10 @@
 /***** INCLUDES *******************************************************/
 /*** STD ***/
 #include <stdint.h>
+#include <stddef.h>
+/*** AVR ***/
+#include <avr/io.h>
+#include <avr/interrupt.h>
 
 
 /***** DEFINES ********************************************************/

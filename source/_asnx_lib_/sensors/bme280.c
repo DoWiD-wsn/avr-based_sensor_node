@@ -15,10 +15,6 @@
 
 /***** INCLUDES *******************************************************/
 #include "bme280.h"
-/*** AVR ***/
-#include <util/delay.h>
-/*** ASNX LIB ***/
-#include "i2c/i2c.h"
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/

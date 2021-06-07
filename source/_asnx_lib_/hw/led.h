@@ -15,6 +15,7 @@
 /***** INCLUDES *******************************************************/
 /*** STD ***/
 #include <stdint.h>
+#include <stddef.h>
 /*** ASNX LIB ***/
 #include "hw/hw.h"
 

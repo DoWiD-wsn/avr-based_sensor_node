@@ -15,13 +15,6 @@
 
 /***** INCLUDES *******************************************************/
 #include "dht.h"
-/*** AVR ***/
-#include <avr/interrupt.h>
-#include <util/delay.h>
-/*** ASNX LIB ***/
-#if DHT_CHECK_LAST_MEAS
-#  include "timer/systick.h"
-#endif
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/

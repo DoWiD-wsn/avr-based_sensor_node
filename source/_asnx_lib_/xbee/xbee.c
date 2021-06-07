@@ -15,12 +15,6 @@
 
 /***** INCLUDES *******************************************************/
 #include "xbee.h"
-/*** AVR ***/
-#include <avr/interrupt.h>
-#include <util/delay.h>
-/*** ASNX LIB ***/
-#include "uart/uart.h"
-#include "hw/hw.h"
 
 
 /***** GLOBAL VARIABLES ***********************************************/

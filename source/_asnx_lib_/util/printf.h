@@ -16,9 +16,13 @@
 
 /***** INCLUDES *******************************************************/
 /*** STD ***/
+#include <stdbool.h>
 #include <stdint.h>
+#include <float.h>
 #include <stdarg.h>
 #include <stddef.h>
+/*** ASNX LIB ***/
+#include "uart/uart.h"
 
 
 /***** MACROS *********************************************************/

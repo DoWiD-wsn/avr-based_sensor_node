@@ -18,6 +18,9 @@
 /***** INCLUDES *******************************************************/
 /*** STD ***/
 #include <stdint.h>
+/*** AVR ***/
+#include <avr/interrupt.h>
+#include <util/delay.h>
 /*** ASNX LIB ***/
 #include "hw/hw.h"
 
@@ -31,6 +34,11 @@
 #define OWI_CRC8_TABLE              (1)
 /*! Allow 16-bit CRC checks by setting to (1) */
 #define OWI_CRC16                   (1)
+#if OWI_CRC
+#  if OWI_CRC8_TABLE
+#     include <avr/pgmspace.h>
+#  endif
+#endif
 
 /*! ROM size in bytes */
 #define OWI_ROM_SIZE                (8)

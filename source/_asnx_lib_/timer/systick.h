@@ -17,6 +17,9 @@
 /***** INCLUDES *******************************************************/
 /*** STD ***/
 #include <stdint.h>
+#include <stddef.h>
+/*** ASNX LIB ***/
+#include "timer/timer.h"
 
 
 /***** STRUCTURES *****************************************************/

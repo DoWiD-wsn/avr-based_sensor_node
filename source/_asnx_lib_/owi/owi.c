@@ -15,14 +15,6 @@
 
 /***** INCLUDES *******************************************************/
 #include "owi.h"
-/*** AVR ***/
-#include <avr/interrupt.h>
-#if OWI_CRC
-#  if OWI_CRC8_TABLE
-#     include <avr/pgmspace.h>
-#  endif
-#endif
-#include <util/delay.h>
 
 
 /***** FUNCTIONS ******************************************************/
