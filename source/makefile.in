@@ -2,10 +2,10 @@
 # USAGE:
 # make              .... build the program image
 # make flash        .... build and flash the application
-# make doc       	.... run doxygen - output will be in > doc
 # make clean        .... remove intermediate and generated files
 # make erase        .... erase program on target device
-
+# make defaultfuses .... program the default fuse settings as specified below
+# make doc       	.... run doxygen and generate the output in the 'doc' directory
 
 ################################################################################
 # define the name of the generated output file
@@ -123,10 +123,14 @@ defaultfuses:
 erase:
 	$(DUDE_ISP) $(DUDE_ERASE)
 
+doc:
+	doxygen ../doxygen.conf
+
 clean:
 	rm -rf $(BUILDDIR)
+	rm -rf doc/
 
 ###
 .DEFAULT_GOAL := all
-.PHONY: all elf hex size flash defaultfuses erase clean
+.PHONY: all elf hex size flash defaultfuses erase clean doc
 .SUFFIXES:
