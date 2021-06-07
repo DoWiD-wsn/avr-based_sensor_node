@@ -5,8 +5,8 @@ It provides a set of modules for the interaction with the AVR MCU's on-chip peri
 
 The libraries where self-written (unless otherwise specified) and have only a small number of dependencies.
 That is, they only require `AVR Libc` to be available on the system and a recent version of `avr-gcc` for the compilation.
-To flash the application on the MCU, either the tools provided by [https://www.microchip.com/en-us/development-tools-tools-and-software](Atmel) or `AVRDUDE` can be used.
-For more information on the installation of those and the basic usage of `AVRDUDE` refer to the source directory's [../source/README.md](README).
+To flash the application on the MCU, either the tools provided by [Atmel](https://www.microchip.com/en-us/development-tools-tools-and-software) or `AVRDUDE` can be used.
+For more information on the installation of those and the basic usage of `AVRDUDE` refer to the source directory's [README](../source/README.md).
 
 To further ease the development of the ASN(x) software part, we provide a superior makefile that offers basic functionality in a convenient way, namely
 * `flash` ... the flashing of a binary onto the MCU
@@ -16,7 +16,7 @@ To further ease the development of the ASN(x) software part, we provide a superi
 * `doc` ... the generation of the libraries doxygen documentation
 * `distclean` ... the cleaning of everything, that is, intermediate files and documentary
 
-The generation of the documentation requires doxygen and dotviz (to generate the call-graphs), see [../source/README.md](README).
+The generation of the documentation requires doxygen and dotviz (to generate the call-graphs), see [README](../source/README.md).
 
 
 ## ASNX LIB dependencies ##
