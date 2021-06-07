@@ -8,8 +8,10 @@
  * @version 1.2.0
  * @date    2021/06/07
  *
- * @todo    Implement better way for (asynchronous) response handling/matching
- * @todo    Fix blocking (non-ISR) functions (not really possible now)
+ * @todo    *) Implement better way for (asynchronous) response handling/matching
+ * @todo    *) Fix blocking (non-ISR) functions (not really possible now)
+ * @todo    *) Check how long it takes for the Xbee to (re)join a network after waking up
+ * @todo    *) Check if the local "AI" command actually returns the right value or if there are issues (cross-check with BLE app)
  */
 
 

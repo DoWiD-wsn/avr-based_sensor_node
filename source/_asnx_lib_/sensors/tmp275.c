@@ -8,7 +8,7 @@
  * @version 1.2.0
  * @date    2021/06/07
  *
- * @todo    Add more device functionality (i.e., configuration)
+ * @todo    *) Add more device functionality (i.e., configuration)
  */
 
 

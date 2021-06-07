@@ -8,7 +8,7 @@
  * @version 1.2.0
  * @date    2021/06/07
  *
- * @todo    Add timeout to "wait" functions (e.g., blocking)
+ * @todo    *) Add timeout to "wait" functions (e.g., blocking)
  */
 
 
