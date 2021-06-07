@@ -16,7 +16,6 @@
 
 /***** INCLUDES *******************************************************/
 /*** STD ***/
-#include <stdio.h>
 #include <stdint.h>
 /*** ASNX LIB ***/
 #include "owi/owi.h"
