@@ -78,7 +78,7 @@ To create an own application, we suggest the following procedure:
 * Put a makefile into the new directory that contains at least:
   * `TARGET = APPLICATION_NAME`
   * `include ../makefile.in`
-** Additionally, also the port or other specific settings can be configured in the makefile.
+  * Additionally, also the port or other specific settings can be configured in the makefile.
 
 That's it.
 You are ready to code your own application.
