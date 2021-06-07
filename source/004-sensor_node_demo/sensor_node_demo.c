@@ -45,23 +45,8 @@
 /*! Incident counter single threshold */
 #define INCIDENT_SINGLE_MAX         (10)
 
-/*** Measurement message data indices (derived from enable value above) */  // TODO: will be removed
-#define MSG_VALUE_ADC_SELF          (0)
-#define MSG_VALUE_MCU_V             (MSG_VALUE_ADC_SELF  + ENABLE_MCU_V)
-#define MSG_VALUE_BAT_V             (MSG_VALUE_MCU_V     + ENABLE_BAT_V)
-#define MSG_VALUE_XBEE_T            (MSG_VALUE_BAT_V     + ENABLE_XBEE_T)
-#define MSG_VALUE_XBEE_V            (MSG_VALUE_XBEE_T    + ENABLE_XBEE_V)
-#define MSG_VALUE_103JT_T           (MSG_VALUE_XBEE_V    + ENABLE_103JT_T)
-#define MSG_VALUE_TMP275_T          (MSG_VALUE_103JT_T   + ENABLE_TMP275_T)
-#define MSG_VALUE_DS18B20_T         (MSG_VALUE_TMP275_T  + ENABLE_DS18B20_T)
-#define MSG_VALUE_STEMMA_H          (MSG_VALUE_DS18B20_T + ENABLE_STEMMA_H)
-#define MSG_VALUE_AM2302_T          (MSG_VALUE_STEMMA_H  + ENABLE_AM2302_T)
-#define MSG_VALUE_AM2302_H          (MSG_VALUE_AM2302_T  + ENABLE_AM2302_H)
-#define MSG_VALUE_RUNTIME           (MSG_VALUE_AM2302_H  + ENABLE_RUNTIME)
-#define MSG_VALUE_INCIDENT          (MSG_VALUE_RUNTIME   + ENABLE_INCIDENT)
-#define MSG_VALUE_REBOOT            (MSG_VALUE_INCIDENT  + ENABLE_REBOOT)
-/*** Derive number of sensor values to be transmitted (passed to sensor_msg.h) */
-#define SEN_MSG_NUM_MEASUREMENTS    (ENABLE_ADC_SELF + ENABLE_MCU_V + ENABLE_BAT_V + ENABLE_XBEE_T + ENABLE_XBEE_V + ENABLE_103JT_T + ENABLE_TMP275_T + ENABLE_DS18B20_T + ENABLE_STEMMA_H + ENABLE_AM2302_T + ENABLE_AM2302_H + ENABLE_RUNTIME + ENABLE_INCIDENT + ENABLE_REBOOT)
+/*! Maximum number of sensor readings per message */
+#define SEN_MSG_NUM_MEASUREMENTS    (14)
 
 
 /***** INCLUDES *******************************************************/
@@ -159,7 +144,8 @@ int main(void) {
     float measurement = 0.0, vcc = 0.0;
     /* Temporary variables */
     uint8_t reg = 0;
-    uint8_t i = 0;
+    /* Message index counter */
+    uint8_t index = 0;
 #if ENABLE_RUNTIME
     uint16_t runtime = 0;
 #endif
@@ -197,14 +183,6 @@ int main(void) {
     
     /* Configure the sleep mode */
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-    
-    /* Initialize the message structure ***/
-    msg.struc.time = 0;
-    msg.struc.cnt = SEN_MSG_NUM_MEASUREMENTS;
-    for(i=0; i<SEN_MSG_NUM_MEASUREMENTS; i++) {
-        msg.struc.values[i].type = 0;
-        msg.struc.values[i].value = 0;
-    }
     
     /* Initialize the user LEDs and disable both by default */
     led_init();
@@ -298,51 +276,16 @@ int main(void) {
     
     /* Enable interrupts globally */
     sei();
-    
-#if ENABLE_ADC_SELF
-    /* ADC self check */
-    msg.struc.values[MSG_VALUE_ADC_SELF].type = SEN_MSG_TYPE_CHK_ADC;
-    msg.struc.values[MSG_VALUE_ADC_SELF].value = 0;
-#endif
-#if ENABLE_MCU_V
-    /* MCU supply voltage */
-    msg.struc.values[MSG_VALUE_MCU_V].type = SEN_MSG_TYPE_VSS_MCU;
-    msg.struc.values[MSG_VALUE_MCU_V].value = 0;
-#endif
-#if ENABLE_BAT_V
-    /* Battery voltage */
-    msg.struc.values[MSG_VALUE_BAT_V].type = SEN_MSG_TYPE_VSS_BAT;
-    msg.struc.values[MSG_VALUE_BAT_V].value = 0;
-#endif
-#if ENABLE_103JT_T
-    /* 103JT thermistor */
-    msg.struc.values[MSG_VALUE_103JT_T].type = SEN_MSG_TYPE_TEMP_SURFACE;
-    msg.struc.values[MSG_VALUE_103JT_T].value = 0;
-#endif
-#if ENABLE_INCIDENT
-    /* Incident counter */
-    msg.struc.values[MSG_VALUE_INCIDENT].type = SEN_MSG_TYPE_INCIDENTS;
-    msg.struc.values[MSG_VALUE_INCIDENT].value = 0;
-#endif
-#if ENABLE_REBOOT
-    /* Reboot sources */
-    msg.struc.values[MSG_VALUE_REBOOT].type = SEN_MSG_TYPE_REBOOT;
-    msg.struc.values[MSG_VALUE_REBOOT].value = MCUSR_dump & 0x0F;
-#endif
 
 #if ENABLE_TMP275_T
     /* Initialize the TMP275 sensor */
     if(tmp275_init(&tmp275, TMP275_I2C_ADDRESS) != TMP275_RET_OK) {
         en_tmp275 = 0;
-        msg.struc.values[MSG_VALUE_TMP275_T].type = SEN_MSG_TYPE_IGNORE;
-        msg.struc.values[MSG_VALUE_TMP275_T].value = 0;
         printf("Couldn't initialize TMP275!\n");
     }
     /* Configure the TMP275 sensor (SD; 10-bit mode) */
     if(tmp275_set_config(&tmp275, 0x21) != TMP275_RET_OK) {
         en_tmp275 = 0;
-        msg.struc.values[MSG_VALUE_TMP275_T].type = SEN_MSG_TYPE_IGNORE;
-        msg.struc.values[MSG_VALUE_TMP275_T].value = 0;
         printf("Couldn't configure TMP275!\n");
     } else {
         en_tmp275 = 1;
@@ -354,8 +297,6 @@ int main(void) {
     /* Initialize the DS18B20 sensor */
     if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) != DS18X20_RET_OK) {
         en_ds18b20 = 0;
-        msg.struc.values[MSG_VALUE_DS18B20_T].type = SEN_MSG_TYPE_IGNORE;
-        msg.struc.values[MSG_VALUE_DS18B20_T].value = 0;
         printf("Couldn't initialize DS18B20!\n");
     } else {
         en_ds18b20 = 1;
@@ -367,8 +308,6 @@ int main(void) {
     /* Initialize the STEMMA SOIL sensor */
     if(stemma_init(&stemma, STEMMA_I2C_ADDRESS) != STEMMA_RET_OK) {
         en_stemma = 0;
-        msg.struc.values[MSG_VALUE_STEMMA_H].type = SEN_MSG_TYPE_IGNORE;
-        msg.struc.values[MSG_VALUE_STEMMA_H].value = 0;
         printf("Couldn't initialize STEMMA!\n");
     } else {
         en_stemma = 1;
@@ -402,23 +341,27 @@ int main(void) {
         }
     }
     /* Print status message */
-    printf("... ZIGBEE connected (message size = %d bytes)\n", SEN_MSG_SIZE);
+    printf("... ZIGBEE connected (variable message size; maximum = %d bytes)\n", SEN_MSG_SIZE_MAX);
     printf("\n");
 
     /***** MAIN ROUTINE ***********************************************/
     while(1) {
+        /* Reset sensor message */
+        for(index=0; index<SEN_MSG_NUM_MEASUREMENTS; index++) {
+            msg.struc.values[index].type = SEN_MSG_TYPE_IGNORE;
+            msg.struc.values[index].value = 0;
+        }
+        index = 0;
+        
 #if ENABLE_RUNTIME
         /* Reset timer1 counter value to 0 */
         timer1_set_tcnt(0);
-        /* Check if it's the first cycle (no result yet) */
-        if(runtime == 0) {
-            /* First cycle -> no measurement yet */
-            msg.struc.values[MSG_VALUE_RUNTIME].type = SEN_MSG_TYPE_IGNORE;
-            msg.struc.values[MSG_VALUE_RUNTIME].value = 0;
-        } else {
+        /* Check if it's a subsequent cycle */
+        if(runtime > 0) {
             /* Subsequent cycle -> measurement available */
-            msg.struc.values[MSG_VALUE_RUNTIME].type = SEN_MSG_TYPE_CHK_RUNTIME;
-            msg.struc.values[MSG_VALUE_RUNTIME].value = runtime;
+            msg.struc.values[index].type = SEN_MSG_TYPE_CHK_RUNTIME;
+            msg.struc.values[index].value = runtime;
+            index++;
 #  if ENABLE_DBG
             uint32_t runtime_us = (uint32_t)(runtime) * 256UL;
             printf("... TIMER1 runtime = %d:%03d:%03d us\n",(runtime_us/1000000UL),((runtime_us/1000UL)%1000UL),(runtime_us%1000UL));
@@ -461,8 +404,10 @@ int main(void) {
 #if ENABLE_ADC_SELF
         /*** ADC self-diagnosis (via ADC CH0) ***/
         /* Constant voltage divider (1:1) */
-        msg.struc.values[MSG_VALUE_ADC_SELF].value = adc_read_input(ADC_CH0);
-        printf("... ADC self-diagnosis: %d\n", msg.struc.values[MSG_VALUE_ADC_SELF].value);
+        msg.struc.values[index].type = SEN_MSG_TYPE_CHK_ADC;
+        msg.struc.values[index].value = adc_read_input(ADC_CH0);
+        index++;
+        printf("... ADC self-diagnosis: %d\n", msg.struc.values[index].value);
 #endif
         
 #if ENABLE_MCU_V
@@ -471,7 +416,9 @@ int main(void) {
         vcc = adc_read_vcc();
         printf("... Supply voltage: %.2f\n", vcc);
         /* Pack measurement into msg as fixed-point number */
-        msg.struc.values[MSG_VALUE_MCU_V].value = fp_float_to_fixed16_10to6(vcc);
+        msg.struc.values[index].type = SEN_MSG_TYPE_VSS_MCU;
+        msg.struc.values[index].value = fp_float_to_fixed16_10to6(vcc);
+        index++;
 #endif
         
 #if ENABLE_BAT_V
@@ -480,7 +427,9 @@ int main(void) {
         measurement = 2.0 * (adc_read_input(ADC_CH2) * (vcc / 1023.0));
         printf("... Battery voltage: %.2f\n", measurement);
         /* Pack measurement into msg as fixed-point number */
-        msg.struc.values[MSG_VALUE_BAT_V].value = fp_float_to_fixed16_10to6(measurement);
+        msg.struc.values[index].type = SEN_MSG_TYPE_VSS_BAT;
+        msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+        index++;
 #endif
         
 #if ENABLE_XBEE_T
@@ -492,15 +441,14 @@ int main(void) {
         if(xbee_cmd_get_temperature(&measurement) == XBEE_RET_OK) {
             printf("... Xbee temperature: %.2f\n", measurement);
             /* Pack measurement into msg as fixed-point number */
-            msg.struc.values[MSG_VALUE_XBEE_T].type = SEN_MSG_TYPE_TEMP_RADIO;
-            msg.struc.values[MSG_VALUE_XBEE_T].value = fp_float_to_fixed16_10to6(measurement);
+            msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_RADIO;
+            msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+            index++;
             /* Decrement incident counter */
             if(inc_xbee > 0) {
                 inc_xbee--;
             }
         } else {
-            msg.struc.values[MSG_VALUE_XBEE_T].type = SEN_MSG_TYPE_IGNORE;
-            msg.struc.values[MSG_VALUE_XBEE_T].value = 0;
             printf("... Xbee temperature: FAILED!\n");
             /* Increment incident counter */
             if(inc_xbee < INCIDENT_SINGLE_MAX) {
@@ -521,15 +469,14 @@ int main(void) {
         if(xbee_cmd_get_vss(&measurement) == XBEE_RET_OK) {
             printf("... Xbee supply voltage: %.2f\n", measurement);
             /* Pack measurement into msg as fixed-point number */
-            msg.struc.values[MSG_VALUE_XBEE_V].type = SEN_MSG_TYPE_VSS_RADIO;
-            msg.struc.values[MSG_VALUE_XBEE_V].value = fp_float_to_fixed16_10to6(measurement);
+            msg.struc.values[index].type = SEN_MSG_TYPE_VSS_RADIO;
+            msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+            index++;
             /* Decrement incident counter */
             if(inc_xbee > 0) {
                 inc_xbee--;
             }
         } else {
-            msg.struc.values[MSG_VALUE_XBEE_V].type = SEN_MSG_TYPE_IGNORE;
-            msg.struc.values[MSG_VALUE_XBEE_V].value = 0;
             printf("... Xbee temperature: FAILED!\n");
             /* Increment incident counter */
             if(inc_xbee < INCIDENT_SINGLE_MAX) {
@@ -547,7 +494,9 @@ int main(void) {
         measurement = jt103_get_temperature(adc_read_input(ADC_CH1));
         printf("... 103JT thermistor: %.2f\n", measurement);
         /* Pack measurement into msg as fixed-point number */
-        msg.struc.values[MSG_VALUE_103JT_T].value = fp_float_to_fixed16_10to6(measurement);
+        msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_SURFACE;
+        msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+        index++;
 #endif
 
 #if ENABLE_TMP275_T
@@ -561,15 +510,14 @@ int main(void) {
                 if(tmp275_get_temperature(&tmp275, &measurement) == TMP275_RET_OK) {
                     printf("... TMP275 temperature: %.2f\n", measurement);
                     /* Pack measurement into msg as fixed-point number */
-                    msg.struc.values[MSG_VALUE_TMP275_T].type = SEN_MSG_TYPE_TEMP_BOARD;
-                    msg.struc.values[MSG_VALUE_TMP275_T].value = fp_float_to_fixed16_10to6(measurement);
+                    msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_BOARD;
+                    msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+                    index++;
                     /* Decrement incident counter */
                     if(inc_tmp275 > 0) {
                         inc_tmp275--;
                     }
                 } else {
-                    msg.struc.values[MSG_VALUE_TMP275_T].type = SEN_MSG_TYPE_IGNORE;
-                    msg.struc.values[MSG_VALUE_TMP275_T].value = 0;
                     printf("... TMP275 temperature: FAILED!\n");
                     /* Increment incident counter */
                     if(inc_tmp275 < INCIDENT_SINGLE_MAX) {
@@ -579,8 +527,6 @@ int main(void) {
                     }
                 }
             }  else {
-                msg.struc.values[MSG_VALUE_TMP275_T].type = SEN_MSG_TYPE_IGNORE;
-                msg.struc.values[MSG_VALUE_TMP275_T].value = 0;
                 printf("... TMP275 query one-shot (OS): FAILED!\n");
                 /* Increment incident counter */
                 if(inc_tmp275 < INCIDENT_SINGLE_MAX) {
@@ -599,15 +545,14 @@ int main(void) {
             if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
                 printf("... DS18B20 temperature: %.2f\n", measurement);
                 /* Pack measurement into msg as fixed-point number */
-                msg.struc.values[MSG_VALUE_DS18B20_T].type = SEN_MSG_TYPE_TEMP_SOIL;
-                msg.struc.values[MSG_VALUE_DS18B20_T].value = fp_float_to_fixed16_10to6(measurement);
+                msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_SOIL;
+                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+                index++;
                 /* Decrement incident counter */
                 if(inc_ds18b20 > 0) {
                     inc_ds18b20--;
                 }
             } else {
-                msg.struc.values[MSG_VALUE_DS18B20_T].type = SEN_MSG_TYPE_IGNORE;
-                msg.struc.values[MSG_VALUE_DS18B20_T].value = 0;
                 printf("... DS18B20 temperature: FAILED!\n");
                 /* Increment incident counter */
                 if(inc_ds18b20 < INCIDENT_SINGLE_MAX) {
@@ -626,15 +571,14 @@ int main(void) {
             if(stemma_get_humidity_avg(&stemma, &avg_stemma, &measurement) == STEMMA_RET_OK) {
                 printf("... STEMMA humidity: %.2f\n", measurement);
                 /* Pack measurement into msg as fixed-point number */
-                msg.struc.values[MSG_VALUE_STEMMA_H].type = SEN_MSG_TYPE_HUMID_SOIL;
-                msg.struc.values[MSG_VALUE_STEMMA_H].value = fp_float_to_fixed16_10to6(measurement);
+                msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_SOIL;
+                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+                index++;
                 /* Decrement incident counter */
                 if(inc_stemma > 0) {
                     inc_stemma--;
                 }
             } else {
-                msg.struc.values[MSG_VALUE_STEMMA_H].type = SEN_MSG_TYPE_IGNORE;
-                msg.struc.values[MSG_VALUE_STEMMA_H].value = 0;
                 printf("... STEMMA humidity: FAILED!\n");
                 /* Increment incident counter */
                 if(inc_stemma < INCIDENT_SINGLE_MAX) {
@@ -653,15 +597,14 @@ int main(void) {
             if(dht_get_temperature(&am2302, &measurement) == DHT_RET_OK) {
                 printf("... AM2302 temperature: %.2f\n", measurement);
                 /* Pack measurement into msg as fixed-point number */
-                msg.struc.values[MSG_VALUE_AM2302_T].type = SEN_MSG_TYPE_TEMP_AIR;
-                msg.struc.values[MSG_VALUE_AM2302_T].value = fp_float_to_fixed16_10to6(measurement);
+                msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_AIR;
+                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+                index++;
                 /* Decrement incident counter */
                 if(inc_am2302 > 0) {
                     inc_am2302--;
                 }
             } else {
-                msg.struc.values[MSG_VALUE_AM2302_T].type = SEN_MSG_TYPE_IGNORE;
-                msg.struc.values[MSG_VALUE_AM2302_T].value = 0;
                 printf("... AM2302 temperature: FAILED!\n");
                 /* Increment incident counter */
                 if(inc_am2302 < INCIDENT_SINGLE_MAX) {
@@ -680,15 +623,14 @@ int main(void) {
             if(dht_get_humidity(&am2302, &measurement) == DHT_RET_OK) {
                 printf("... AM2302 humidity: %.2f\n", measurement);
                 /* Pack measurement into msg as fixed-point number */
-                msg.struc.values[MSG_VALUE_AM2302_H].type = SEN_MSG_TYPE_HUMID_AIR;
-                msg.struc.values[MSG_VALUE_AM2302_H].value = fp_float_to_fixed16_10to6(measurement);
+                msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_AIR;
+                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+                index++;
                 /* Decrement incident counter */
                 if(inc_am2302 > 0) {
                     inc_am2302--;
                 }
             } else {
-                msg.struc.values[MSG_VALUE_AM2302_H].type = SEN_MSG_TYPE_IGNORE;
-                msg.struc.values[MSG_VALUE_AM2302_H].value = 0;
                 printf("... AM2302 humidity: FAILED!\n");
                 /* Increment incident counter */
                 if(inc_am2302 < INCIDENT_SINGLE_MAX) {
@@ -700,43 +642,56 @@ int main(void) {
         }
 #endif
 
+#if ENABLE_INCIDENT
         /*** INCIDENT COUNTER ***/
         inc_sum = inc_xbee;
-#if ENABLE_TMP275_T
+#  if ENABLE_TMP275_T
         inc_sum += inc_tmp275;
-#endif
-#if ENABLE_DS18B20_T
+#  endif
+#  if ENABLE_DS18B20_T
         inc_sum += inc_ds18b20;
-#endif
-#if ENABLE_STEMMA_H
+#  endif
+#  if ENABLE_STEMMA_H
         inc_sum += inc_stemma;
-#endif
-#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+#  endif
+#  if (ENABLE_AM2302_T || ENABLE_AM2302_H)
         inc_sum += inc_am2302;
-#endif
+#  endif
 
         printf("... INCIDENT COUNTER (ENABLE):\n");
         printf("    ... XBEE:    %d\n", inc_xbee);
-#if ENABLE_TMP275_T
+#  if ENABLE_TMP275_T
         printf("    ... TMP275:  %d (%d)\n", inc_tmp275, en_tmp275);
-#endif
-#if ENABLE_DS18B20_T
+#  endif
+#  if ENABLE_DS18B20_T
         printf("    ... DS18B20: %d (%d)\n", inc_ds18b20, en_ds18b20);
-#endif
-#if ENABLE_STEMMA_H
+#  endif
+#  if ENABLE_STEMMA_H
         printf("    ... STEMMA:  %d (%d)\n", inc_stemma, en_stemma);
-#endif
-#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+#  endif
+#  if (ENABLE_AM2302_T || ENABLE_AM2302_H)
         printf("    ... AM2302:  %d (%d)\n", inc_am2302, en_am2302);
-#endif
+#  endif
         printf("    ... TOTAL:   %d\n", inc_sum);
         /* Counter value between 0 and defined threshold */
-        msg.struc.values[MSG_VALUE_INCIDENT].value = inc_sum;
+        msg.struc.values[index].type = SEN_MSG_TYPE_INCIDENTS;
+        msg.struc.values[index].value = inc_sum;
+        index++;
         /* Check total incident counter */
         if(inc_sum >= INCIDENT_TOTAL_MAX) {
             /* Wait for watchdog reset */
             wait_for_wdt_reset();
         }
+#endif
+        
+#if ENABLE_REBOOT
+        /* Last reboot source */
+        msg.struc.values[index].type = SEN_MSG_TYPE_REBOOT;
+        msg.struc.values[index].value = MCUSR_dump & 0x0F;
+        index++;
+        /* Reset reboot source */
+        MCUSR_dump = 0;
+#endif
         
         /* Reset the Xbee buffer */
         xbee_rx_flush();
@@ -757,7 +712,7 @@ int main(void) {
         }
         
         /* Send the measurement to the CH */
-        int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, msg.byte, SEN_MSG_SIZE, 0x00);
+        int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, msg.byte, SEN_MSG_SIZE(index), 0x00);
         if(ret != XBEE_RET_OK) {
             printf("ERROR sending message (%d)!\n",ret);
             /* Increment incident counter */
@@ -783,7 +738,7 @@ int main(void) {
                 _delay_ms(1);
             }
         }
-        printf("Sensor value update sent! (#%d)\n\n",msg.struc.time++);
+        printf("%d sensor values sent! (#%d)\n\n",index,msg.struc.time++);
         
         /* Send xbee to sleep */
         if(xbee_sleep_enable() != XBEE_RET_OK) {

@@ -22,8 +22,8 @@
 /***** DEFINES ********************************************************/
 /*! Number of sensor measurements per message */
 #ifndef SEN_MSG_NUM_MEASUREMENTS
-/*! Default value is the maximum for the full demo (13 measurements) */
-#  define SEN_MSG_NUM_MEASUREMENTS            (13)
+/*! Default value is the maximum for the full demo (14 measurements) */
+#  define SEN_MSG_NUM_MEASUREMENTS          (14)
 #endif
 
 /* Get SL & SH from 64-bit MAC */
@@ -117,10 +117,11 @@ typedef struct {
  * A union to access the sensor message via the structure or as byte array.
  */
 /* Define for the message size [bytes] */
-#define SEN_MSG_SIZE    (sizeof(uint16_t)+sizeof(uint8_t)+SEN_MSG_NUM_MEASUREMENTS*sizeof(SEN_VALUE_t))
+#define SEN_MSG_SIZE(VALUES)    (sizeof(uint16_t)+sizeof(uint8_t)+VALUES*sizeof(SEN_VALUE_t))
+#define SEN_MSG_SIZE_MAX        SEN_MSG_SIZE(SEN_MSG_NUM_MEASUREMENTS)
 typedef union {
-    SEN_MSG_t struc;            /**< Access the message as a structure */
-    uint8_t byte[SEN_MSG_SIZE]; /**< Access the message as a byte array */
+    SEN_MSG_t struc;                /**< Access the message as a structure */
+    uint8_t byte[SEN_MSG_SIZE_MAX]; /**< Access the message as a byte array */
 } SEN_MSG_u;
 
 
