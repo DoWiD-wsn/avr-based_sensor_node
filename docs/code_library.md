@@ -24,9 +24,6 @@ The generation of the documentation requires doxygen and dotviz (to generate the
 As mentioned above, the ASN(x) software library has only little external dependencies (i.e., `AVR Libc`).
 Additionally, the internal structure was kept shallow to minimize the modules' cross-dependencies and keep the software complexity as low as reasonably possible.
 
-Dependency graph:
-![PCB front (/media/asnx_lib/dependency_graph.svg)](../media/asnx_lib/dependency_graph.svg)
-
 
 ## Prepared demo applications ##
 
