@@ -95,7 +95,7 @@ An interactive BOM can be found in the `/kicad/bom/` directory (see [here](../ki
 | U1        | -     | *mycomponents*`*` | TMP275 | Package_SO | VSSOP-8_3.0x3.0mm_P0.65mm | [Farnell](https://at.farnell.com/texas-instruments/tmp275aidgkr/temperature-sensor-0-0625deg-c/dp/3009081) |
 | U2        | -     | *mycomponents*`*` | ATmega1284P | Package_QFP | TQFP-44_10x10mm_P0.8mm | [Farnell](https://at.farnell.com/microchip/atmega1284p-au/mcu-8bit-avr-128k-flash-44tqfp/dp/1715480) |
 | U3        | -     | *mycomponents*`*` | TPS63031 | Package_SON | VSON-10-1EP_3x3mm_P0.5mm_EP1.2x2mm_ThermalVias | [Farnell](https://at.farnell.com/texas-instruments/tps63031dskr/dc-dc-conv-buck-boost-2-4mhz-vson/dp/3122997) |
-| U4        | -     | *mycomponents*`*` | PCF85263A | Package_SO | TSSOP-10_3x3mm_P0.5mm | [Farnell](https://at.farnell.com/nxp/pcf85263att1-aj/takt-ic-aec-q100-tssop-10/dp/2890043) |
+| U4        | -     | *mycomponents*`*` | PCF85263ATT | Package_SO | TSSOP-8_3x3mm_P0.65mm | [Farnell](https://at.farnell.com/nxp/pcf85263att-aj/echtzeituhr-5-5v-i2c-tssop-8/dp/2775936) |
 | Y1        | 4MHz  | Device         | Crystal | Crystal          | Crystal_SMD_HC49-SD | [Farnell](https://at.farnell.com/txc/9c-4-000maaj-t/xtal-4-000mhz-18pf-smd-hc-49s/dp/1842332) |
 | Y2        | 32.768kHz  | Device         | Crystal | Crystal          | Crystal_SMD_3215-2Pin_3.2x1.5mm | [Farnell](https://at.farnell.com/abracon/abs07-lr-32-768khz-6-1-t/quarz-32-768khz-6pf-3-2mm-x-1/dp/2849465) |
 | SW1       | push  | Switch         | SW_Push | Button_Switch_SMD | SW_SPST_PTS645   | [Farnell](https://at.farnell.com/c-k-components/pts645sm43smtr92lfs/taster-spst-0-05a-12vdc-smd-4/dp/2320087) |

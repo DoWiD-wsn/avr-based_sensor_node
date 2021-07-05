@@ -7,6 +7,7 @@ However, the major and minor number are used to express the version of the hardw
 ## [dev]
 ### Added
 ### Changed
+- Switched PCF85263A from 10-pin to 8-pin TSSOP (easier to acquire on the market)
 ### Removed
 
 ## [1.2.0] - 2021-06-04
