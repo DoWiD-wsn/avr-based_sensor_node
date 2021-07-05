@@ -6,6 +6,11 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
+### Changed
+### Removed
+
+## [1.2.0] - 2021-06-04
+### Added
 - Added solder-jumper (bridged) for ADC2 input
 - Added doxygen support for ASNX LIB documentation (incl. makefile rule)
 ### Changed
