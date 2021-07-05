@@ -6,11 +6,23 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
-- N/A
 ### Changed
-- N/A
 ### Removed
-- N/A
+
+## [1.2.0] - 2021-06-04
+### Added
+- Added solder-jumper (bridged) for ADC2 input
+- Added doxygen support for ASNX LIB documentation (incl. makefile rule)
+### Changed
+- Switched ADC1 and ADC2 input (thermistor <-> Vbat)
+- Changed voltage-divider resistors (Vmcu & Vbat) to 1MOhm and added 10nF capacitor for smoothing
+- Changed TPS63031DSKR (DC/DC) PS pin to GND to enable low-power operation
+- Changed TMP275 capacitor from 10nF to 100nF (would have been the only 10n)
+- General PCB update: take care of better use of GND planes; improved silk layer
+- Sensor node demo: use dynamic message size for transmission
+### Removed
+- Removed Xbee sleep pin pull-up resistors (Xbee has internal pull-ups)
+- Removed Xbee reset pin pull-up resistors (reset not used)
 
 ## [1.1.0] - 2021-05-26
 ### Added

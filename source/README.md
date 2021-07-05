@@ -11,6 +11,9 @@ To use the *ASN(x) C Code Library*, you need to have `avr-gcc`, `AVR Libc`, and 
   `sudo apt install gcc-avr avr-libc avrdude`  
 That's basically it :)
 
+Additionally, to generate the doxygen-based documentation, `doxygen` and `graphviz` are required where the latter one is needed to generate the call-graphs:  
+  `sudo apt install doxygen graphviz`
+
 
 ## Directory Structure ##
 
@@ -18,8 +21,11 @@ That's basically it :)
 .
 ├── _asnx_lib_                         : ASN(x) library files
 ├── makefile.in                        : Superior makefile to be included
-├── 000-blinky_demo                    : Initial blinky demo to check the toolchain
+├── 000-blinky_demo                    : Blinky demo to check the toolchain
 ├── 001-adc_uart_demo                  : ADC to UART output demo
+├── 002-sensor_demo                    : Sensor reading demo
+├── 003-xbee_demo                      : Xbee basic communication demo
+├── 004-sensor_node_demo               : Full sensor node demo
 ├── xyz                                : Further applications
 └── ...
 ```

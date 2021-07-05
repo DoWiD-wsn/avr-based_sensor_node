@@ -1,14 +1,13 @@
-/*****
- * @brief   ASN(x) UART library
+/*!
+ * @brief   ASN(x) UART library -- header file
  *
  * Library to support the use of the UART (blocking and non-blocking).
  *
  * @file    /_asnx_lib_/uart/uart.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- * @todo    Add timeout to "wait" functions (e.g., blocking)
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 #ifndef _ASNX_UART_H_
 #define _ASNX_UART_H_
@@ -16,16 +15,21 @@
 /***** INCLUDES *******************************************************/
 /*** STD ***/
 #include <stdint.h>
+/*** AVR ***/
+#include <avr/io.h>
+#include <avr/interrupt.h>
+/*** ASNX LIB ***/
+#include "util/cbuffer.h"
 
 
 /***** DEFINES ********************************************************/
-/*** CPU frequency (F_CPU) ***/
+/*! CPU frequency (F_CPU) */
 #ifndef F_CPU
 # warning "F_CPU not defined for \"uart.h\""
 # define F_CPU 4000000UL
 #endif
 /*** UART specifics ***/
-/* Use 2X mode for higher baud rate */
+/*! Use 2X mode for higher baud rate */
 #define UART_USE_2X                 (0)
 /* Function return values */
 #define UART_RET_OK                 (0)
@@ -33,9 +37,9 @@
 
 
 /***** STRUCTURES *****************************************************/
-/***
+/*!
  * A structure to store the UART function callbacks.
- ***/
+ */
 typedef struct {
     void (*f_rx)(void);     /**< RX callback function (receive) */
     void (*f_tx)(void);     /**< TX callback function (transmit) */

@@ -20,16 +20,17 @@ It was designed with a focus on energy efficiency and robustness.
 * On-board [PCF85263A](docs/datasheets/PCF85263A.pdf) RTC as MCU wake-up source (I²C; INT2)
 * Fixed 3.3V DC/DC converter [TPS63031DSKR](docs/datasheets/TPS63031DSKR.pdf)
     * Input voltage range: 1.8V to 5.5V
-    * Output current: >= 500mA
-    * Energy efficiency: >= 80%
+    * Energy efficiency (node power-down): >= 65%
+    * Energy efficiency (node active): >= 80%
+    * Optimized for low-power mode (<100mA)
 * Xbee socket with connected sleep-request and sleep-indicator pins (incl. pull-down resistors)
 * Two low-current user LEDs (can be disconnected via cut-through solder jumpers)
 * Two solder jumpers to enable bridging of UART0 and UART1 (for loopback self-tests)
 * Onboard resistor divider for ADC self-test 
 * Onboard resistor divider for battery voltage measurement
 * Onboard connector for thermistor temperature measurements
-* Two OWI connectors (incl. pull-up resistors; separate data pins)
-* Two TWI connectors (incl. pull-up resistors)
+* Two one-wire interface (OWI) connectors (incl. pull-up resistors; separate data pins)
+* Two two-wire interface (TWI/I²C) connectors (incl. pull-up resistors)
 * 2x14-pin expansion headers
 
 

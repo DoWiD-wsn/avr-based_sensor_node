@@ -1,39 +1,34 @@
-/*****
- * @brief   ASN(x) STEMMA SOIL sensor library
+/*!
+ * @brief   ASN(x) STEMMA SOIL sensor library -- source file
  *
  * Library to support the STEMMA SOIL sensor.
  *
- * @file    /_asnx_lib_/sensors/stemma_soil.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
+ * @file    /_asnx_lib_/sensors/stemma_soil.c
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ *
  * @see     https://learn.adafruit.com/adafruit-stemma-soil-sensor-i2c-capacitive-moisture-sensor/
  * @see     https://github.com/adafruit/Adafruit_Seesaw
- *****/
+ */
 
 
 /***** INCLUDES *******************************************************/
 #include "stemma_soil.h"
-/*** AVR ***/
-#include <util/delay.h>
-/*** ASNX LIB ***/
-#include "i2c/i2c.h"
 
 
 /***** FUNCTIONS ******************************************************/
-/***
+/*!
  * Initialization of the STEMMA SOIL sensor.
  *
  * @param[out]  dev             Device structure to be filled
  * @param[in]   address         I2C address of the sensor
- ***/
+ */
 STEMMA_RET_t stemma_init(STEMMA_t* dev, uint8_t address) {
    /* Check if the device is available */
    if(i2c_is_available(address) == I2C_RET_OK) {
         /* Device is available ... store address in device structure */
         dev->address = address;
-        /* Initially, set config to default value */
-        dev->config = 0x00;
         /* Return OK */
         return STEMMA_RET_OK;
    } else {
@@ -43,14 +38,14 @@ STEMMA_RET_t stemma_init(STEMMA_t* dev, uint8_t address) {
 }
 
 
-/***
+/*!
  * Read the version code of the STEMMA SOIL sensor.
  * Bits [31:16] will be a date code, [15:0] will be the product id.
  * 
  * @param[in]   dev             Device structure
  * @param[out]  version         Version code read from the sensor
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 STEMMA_RET_t stemma_get_version(STEMMA_t* dev, uint32_t* version) {
     /* Variable for the read result */
     uint8_t res[4] = {0};
@@ -66,13 +61,13 @@ STEMMA_RET_t stemma_get_version(STEMMA_t* dev, uint32_t* version) {
 }
 
 
-/***
+/*!
  * Read the temperature of the sensor in degrees Celsius (°C).
  * 
  * @param[in]   dev             Device structure
  * @param[out]  temperature     Sensor temperature in degrees Celsius (°C)
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 STEMMA_RET_t stemma_get_temperature(STEMMA_t* dev, float* temperature) {
     /* Variable for the read result */
     uint8_t res[4] = {0};
@@ -90,13 +85,13 @@ STEMMA_RET_t stemma_get_temperature(STEMMA_t* dev, float* temperature) {
 }
 
 
-/***
+/*!
  * Read the humidity of the sensor indicated by its capacitance.
  * 
  * @param[in]   dev             Device structure
  * @param[out]  humidity        Humidity in percent
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 STEMMA_RET_t stemma_get_humidity(STEMMA_t* dev, float* humidity) {
     /* Variable for the read result */
     uint16_t ret = STEMMA_TOUCH_WORKING;
@@ -115,7 +110,7 @@ STEMMA_RET_t stemma_get_humidity(STEMMA_t* dev, float* humidity) {
 }
 
 
-/***
+/*!
  * Read the humidity of the sensor indicated by its capacitance and use
  * a floating average over a defined number of readings to smooth the value.
  * 
@@ -123,11 +118,14 @@ STEMMA_RET_t stemma_get_humidity(STEMMA_t* dev, float* humidity) {
  * @param[in]   structure       Floating average structure
  * @param[out]  humidity        Humidity in percent
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 STEMMA_RET_t stemma_get_humidity_avg(STEMMA_t* dev, STEMMA_AVG_t* structure, float* humidity) {
-    float tmp;                      /**< Temporary variable for the sensor reading */
-    uint8_t i = 0;                  /**< Temporary counter variable */
-    static uint8_t index = 0;       /**< Static variable for the value array index */
+    /* Temporary variable for the sensor reading */
+    float tmp;
+    /* Temporary counter variable */
+    uint8_t i = 0;
+    /* Static variable for the value array index */
+    static uint8_t index = 0;
     /* Get a new reading */
     STEMMA_RET_t ret = stemma_get_humidity(dev, &tmp);
     /* Check if the reading is valid */

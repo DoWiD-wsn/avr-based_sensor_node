@@ -1,20 +1,19 @@
-/*****
- * @brief   ASN(x) DS18X20 temperature sensor library
+/*!
+ * @brief   ASN(x) DS18X20 temperature sensor library -- source file
  *
  * Library to support the DS18X20 temperature sensor.
  *
  * @file    /_asnx_lib_/sensors/ds18x20.c
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ *
  * @see     https://create.arduino.cc/projecthub/TheGadgetBoy/ds18b20-digital-temperature-sensor-and-arduino-9cc806
- *****/
+ */
 
 
 /***** INCLUDES ***************************************************************/
 #include "ds18x20.h"
-/*** AVR ***/
-#include <util/delay.h>
 
 
 /***** LOCAL FUNCTION PROTOTYPES **********************************************/
@@ -24,7 +23,7 @@ static float _raw2celsius(int16_t raw);
 
 
 /***** FUNCTIONS **************************************************************/
-/***
+/*!
  * Initialization of a DS18x20 sensor instance.
  * 
  * @param[out]  dev     Pointer to the device structure to be filled
@@ -33,7 +32,7 @@ static float _raw2celsius(int16_t raw);
  * @param[in]   pin     Pointer to the GPIO's PINx register
  * @param[in]   portpin Index of the GPIO pin
  * @return      OK in case of success; ERROR otherwise
- ***/
+ */
 DS18X20_RET_t ds18x20_init(DS18X20_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin) {
     /* Fill the HW GPIO and data structure */
     owi_get(&(dev->gpio), &(dev->data), ddr, port, pin, portpin);
@@ -44,12 +43,12 @@ DS18X20_RET_t ds18x20_init(DS18X20_t* dev, volatile uint8_t* ddr, volatile uint8
 }
 
 
-/***
+/*!
  * Find a DS18x20 sensor on the OWI line.
  * 
  * @param[in]   dev     Pointer to the device structure to be filled
  * @return      OK in case of success; ERROR* otherwise
- ***/
+ */
 DS18X20_RET_t _find(DS18X20_t* dev) {
     /* Search for a onewire device */
     if(!owi_search(&(dev->gpio),&(dev->data),dev->addr)) {
@@ -84,13 +83,13 @@ DS18X20_RET_t _find(DS18X20_t* dev) {
 }
 
 
-/***
+/*!
  * Read the raw temperature from a DS18x20 sensor.
  * 
  * @param[in]   dev     Pointer to the device structure to be filled
  * @param[out]  raw     Raw temperature reading
  * @return      OK in case of success; ERROR* otherwise
- ***/
+ */
 static DS18X20_RET_t _get_raw(DS18X20_t* dev, int16_t* raw) {
     uint8_t i;
     /* Temporary results */
@@ -151,24 +150,24 @@ static DS18X20_RET_t _get_raw(DS18X20_t* dev, int16_t* raw) {
 }
 
 
-/***
+/*!
  * Convert the raw temperature reading to degree Celsius (°C).
  * 
  * @param[in]   raw     Raw temperature reading
  * @return      Temperature in degree celsius (°C)
- ***/
+ */
 static float _raw2celsius(int16_t raw) {
     /* Calculation, see DS18x20 datasheet */
     return ((float)raw/16.0);
 }
 
 
-/***
+/*!
  * Read the corresponding temperature in degree Celsius (°C) from a DS18x20 sensor.
  * 
  * @param[in]   dev     Pointer to the device structure to be filled
  * @return      Temperature reading in degree Celsius (°C)
- ***/
+ */
 DS18X20_RET_t ds18x20_get_temperature(DS18X20_t* dev, float* temperature) {
     int16_t raw;
     DS18X20_RET_t ret = _get_raw(dev, &raw);

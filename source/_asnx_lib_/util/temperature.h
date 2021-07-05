@@ -1,19 +1,19 @@
-/*****
- * @brief   ASN(x) temperature helper library
+/*!
+ * @brief   ASN(x) temperature helper library -- header file
  *
  * Library to support working with temperature values and their conversion.
  *
  * @file    /_asnx_lib_/util/temperature.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 #ifndef _ASNX_TEMP_H_
 #define _ASNX_TEMP_H_
 
 /***** DEFINES ********************************************************/
-/* HI formula coefficients
+/* Heat-index (HI) formula coefficients
  * @see https://en.wikipedia.org/wiki/Heat_index#Formula
  */
 #define TEMP_HI_C1                      (-8.78469475556)

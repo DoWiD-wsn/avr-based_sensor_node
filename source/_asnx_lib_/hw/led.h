@@ -1,13 +1,13 @@
-/*****
- * @brief   ASN(x) user LED library
+/*!
+ * @brief   ASN(x) user LED library -- header file
  *
  * Library to support the use of the ASN(x) user LEDs.
  *
  * @file    /_asnx_lib_/hw/led.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
- *****/
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ */
 
 #ifndef _ASNX_LED_H_
 #define _ASNX_LED_H_
@@ -15,20 +15,21 @@
 /***** INCLUDES *******************************************************/
 /*** STD ***/
 #include <stdint.h>
-/*** AVR ***/
-#include <avr/io.h>
+#include <stddef.h>
+/*** ASNX LIB ***/
+#include "hw/hw.h"
 
 
 /***** DEFINES ********************************************************/
-/* User LEDs DDR register */
+/*! User LEDs DDR register */
 #define LED_DDR                             DDRD
-/* User LEDs PORT register */
+/*! User LEDs PORT register */
 #define LED_PORT                            PORTD
-/* User LEDs PIN register */
+/*! User LEDs PIN register */
 #define LED_PIN                             PIND
-/* User LED1 portpin index */
+/*! User LED1 portpin index */
 #define LED1_GPIO                           PD5
-/* User LED2 portpin index */
+/*! User LED2 portpin index */
 #define LED2_GPIO                           PD4
 
 

@@ -1,30 +1,24 @@
-/*****
- * @brief   ASN(x) DHT temperature/humidity sensor library
+/*!
+ * @brief   ASN(x) DHT temperature/humidity sensor library -- source file
  *
  * Library to support the DHT temperature/humidity sensor.
  * The low level reading is partly based on the code of Davide Gironi.
  *
  * @file    /_asnx_lib_/sensors/dht.c
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.1 $
- * @date    $Date: 2021/05/18 $
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
+ *
  * @see     http://davidegironi.blogspot.com/2013/02/reading-temperature-and-humidity-on-avr.html
- *****/
+ */
 
 
 /***** INCLUDES *******************************************************/
 #include "dht.h"
-/*** AVR ***/
-#include <avr/interrupt.h>
-#include <util/delay.h>
-/*** ASNX LIB ***/
-#if DHT_CHECK_LAST_MEAS
-#  include "timer/systick.h"
-#endif
 
 
 /***** FUNCTIONS **************************************************************/
-/***
+/*!
  * Initialization of a DHT sensor instance.
  * 
  * @param[out]  dev     Pointer to the device structure to be filled
@@ -33,7 +27,7 @@
  * @param[in]   pin     Pointer to the GPIO's PINx register
  * @param[in]   portpin Index of the GPIO pin
  * @param[in]   type    DHT sensor type
- ***/
+ */
 void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type) {
     /* Fill the HW GPIO structure */
     dev->gpio.ddr = ddr;
@@ -52,13 +46,13 @@ void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatil
 }
 
 
-/***
+/*!
  * Perform a low-level reading from the sensor.
  * 
  * @param[in]   dev     Pointer to the device structure
  * @return      OK* in case of success; ERROR* otherwise
- ***/
-DHT_RET_t dht_read(DHT_t* dev) {
+ */
+static DHT_RET_t _read(DHT_t* dev) {
     /* Get a pointer to the HW GPIO structure */
     hw_io_t* gpio = &(dev->gpio);
     /* Temporary counter variables */
@@ -191,13 +185,13 @@ DHT_RET_t dht_read(DHT_t* dev) {
 }
 
 
-/***
+/*!
  * Read the temperature in degree Celsius (°C) from a DHT sensor.
  * 
  * @param[in]   dev             Pointer to the device structure
  * @param[out]  temperature     Temperature reading in degree Celsius (°C)
  * @return      OK* in case of success; ERROR* otherwise
- ***/
+ */
 DHT_RET_t dht_get_temperature(DHT_t* dev, float* temperature) {
     float tmp;
     /* Check if a valid reading was previously performed */
@@ -239,13 +233,13 @@ DHT_RET_t dht_get_temperature(DHT_t* dev, float* temperature) {
 }
 
 
-/***
+/*!
  * Read the relative humidity (%RH) from a DHT sensor.
  * 
  * @param[in]   dev             Pointer to the device structure
  * @param[out]  humidity        Relative humidity reading (%RH)
  * @return      OK* in case of success; ERROR* otherwise
- ***/
+ */
 DHT_RET_t dht_get_humidity(DHT_t* dev, float* humidity) {
     float tmp;
     /* Check if a valid reading was previously performed */
@@ -274,14 +268,14 @@ DHT_RET_t dht_get_humidity(DHT_t* dev, float* humidity) {
 }
 
 
-/***
+/*!
  * Read both temperature and humidity from a DHT sensor.
  * 
  * @param[in]   dev             Pointer to the device structure
  * @param[out]  temperature     Temperature reading in degree Celsius (°C)
  * @param[out]  humidity        Relative humidity reading (%RH)
  * @return      OK* in case of success; ERROR* otherwise
- ***/
+ */
 DHT_RET_t dht_get_temperature_humidity(DHT_t* dev, float* temperature, float* humidity) {
     DHT_RET_t ret;
     /* Read the temperature */

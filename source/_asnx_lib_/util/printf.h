@@ -1,34 +1,38 @@
-/*****
- * @brief   ASN(x) printf library
+/*!
+ * @brief   ASN(x) printf library -- header file
  *
  * Library to enable printf functionality.
  *
  * @file    /_asnx_lib_/util/printf.h
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1.0 $
- * @date    $Date: 2021/05/10 $
+ * @author  Dominik Widhalm
+ * @version 1.2.0
+ * @date    2021/06/07
  *
  * @see     https://github.com/mpaland/printf
- *****/
+ */
 
 #ifndef _ASNX_PRINTF_H_
 #define _ASNX_PRINTF_H_
 
 /***** INCLUDES *******************************************************/
 /*** STD ***/
+#include <stdbool.h>
 #include <stdint.h>
+#include <float.h>
 #include <stdarg.h>
 #include <stddef.h>
+/*** ASNX LIB ***/
+#include "uart/uart.h"
 
 
 /***** MACROS *********************************************************/
-/* 'ntoa' conversion buffer size (default: 32 byte) */
+/*! 'ntoa' conversion buffer size (default: 32 byte) */
 #define PRINTF_NTOA_BUFFER_SIZE         (32U)
-/* 'ftoa' conversion buffer size (default: 32 byte) */
+/*! 'ftoa' conversion buffer size (default: 32 byte) */
 #define PRINTF_FTOA_BUFFER_SIZE         (32U)
-/* Define the default floating point precision (default: 6 digits) */
+/*! Define the default floating point precision (default: 6 digits) */
 #define PRINTF_DEFAULT_FLOAT_PRECISION  (6U)
-/* Define the largest float suitable to print with %f (default: 1e9) */
+/*! Define the largest float suitable to print with %f (default: 1e9) */
 #define PRINTF_MAX_FLOAT                (1e9)
 /* Internal flag definitions */
 #define PRINTF_FLAGS_ZEROPAD            (1U <<  0U)
