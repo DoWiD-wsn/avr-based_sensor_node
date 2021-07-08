@@ -13,54 +13,35 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-$Comp
-L mycomponents:Xbee3 JP1
-U 1 1 604F6392
-P 1650 1850
-F 0 "JP1" H 1750 2450 45  0000 C CNN
-F 1 "Xbee3" V 1650 1850 45  0000 C CNN
-F 2 "myfootprint:XBEE-20_THT" H 1450 1200 20  0001 C CNN
-F 3 "https://www.digi.com/resources/library/data-sheets/ds_xbee-3-zigbee-3" H 1650 1850 50  0001 C CNN
-	1    1650 1850
-	1    0    0    -1  
-$EndComp
-NoConn ~ 2150 1400
-NoConn ~ 2150 1550
-NoConn ~ 2150 1650
-NoConn ~ 2150 1750
-NoConn ~ 2150 1850
-NoConn ~ 2150 2000
-NoConn ~ 2150 2100
-NoConn ~ 2150 2250
-NoConn ~ 2150 2350
-NoConn ~ 1150 1900
-NoConn ~ 1150 1800
+NoConn ~ 2000 1100
+NoConn ~ 2000 1700
+NoConn ~ 2000 1800
+NoConn ~ 2000 1950
+NoConn ~ 2000 2050
+NoConn ~ 1000 1600
+NoConn ~ 1000 1500
 $Comp
 L power:+3V3 #PWR07
 U 1 1 604F9E39
-P 1650 1100
-F 0 "#PWR07" H 1650 950 50  0001 C CNN
-F 1 "+3V3" H 1665 1273 50  0000 C CNN
-F 2 "" H 1650 1100 50  0001 C CNN
-F 3 "" H 1650 1100 50  0001 C CNN
-	1    1650 1100
+P 1500 900
+F 0 "#PWR07" H 1500 750 50  0001 C CNN
+F 1 "+3V3" H 1515 1073 50  0000 C CNN
+F 2 "" H 1500 900 50  0001 C CNN
+F 3 "" H 1500 900 50  0001 C CNN
+	1    1500 900 
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	1650 1100 1650 1200
 $Comp
 L power:GND #PWR08
 U 1 1 604FC039
-P 1650 2650
-F 0 "#PWR08" H 1650 2400 50  0001 C CNN
-F 1 "GND" H 1655 2477 50  0000 C CNN
-F 2 "" H 1650 2650 50  0001 C CNN
-F 3 "" H 1650 2650 50  0001 C CNN
-	1    1650 2650
+P 1500 2300
+F 0 "#PWR08" H 1500 2050 50  0001 C CNN
+F 1 "GND" H 1505 2127 50  0000 C CNN
+F 2 "" H 1500 2300 50  0001 C CNN
+F 3 "" H 1500 2300 50  0001 C CNN
+	1    1500 2300
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	1650 2650 1650 2550
 $Comp
 L Device:Battery BT1
 U 1 1 604FE9A0
@@ -74,14 +55,10 @@ F 3 "http://www.farnell.com/datasheets/1703957.pdf" V 3750 5510 50  0001 C CNN
 $EndComp
 Text Notes 3450 4800 0    50   ~ 0
 INPUT (2xAA) -> 3V3 fixed
-Text Label 1050 2150 2    50   ~ 0
+Text Label 1000 1850 2    50   ~ 0
 sleep
-Text Label 1050 2050 2    50   ~ 0
+Text Label 1000 1750 2    50   ~ 0
 sleep_rq
-Wire Wire Line
-	1050 2150 1150 2150
-Wire Wire Line
-	1050 2050 1150 2050
 Text Label 6900 3200 0    50   ~ 0
 RXD0
 Text Label 6900 3300 0    50   ~ 0
@@ -90,41 +67,32 @@ Wire Wire Line
 	6800 3200 6900 3200
 Wire Wire Line
 	6900 3300 6800 3300
-Text Label 1050 1550 2    50   ~ 0
-TXD0
-Text Label 1050 1650 2    50   ~ 0
-RXD0
-Wire Wire Line
-	1050 1550 1150 1550
-Wire Wire Line
-	1150 1650 1050 1650
 $Comp
 L Device:C C2
 U 1 1 60505F42
-P 1300 2650
-F 0 "C2" V 1150 2650 50  0000 C CNN
-F 1 "100n" V 1450 2650 50  0000 C CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric" H 1338 2500 50  0001 C CNN
-F 3 "~" H 1300 2650 50  0001 C CNN
-	1    1300 2650
+P 1150 2300
+F 0 "C2" V 1100 2200 50  0000 C CNN
+F 1 "100n" V 1300 2300 50  0000 C CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 1188 2150 50  0001 C CNN
+F 3 "~" H 1150 2300 50  0001 C CNN
+	1    1150 2300
 	0    1    1    0   
 $EndComp
 $Comp
 L power:+3V3 #PWR03
 U 1 1 60507A8C
-P 1050 2650
-F 0 "#PWR03" H 1050 2500 50  0001 C CNN
-F 1 "+3V3" H 1065 2823 50  0000 C CNN
-F 2 "" H 1050 2650 50  0001 C CNN
-F 3 "" H 1050 2650 50  0001 C CNN
-	1    1050 2650
+P 900 2300
+F 0 "#PWR03" H 900 2150 50  0001 C CNN
+F 1 "+3V3" H 915 2473 50  0000 C CNN
+F 2 "" H 900 2300 50  0001 C CNN
+F 3 "" H 900 2300 50  0001 C CNN
+	1    900  2300
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	1050 2650 1150 2650
+	900  2300 1000 2300
 Wire Wire Line
-	1450 2650 1650 2650
-Connection ~ 1650 2650
+	1300 2300 1500 2300
 Text Notes 650  750  0    50   ~ 0
 Xbee 3 Transceiver
 $Comp
@@ -1990,7 +1958,7 @@ Wire Wire Line
 Wire Wire Line
 	3500 2150 3500 2050
 Connection ~ 3500 2150
-NoConn ~ 1150 1400
+NoConn ~ 1000 1100
 Wire Notes Line
 	2500 600  2500 1450
 Wire Notes Line
@@ -2048,4 +2016,66 @@ F 3 "https://www.nxp.com/docs/en/data-sheet/PCF85263A.pdf" H 8500 4600 50  0001 
 	1    8500 4650
 	1    0    0    -1  
 $EndComp
+Text Label 1650 2600 0    50   ~ 0
+TXD0
+Text Label 1650 2700 0    50   ~ 0
+RXD0
+Text Label 1350 2600 2    50   ~ 0
+DIN
+Text Label 1350 2700 2    50   ~ 0
+DOUT
+Text Label 1000 1250 2    50   ~ 0
+DIN
+Wire Wire Line
+	1350 2600 1650 2600
+Wire Wire Line
+	1350 2700 1650 2700
+Text Label 1650 2800 0    50   ~ 0
+SPI_MISO
+Text Label 1650 2900 0    50   ~ 0
+SPI_MOSI
+Text Label 1650 3000 0    50   ~ 0
+SPI_SCK
+Text Label 1000 1350 2    50   ~ 0
+DOUT
+Text Label 1650 3100 0    50   ~ 0
+PB4
+Wire Wire Line
+	1500 2300 1500 2250
+Connection ~ 1500 2300
+$Comp
+L mycomponents:Xbee3 JP1
+U 1 1 604F6392
+P 1500 1550
+F 0 "JP1" H 1600 2150 45  0000 C CNN
+F 1 "Xbee3" V 1500 1550 45  0000 C CNN
+F 2 "myfootprint:XBEE-20_THT" H 1300 900 20  0001 C CNN
+F 3 "https://www.digi.com/resources/library/data-sheets/ds_xbee-3-zigbee-3" H 1500 1550 50  0001 C CNN
+	1    1500 1550
+	1    0    0    -1  
+$EndComp
+Text Label 2000 1550 0    50   ~ 0
+X_SSEL
+Text Label 2000 1450 0    50   ~ 0
+X_CLK
+Text Label 2000 1350 0    50   ~ 0
+X_MISO
+Text Label 2000 1250 0    50   ~ 0
+X_MOSI
+Text Label 1350 3100 2    50   ~ 0
+X_SSEL
+Text Label 1350 3000 2    50   ~ 0
+X_CLK
+Text Label 1350 2800 2    50   ~ 0
+X_MISO
+Text Label 1350 2900 2    50   ~ 0
+X_MOSI
+Wire Wire Line
+	1350 2800 1650 2800
+Wire Wire Line
+	1350 2900 1650 2900
+Wire Wire Line
+	1350 3000 1650 3000
+Wire Wire Line
+	1650 3100 1350 3100
 $EndSCHEMATC
