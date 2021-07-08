@@ -23,7 +23,9 @@ It was designed with a focus on energy efficiency and robustness.
     * Energy efficiency (node power-down): >= 65%
     * Energy efficiency (node active): >= 80%
     * Optimized for low-power mode (<100mA)
-* Xbee socket with connected sleep-request and sleep-indicator pins (incl. pull-down resistors)
+* Xbee radio socket
+    * UART and SPI connected
+    * sleep-request and sleep-indicator pins connected
 * Two low-current user LEDs (can be disconnected via cut-through solder jumpers)
 * Two solder jumpers to enable bridging of UART0 and UART1 (for loopback self-tests)
 * Onboard resistor divider for ADC self-test 
