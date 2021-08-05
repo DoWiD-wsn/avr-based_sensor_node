@@ -77,72 +77,74 @@ If you use the [XCTU](https://www.digi.com/products/embedded-systems/digi-xbee/d
 Parameters not mentioned in the list below are left at their initial/default value.
 
 * **Networking**
-    * _CE_ (Device Role)  
+    * `CE` (_device role_)  
         set to `0` (join network).
-    * _ID_ (extended PAN ID)  
+    * `ID` (_extended PAN ID_)  
         set to a defined address, e.g., `FEDCBA9876543210`.
 
 * **Discovery Options**
-    * _NI_ (node identifier)  
+    * `NI` (_node identifier_)  
         you can set a user-defined name; we use `SNx` for our devices where `x` is a consecutive number.
 
 * **RF Interfacing**
-    * _PL_ (TX power level)  
+    * `PL` (_TX power level_)  
         to save energy, we use the lowest value `0` (-5 dBm).
 
 * **Sleep Settings**
-    * _SM_ (sleep mode)  
+    * `SM` (_sleep mode_)  
         to enable the sleep mode, set this value to `1` (pin hibernate).  
         Be careful to have the sleep-request pin at the right logic level; otherwise the XBee goes to sleep and will not be accessible anymore!
 
 * **Bluetooth Options**
     * We use the BLE interface during development to have an easy access to the XBee's setting via the [Digi XBee mobile app](https://www.digi.com/products/embedded-systems/digi-xbee/digi-xbee-tools/digi-xbee-mobile-app).  
         However, in the actual deployment, the BLE interface is deactivated to save energy and for security reasons.
-    * _BT_ (Bluetooth enable)  
+    * `BT` (_Bluetooth enable_)  
         activate the BLE interface by setting this parameter to `1` (you will be asked to set a BLE password).
-    * _BI_ (Bluetooth identifier)  
+    * `BI` (_Bluetooth identifier_)  
         optionally, a user-defined BLE identifier can be set to easily identify the single XBees in the mobile app.  
         We use `XBee SNx` where the `SNx` part matches the _NI_ described above.  
         The prefix `XBee` is used to filter the available Bluetooth devices in the mobile app (i.e., only show Bluetooth devices whose identifier starts with `XBee`).
-    * _BP_ (Bluetooth power)  
+    * `BP` (_Bluetooth power_)  
         to save energy, we use the lowest value `0` (-20 dBm).
 
 * **API Configuration**
-    * _AP_ (API enable)  
+    * `AP` (_API enable_)  
         we use the XBee in API mode, therefore, set this parameter to `1` (API mode without escapes).
 
 * **UART Interface**
     * We use the default setting of the UART interface (i.e., 9600 8N1).
-    * _BD_ (UART baud rate)  
+    * `BD` (_UART baud rate_)  
         set to `3` (9600 b/s)
-    * _NB_ (parity)  
+    * `NB` (_UART parity_)  
         set to `0` (no parity)
-    * _SB_ (stop bits)  
+    * `SB` (_UART stop bits_)  
         set to `0` (one stop bit)
 
 * **I/O Settings**
     * To save energy, we deactivate the GPIOs usually used for status information.  
         However, be careful to leave the sleep request and asleep indicator assigned, especially when using pin hibernation!
-    * _D5_ (DIO5/Associate Configuration)  
+    * `D5` (_DIO5/Associate Configuration_)  
         set to `0` (disabled)
-    * _D8_ (DIO8/Sleep_Rq)  
+    * `D8` (_DIO8/Sleep_Rq_)  
         set to `1` (DTR/Sleep_Rq)
-    * _D9_ (DIO9/Sleep Indicator)  
+    * `D9` (_DIO9/Sleep Indicator_)  
         set to `1` (Awake/Asleep indicator)
-    * _P0_ (DIO10/RSSI Configuration)  
+    * `P0` (_DIO10/RSSI Configuration_)  
         set to `0` (disabled)
 
 
 ### Resources ###
 
-**XBee firmwares**:
+If you face troubles with the XBee module, have a look at the [common XBee mistakes](https://www.faludi.com/projects/common-xbee-mistakes/) summary.
+
+#### XBee firmwares ####
+
 * [Zigbee](https://www.digi.com/products/embedded-systems/digi-xbee/rf-modules/2-4-ghz-rf-modules/xbee3-zigbee-3)
 * [802.15.4](https://www.digi.com/products/embedded-systems/digi-xbee/rf-modules/2-4-ghz-rf-modules/xbee3-802-15-4)
 * [Digimesh](https://www.digi.com/products/embedded-systems/digi-xbee/rf-modules/2-4-ghz-rf-modules/xbee3-digimesh-2-4)
 
-**XBee libraries**:
+#### XBee libraries ####
+
 * [XBee mbed Library](https://os.mbed.com/teams/Digi-International-Inc/code/XBeeLib/)
 * [Digi XBee Ansi C Library](https://github.com/digidotcom/xbee_ansic_library/)
 * [XBee-arduino](https://github.com/andrewrapp/xbee-arduino)
-
-If you face troubles with the XBee module, have a look at the [common XBee mistakes](https://www.faludi.com/projects/common-xbee-mistakes/) summary.
