@@ -99,9 +99,9 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:zoom="1.7311021"
-     inkscape:cx="289.84214"
-     inkscape:cy="186.09931"
+     inkscape:zoom="13.848817"
+     inkscape:cx="313.72735"
+     inkscape:cy="228.11558"
      inkscape:window-x="0"
      inkscape:window-y="27"
      inkscape:window-maximized="1"
@@ -530,65 +530,6 @@
      id="circle704" />
   <text
      style="font-size:524.934021px;text-anchor:middle;opacity:0;fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:59.05509949;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
-     id="text798"
-     lengthAdjust="spacingAndGlyphs"
-     font-size="524.934"
-     textLength="2813.9299"
-     y="9720.0801"
-     x="20422.4"
-     transform="matrix(1.664392,0,0,1.664392,-478.6393,5089.023)">2021-03</text>
-  <text
-     style="font-size:524.934021px;text-anchor:middle;opacity:0;fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:59.05509949;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
-     id="text920"
-     lengthAdjust="spacingAndGlyphs"
-     font-size="524.934"
-     textLength="1501.59"
-     y="3295.0801"
-     x="27897.4"
-     transform="matrix(1.664392,0,0,1.664392,-478.6393,5089.023)">OWI1</text>
-  <text
-     style="font-size:524.934021px;text-anchor:middle;opacity:0;fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:59.05509949;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
-     id="text946"
-     lengthAdjust="spacingAndGlyphs"
-     font-size="524.934"
-     textLength="3132.6399"
-     y="3295.0801"
-     x="18047.4"
-     transform="matrix(1.664392,0,0,1.664392,-478.6393,5089.023)">COM/GPIO</text>
-  <text
-     style="font-size:524.934021px;text-anchor:middle;opacity:0;fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:59.05509949;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
-     id="text964"
-     lengthAdjust="spacingAndGlyphs"
-     font-size="524.934"
-     textLength="1351.61"
-     y="8895.0801"
-     x="20422.4"
-     transform="matrix(1.664392,0,0,1.664392,-478.6393,5089.023)">V1.0</text>
-  <path
-     style="fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:98.29083252;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
-     inkscape:connector-curvature="0"
-     id="path966"
-     d="m 32512.94,19206.395 218.036,655.77 218.035,-655.77" />
-  <g
-     id="g1244">
-    <path
-       d="m 33511.575,19862.165 h -374.488"
-       id="path968"
-       inkscape:connector-curvature="0"
-       style="fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:98.29083252;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1" />
-    <path
-       d="m 33323.499,19862.165 v -655.77 l -61.582,93.206 -63.247,63.247 -61.583,31.623"
-       id="path970"
-       inkscape:connector-curvature="0"
-       style="fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:98.29083252;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1" />
-  </g>
-  <path
-     style="fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:98.29083252;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
-     inkscape:connector-curvature="0"
-     id="path972"
-     d="m 33792.858,19798.919 29.959,31.623 -29.959,31.623 -31.624,-31.623 31.624,-31.623 v 63.246" />
-  <text
-     style="font-size:524.934021px;text-anchor:middle;opacity:0;fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:59.05509949;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
      id="text976"
      lengthAdjust="spacingAndGlyphs"
      font-size="524.934"
@@ -863,15 +804,6 @@
      inkscape:connector-curvature="0"
      id="path1080"
      d="m 36351.028,15040.422 61.583,-63.247 124.829,-186.412 63.247,-124.829 61.583,-188.076 63.246,-311.242 v -249.658 l -63.246,-311.242 -61.583,-188.076 -63.247,-124.829 -124.829,-186.412 -61.583,-63.247" />
-  <text
-     style="font-size:524.934021px;text-anchor:middle;opacity:0;fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:59.05509949;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
-     id="text1132"
-     lengthAdjust="spacingAndGlyphs"
-     font-size="524.934"
-     textLength="1614.08"
-     y="3370.0801"
-     x="10022.4"
-     transform="matrix(1.664392,0,0,1.664392,-478.6393,5089.023)">RXD1</text>
   <circle
      style="fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:78.63269806;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
      id="circle1150"
@@ -1148,24 +1080,6 @@
      inkscape:connector-curvature="0"
      id="path1492"
      d="m 49030.366,7875.215 v 872.1413" />
-  <text
-     style="font-size:524.934021px;text-anchor:middle;opacity:0;fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:59.05509949;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
-     id="text1568"
-     lengthAdjust="spacingAndGlyphs"
-     font-size="524.934"
-     textLength="845.42603"
-     y="14795.1"
-     x="21922.4"
-     transform="matrix(1.664392,0,0,1.664392,-478.6393,5089.023)">C4</text>
-  <text
-     style="font-size:524.934021px;text-anchor:middle;opacity:0;fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:59.05509949;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
-     id="text1756"
-     lengthAdjust="spacingAndGlyphs"
-     font-size="524.934"
-     textLength="845.42603"
-     y="6058.0698"
-     x="6922.4199"
-     transform="matrix(1.664392,0,0,1.664392,-478.6393,5089.023)">R3</text>
   <path
      style="fill:#c2c2c2;fill-opacity:0;stroke:#c2c2c2;stroke-width:32.76355743;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
      inkscape:connector-curvature="0"
@@ -1645,7 +1559,7 @@
        y="28185.262"
        x="-7624.8921"
        id="tspan5001"
-       sodipodi:role="line">PC2</tspan></text>
+       sodipodi:role="line">PC2/RDEN</tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1849.32458496px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:173.37417603"
@@ -2446,9 +2360,4 @@
      cy="13939.46"
      cx="40192.195"
      style="fill:#848400;fill-opacity:1;stroke:#848400;stroke-width:0;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1" />
-  <path
-     d="m 34104.092,19270.336 31.624,-31.623 61.582,-31.624 h 156.453 l 63.247,31.624 29.959,31.623 31.623,61.583 v 63.247 l -31.623,93.206 -374.488,374.488 h 406.111"
-     id="path1245"
-     inkscape:connector-curvature="0"
-     style="fill:#008484;fill-opacity:0;stroke:#008484;stroke-width:98.29083252;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1" />
 </svg>
