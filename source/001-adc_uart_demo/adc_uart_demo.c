@@ -7,8 +7,8 @@
  *
  * @file    /001-adc_uart_demo/adc_uart_demo.c
  * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1 $
- * @date    $Date: 2021/05/10 $
+ * @version $Revision: 1.2 $
+ * @date    $Date: 2021/08/09 $
  *****/
 
 
@@ -43,12 +43,22 @@ int main(void) {
         vcc = adc_read_vcc();
         printf("Vcc  = %.2f V\n", vcc);
         /* Supply voltage in volts (V) */
-        value = adc_read_input(ADC_CH2);
+        value = adc_read_input(ADC_CH1);
         /* Calculate voltage from value (voltage divider 1:1) */
         vbat = 2.0 * (value * (vcc / 1023.0));
         printf("Vbat = %.2f V\n", vbat);
+        /* Read and print all ADC channels */
+        adc_set_reference(ADC_REFS_VCC);
+        printf("CH0 = %4d\n", adc_read_input(ADC_CH0));
+        printf("CH1 = %4d\n", adc_read_input(ADC_CH1));
+        printf("CH2 = %4d\n", adc_read_input(ADC_CH2));
+        printf("CH3 = %4d\n", adc_read_input(ADC_CH3));
+        printf("CH4 = %4d\n", adc_read_input(ADC_CH4));
+        printf("CH5 = %4d\n", adc_read_input(ADC_CH5));
+        printf("CH6 = %4d\n", adc_read_input(ADC_CH6));
+        printf("CH7 = %4d\n", adc_read_input(ADC_CH7));
         printf("\n");
-        // Update once per second
+        /* Update once per second */
         _delay_ms(1000);
     }
 
