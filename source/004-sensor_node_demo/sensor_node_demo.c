@@ -29,10 +29,10 @@
 #define ENABLE_XBEE_V               (1)     /**< Enable the XBEE radio supply voltage (V) measurement (via UART) */
 #define ENABLE_103JT_T              (1)     /**< Enable the 103JT thermistor temperature (T) measurement (via ADC) */
 #define ENABLE_TMP275_T             (1)     /**< Enable the TMP275 sensor temperature (T) measurement (via TWI) */
-#define ENABLE_DS18B20_T            (1)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_STEMMA_H             (1)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
-#define ENABLE_AM2302_T             (0)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_AM2302_H             (0)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
+#define ENABLE_DS18B20_T            (0)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_STEMMA_H             (0)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
+#define ENABLE_AM2302_T             (1)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_AM2302_H             (1)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
 #define ENABLE_RUNTIME              (1)     /**< Enable the transmission of the last runtime value */
 #define ENABLE_INCIDENT             (1)     /**< Enable the transmission of the cumulative incident counter */
 #define ENABLE_REBOOT               (1)     /**< Enable the transmission of the last reset source (MCUSR) */
@@ -764,6 +764,8 @@ int main(void) {
         /* Reset the Xbee buffer */
         xbee_rx_flush();
         xbee_tx_flush();
+        /* Set the measurements count in data structure */
+        msg.struc.cnt = index;
         /* Check Xbee module connection */
         retries = 0;
         while(xbee_is_connected() != XBEE_RET_OK) {
