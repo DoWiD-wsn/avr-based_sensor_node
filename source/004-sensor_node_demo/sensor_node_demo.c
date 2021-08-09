@@ -29,10 +29,10 @@
 #define ENABLE_XBEE_V               (1)     /**< Enable the XBEE radio supply voltage (V) measurement (via UART) */
 #define ENABLE_103JT_T              (1)     /**< Enable the 103JT thermistor temperature (T) measurement (via ADC) */
 #define ENABLE_TMP275_T             (1)     /**< Enable the TMP275 sensor temperature (T) measurement (via TWI) */
-#define ENABLE_DS18B20_T            (0)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_STEMMA_H             (0)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
-#define ENABLE_AM2302_T             (1)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_AM2302_H             (1)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
+#define ENABLE_DS18B20_T            (1)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_STEMMA_H             (1)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
+#define ENABLE_AM2302_T             (0)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_AM2302_H             (0)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
 #define ENABLE_RUNTIME              (1)     /**< Enable the transmission of the last runtime value */
 #define ENABLE_INCIDENT             (1)     /**< Enable the transmission of the cumulative incident counter */
 #define ENABLE_REBOOT               (1)     /**< Enable the transmission of the last reset source (MCUSR) */
@@ -161,6 +161,9 @@ int main(void) {
     /* Temporary variable for sensor measurements */
     float measurement = 0.0;
 #endif
+#if (ENABLE_AM2302_T && ENABLE_AM2302_H)
+    float measurement2 = 0.0;
+#endif
 #if (ENABLE_MCU_V || ENABLE_BAT_V)
     float vcc = 0.0;
 #endif
@@ -194,7 +197,9 @@ int main(void) {
     uint16_t inc_am2302 = 0;        /* Incident counter for AM2302 functions */
     uint8_t en_am2302 = 0;          /* AM2302 is available (1) or has failed (0) */
 #endif
+#if ENABLE_INCIDENT
     uint16_t inc_sum = 0;           /* Total incident counter (sum of others) */
+#endif
     
     /* Disable unused hardware modules */
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
@@ -616,7 +621,44 @@ int main(void) {
         }
 #endif
 
-#if ENABLE_AM2302_T
+/* Since AM2302 allows only one result query per 2 seconds, we need to
+ * handle three distinct cases: (1) T&H, (2) T, (3) H
+ */
+#if (ENABLE_AM2302_T && ENABLE_AM2302_H)
+        /*** AM2302 (T & H) ***/
+        if(en_am2302) {
+            /* Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
+            if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
+                printf("... AM2302 temperature: %.2f\n", measurement);
+                printf("... AM2302 humidity: %.2f\n", measurement2);
+                
+                /* Pack measurement into msg as fixed-point number */
+                /* Temperature */
+                msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_AIR;
+                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+                index++;
+                /* Humidity */
+                msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_AIR;
+                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+                index++;
+                
+                /* Decrement incident counter */
+                if(inc_am2302 > 0) {
+                    inc_am2302--;
+                }
+            } else {
+                printf("... AM2302 temperature & humidity: FAILED!\n");
+                /* Increment incident counter */
+                if(inc_am2302 < INCIDENT_SINGLE_MAX) {
+                    inc_am2302++;
+                } else {
+                    en_am2302 = 0;
+                }
+            }
+        }
+#endif
+
+#if (ENABLE_AM2302_T && !ENABLE_AM2302_H)
         /*** AM2302 (T) ***/
         if(en_am2302) {
             /* Temperature in degree Celsius (°C) */
@@ -642,7 +684,7 @@ int main(void) {
         }
 #endif
         
-#if ENABLE_AM2302_H
+#if (!ENABLE_AM2302_T && ENABLE_AM2302_H)
         /*** AM2302 (H) ***/
         if(en_am2302) {
             /* Relative humidity in percent (% RH) */
