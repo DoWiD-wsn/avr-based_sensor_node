@@ -61,6 +61,19 @@ void get_mcusr(void) {
 
 
 /*!
+ * Sleep function with seconds delay.
+ *
+ * @param[in]   time    Sleep time in seconds
+ */
+void _delay_s(uint8_t time) {
+    volatile uint8_t cnt;
+    for(cnt=0; cnt<time; cnt++) {
+        _delay_ms(1000);
+    }
+}
+
+
+/*!
  * Main function of the demo application.
  */
 int main(void) {
@@ -89,15 +102,15 @@ int main(void) {
 
     /***** MAIN ROUTINE ***********************************************/
     /* 1.) FULL ON */
-    _delay_ms(TIME_IN_MODE);
+    _delay_s(TIME_IN_MODE);
     
     /* 2.) Deactivate diagnostics */
     diag_disable();
-    _delay_ms(TIME_IN_MODE);
+    _delay_s(TIME_IN_MODE);
     
     /* 3.) Put XBee to sleep */
     xbee_sleep_enable();
-    _delay_ms(TIME_IN_MODE);
+    _delay_s(TIME_IN_MODE);
     
     /* 4.) Put MCU to power-down mode */
     sleep_enable();
