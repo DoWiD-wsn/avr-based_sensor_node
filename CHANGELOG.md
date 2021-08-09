@@ -7,9 +7,14 @@ However, the major and minor number are used to express the version of the hardw
 ## [dev]
 ### Added
 - Added SPI signals from Xbee to MCU for future radio extensions
+- MOSFET to enable/disable diagnostic voltage dividers (via PC2; active high)
+- Bridged solder jumper to disable diagnostic voltage dividers if not needed
 ### Changed
 - Switched PCF85263A from 10-pin to 8-pin TSSOP (easier to acquire on the market)
+- Changed diagnostic voltage divider resistors to 10k (to have a more stable voltage level)
 ### Removed
+- Capacitors for diagnostic voltage dividers
+- Legacy pull-up resistors R12 and R13
 
 ## [1.2.0] - 2021-06-04
 ### Added
