@@ -276,19 +276,60 @@ DHT_RET_t dht_get_humidity(DHT_t* dev, float* humidity) {
  * @return      OK* in case of success; ERROR* otherwise
  */
 DHT_RET_t dht_get_temperature_humidity(DHT_t* dev, float* temperature, float* humidity) {
-    DHT_RET_t ret;
-    /* Read the temperature */
-    ret = dht_get_temperature(dev, temperature);
-    /* Check the return value */
-    if(ret < DHT_RET_OK) {
+    float tmp1,tmp2;
+    /* Perform a low level read from the sensor */
+    DHT_RET_t ret = _read(dev);
+    if(ret >= DHT_RET_OK) {
+        /* Reading temperature format depends on sensor type */
+        switch(dev->type) {
+            case DHT_DEV_DHT11:
+                tmp1 = dev->data[2];
+                if (dev->data[3] & 0x80) {
+                    tmp1 = -1 - tmp1;
+                }
+                tmp1 += (dev->data[3] & 0x0F) * 0.1;
+                break;
+            case DHT_DEV_DHT12:
+                tmp1 = dev->data[2];
+                tmp1 += (dev->data[3] & 0x0F) * 0.1;
+                if (dev->data[2] & 0x80) {
+                    tmp1 *= -1;
+                }
+                break;
+            case DHT_DEV_DHT21:
+            case DHT_DEV_DHT22:
+                tmp1 = ((int16_t)(dev->data[2] & 0x7F) << 8) | dev->data[3];
+                tmp1 *= 0.1;
+                if (dev->data[2] & 0x80) {
+                    tmp1 *= -1;
+                }
+                break;
+            default:
+                /* Unsupported/unknown sensor device */
+                return DHT_RET_ERROR_TYPE;
+        }
+        /* Reading humidity format depends on sensor type */
+        switch(dev->type) {
+            case DHT_DEV_DHT11:
+            case DHT_DEV_DHT12:
+                tmp2 = dev->data[0] + dev->data[1] * 0.1;
+                break;
+            case DHT_DEV_DHT21:
+            case DHT_DEV_DHT22:
+                tmp2 = ((int16_t)(dev->data[0]) << 8) | dev->data[1];
+                tmp2 *= 0.1;
+                break;
+            default:
+                /* Unsupported/unknown sensor device */
+                return DHT_RET_ERROR_TYPE;
+        }
+    } else {
+        /* Reading the sensor failed */
         return ret;
     }
-    /* Read the humidity */
-    ret = dht_get_humidity(dev, humidity);
-    /* Check the return value */
-    if(ret < DHT_RET_OK) {
-        return ret;
-    }
+    /* Return the acquired temperature and humidity with success */
+    *temperature = tmp1;
+    *humidity = tmp2;
     /* Read was successful */
     return DHT_RET_OK;
 }
