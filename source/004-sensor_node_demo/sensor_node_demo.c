@@ -31,8 +31,8 @@
 #define ENABLE_TMP275_T             (1)     /**< Enable the TMP275 sensor temperature (T) measurement (via TWI) */
 #define ENABLE_DS18B20_T            (0)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
 #define ENABLE_STEMMA_H             (0)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
-#define ENABLE_AM2302_T             (0)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_AM2302_H             (0)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
+#define ENABLE_AM2302_T             (1)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_AM2302_H             (1)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
 #define ENABLE_RUNTIME              (1)     /**< Enable the transmission of the last runtime value */
 #define ENABLE_INCIDENT             (1)     /**< Enable the transmission of the cumulative incident counter */
 #define ENABLE_REBOOT               (1)     /**< Enable the transmission of the last reset source (MCUSR) */
@@ -238,7 +238,7 @@ int main(void) {
 #endif
     
     /* Initialize Xbee 3 (uses UART0) */
-    //xbee_init(9600UL);
+    xbee_init(9600UL);
     
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
@@ -345,23 +345,23 @@ int main(void) {
 #endif
 
     /* Reset the Xbee buffer */
-    //xbee_rx_flush();
-    //xbee_tx_flush();
+    xbee_rx_flush();
+    xbee_tx_flush();
     /* Check Xbee module connection */
-    //uint32_t retries = 0;
+    uint32_t retries = 0;
     /* Check Xbee module connection */
-    //while(xbee_is_connected() != XBEE_RET_OK) {
-    //    /* Check if timeout [s] has been reached (counter in [ms]) */
-    //    if(retries >= (XBEE_JOIN_TIMEOUT*1000)) {
-    //        printf("Couldn't connect to the network ... aborting!\n");
-    //        /* Wait for watchdog reset */
-    //        wait_for_wdt_reset();
-    //    } else {
-    //        /* Wait for some time */
-    //        retries += XBEE_JOIN_TIMEOUT_DELAY;
-    //        _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
-    //    }
-    //}
+    while(xbee_is_connected() != XBEE_RET_OK) {
+        /* Check if timeout [s] has been reached (counter in [ms]) */
+        if(retries >= (XBEE_JOIN_TIMEOUT*1000)) {
+            printf("Couldn't connect to the network ... aborting!\n");
+            /* Wait for watchdog reset */
+            wait_for_wdt_reset();
+        } else {
+            /* Wait for some time */
+            retries += XBEE_JOIN_TIMEOUT_DELAY;
+            _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
+        }
+    }
     /* Print status message */
     printf("... ZIGBEE connected (variable message size; maximum = %d bytes)\n", SEN_MSG_SIZE_MAX);
     printf("\n");
@@ -400,11 +400,11 @@ int main(void) {
         }
         
         /* Wake-up xbee */
-        //if(xbee_sleep_disable() != XBEE_RET_OK) {
-        //    printf("Couldn't wake-up xbee radio ... aborting!\n");
-        //    /* Wait for watchdog reset */
-        //    wait_for_wdt_reset();
-        //}
+        if(xbee_sleep_disable() != XBEE_RET_OK) {
+            printf("Couldn't wake-up xbee radio ... aborting!\n");
+            /* Wait for watchdog reset */
+            wait_for_wdt_reset();
+        }
         
         /* Reset the TWI */
         i2c_reset();
@@ -615,27 +615,6 @@ int main(void) {
             }
         }
 #endif
-        
-#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
-        /*** AM2302 ***/
-        if(en_am2302) {
-            /* Update sensor readings */
-            if(dht_read(&am2302) == DHT_RET_OK) {
-                /* Decrement incident counter */
-                if(inc_am2302 > 0) {
-                    inc_am2302--;
-                }
-            } else {
-                printf("... AM2302 update: FAILED!\n");
-                /* Increment incident counter */
-                if(inc_am2302 < INCIDENT_SINGLE_MAX) {
-                    inc_am2302++;
-                } else {
-                    en_am2302 = 0;
-                }
-            }
-        }
-#endif
 
 #if ENABLE_AM2302_T
         /*** AM2302 (T) ***/
@@ -741,58 +720,58 @@ int main(void) {
 #endif
         
         /* Reset the Xbee buffer */
-        //xbee_rx_flush();
-        //xbee_tx_flush();
+        xbee_rx_flush();
+        xbee_tx_flush();
         /* Check Xbee module connection */
-        //retries = 0;
-        //while(xbee_is_connected() != XBEE_RET_OK) {
+        retries = 0;
+        while(xbee_is_connected() != XBEE_RET_OK) {
             /* Check if timeout [s] has been reached (counter in [ms]) */
-        //    if(retries >= (XBEE_JOIN_TIMEOUT*1000)) {
-        //        printf("Couldn't re-connect to the network ... aborting!\n");
+            if(retries >= (XBEE_JOIN_TIMEOUT*1000)) {
+                printf("Couldn't re-connect to the network ... aborting!\n");
                 /* Wait for watchdog reset */
-        //        wait_for_wdt_reset();
-        //    } else {
+                wait_for_wdt_reset();
+            } else {
                 /* Wait for some time */
-        //        retries += XBEE_JOIN_TIMEOUT_DELAY;
-        //        _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
-        //    }
-        //}
+                retries += XBEE_JOIN_TIMEOUT_DELAY;
+                _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
+            }
+        }
         
         /* Send the measurement to the CH */
-        //int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, msg.byte, SEN_MSG_SIZE(index), 0x00);
-        //if(ret != XBEE_RET_OK) {
-            //printf("ERROR sending message (%d)!\n",ret);
-            ///* Increment incident counter */
-            //if(inc_xbee < INCIDENT_SINGLE_MAX) {
-                ///* Severe issue, increment by 2 */
-                //inc_xbee += 2;
-            //} else {
-                ///* Wait for watchdog reset */
-                //wait_for_wdt_reset();
-            //}
-        //}
+        int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, msg.byte, SEN_MSG_SIZE(index), 0x00);
+        if(ret != XBEE_RET_OK) {
+            printf("ERROR sending message (%d)!\n",ret);
+            /* Increment incident counter */
+            if(inc_xbee < INCIDENT_SINGLE_MAX) {
+                /* Severe issue, increment by 2 */
+                inc_xbee += 2;
+            } else {
+                /* Wait for watchdog reset */
+                wait_for_wdt_reset();
+            }
+        }
         /* Wait until the xbee/uart0 TX buffer is empty */
-        //retries = 0;
-        //while(xbee_tx_cnt()>0) {
-            ///* Check if timeout has been reached */
-            //if(retries >= 100) {
-                //printf("UART0 TX buffer didn't become empty ... aborting!\n");
-                ///* Wait for watchdog reset */
-                //wait_for_wdt_reset();
-            //} else {
-                ///* Wait for some time */
-                //retries++;
-                //_delay_ms(1);
-            //}
-        //}
-        //printf("%d sensor values sent! (#%d)\n\n",index,msg.struc.time++);
+        retries = 0;
+        while(xbee_tx_cnt()>0) {
+            /* Check if timeout has been reached */
+            if(retries >= 100) {
+                printf("UART0 TX buffer didn't become empty ... aborting!\n");
+                /* Wait for watchdog reset */
+                wait_for_wdt_reset();
+            } else {
+                /* Wait for some time */
+                retries++;
+                _delay_ms(1);
+            }
+        }
+        printf("%d sensor values sent! (#%d)\n\n",index,msg.struc.time++);
         
         /* Send xbee to sleep */
-        //if(xbee_sleep_enable() != XBEE_RET_OK) {
-            //printf("Couldn't send xbee radio to sleep ... aborting!\n");
-            ///* Wait for watchdog reset */
-            //wait_for_wdt_reset();
-        //}
+        if(xbee_sleep_enable() != XBEE_RET_OK) {
+            printf("Couldn't send xbee radio to sleep ... aborting!\n");
+            /* Wait for watchdog reset */
+            wait_for_wdt_reset();
+        }
         
 #if (ENABLE_ADC_SELF || ENABLE_MCU_V || ENABLE_BAT_V || ENABLE_103JT_T)
         /* Disable ADC */
