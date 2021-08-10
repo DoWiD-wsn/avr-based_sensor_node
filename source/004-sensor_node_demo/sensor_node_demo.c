@@ -18,16 +18,16 @@
 
 
 /*** DEMO CONFIGURATION ***/
-#define ENABLE_DBG                  (0)     /**< Enable debug output via UART1 (9600 BAUD) */
-#define UPDATE_INTERVAL             (10)    /**< Update interval [min] */
+#define ENABLE_DBG                  (1)     /**< Enable debug output via UART1 (9600 BAUD) */
+#define UPDATE_INTERVAL             (1)     /**< Update interval [min] */
 
 /*** Enable (1) or disable (0) measurements/sensors ***/
-#define ENABLE_ADC_SELF             (1)     /**< Enable the ADC self-test (via ADC) */
+#define ENABLE_ADC_SELF             (0)     /**< Enable the ADC self-test (via ADC) */
 #define ENABLE_MCU_V                (1)     /**< Enable the MCU supply voltage (V) measurement (via ADC) */
-#define ENABLE_BAT_V                (1)     /**< Enable the battery voltage (V) measurement (via ADC) */
+#define ENABLE_BAT_V                (0)     /**< Enable the battery voltage (V) measurement (via ADC) */
 #define ENABLE_XBEE_T               (1)     /**< Enable the XBEE radio temperature (T) measurement (via UART) */
 #define ENABLE_XBEE_V               (1)     /**< Enable the XBEE radio supply voltage (V) measurement (via UART) */
-#define ENABLE_103JT_T              (1)     /**< Enable the 103JT thermistor temperature (T) measurement (via ADC) */
+#define ENABLE_103JT_T              (0)     /**< Enable the 103JT thermistor temperature (T) measurement (via ADC) */
 #define ENABLE_TMP275_T             (1)     /**< Enable the TMP275 sensor temperature (T) measurement (via TWI) */
 #define ENABLE_DS18B20_T            (0)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
 #define ENABLE_STEMMA_H             (0)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
@@ -110,6 +110,7 @@
 #  include "sensors/dht.h"
 #endif
 /* Misc */
+#include "util/diagnostics.h"
 #include "util/fixed_point.h"
 #include "util/sensor_msg.h"
 #if ENABLE_DBG
@@ -245,6 +246,10 @@ int main(void) {
     /* Initialize Xbee 3 (uses UART0) */
     xbee_init(9600UL);
     
+    /* Initialize the diagnostic circuitry */
+    diag_init();
+    diag_disable();
+    
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
     
@@ -357,7 +362,7 @@ int main(void) {
     /* Check Xbee module connection */
     while(xbee_is_connected() != XBEE_RET_OK) {
         /* Check if timeout [s] has been reached (counter in [ms]) */
-        if(retries >= (XBEE_JOIN_TIMEOUT*1000)) {
+        if(retries >= ((uint32_t)XBEE_JOIN_TIMEOUT*1000)) {
             printf("Couldn't connect to the network ... aborting!\n");
             /* Wait for watchdog reset */
             wait_for_wdt_reset();
@@ -403,6 +408,9 @@ int main(void) {
             printf("Couldn't stop RTC ... aborting!\n");
             wait_for_wdt_reset();
         }
+        
+        /* Enable the self-diagnostics */
+        diag_enable();
         
         /* Wake-up xbee */
         if(xbee_sleep_disable() != XBEE_RET_OK) {
@@ -755,7 +763,8 @@ int main(void) {
 #if ENABLE_REBOOT
         /* Last reboot source */
         msg.struc.values[index].type = SEN_MSG_TYPE_REBOOT;
-        msg.struc.values[index].value = MCUSR_dump & 0x0F;
+        /* Update value with MCUSR value (ignoring the JTAG Reset Flag (JTRF)) */
+        msg.struc.values[index].value = fp_float_to_fixed16_10to6(diag_update_rsource(MCUSR_dump & 0x0F));
         index++;
         /* Reset reboot source */
         MCUSR_dump = 0;
@@ -770,7 +779,7 @@ int main(void) {
         retries = 0;
         while(xbee_is_connected() != XBEE_RET_OK) {
             /* Check if timeout [s] has been reached (counter in [ms]) */
-            if(retries >= (XBEE_JOIN_TIMEOUT*1000)) {
+            if(retries >= ((uint32_t)XBEE_JOIN_TIMEOUT*1000)) {
                 printf("Couldn't re-connect to the network ... aborting!\n");
                 /* Wait for watchdog reset */
                 wait_for_wdt_reset();
@@ -798,13 +807,13 @@ int main(void) {
         retries = 0;
         while(xbee_tx_cnt()>0) {
             /* Check if timeout has been reached */
-            if(retries >= 100) {
+            if(retries >= XBEE_TX_TIMEOUT) {
                 printf("UART0 TX buffer didn't become empty ... aborting!\n");
                 /* Wait for watchdog reset */
                 wait_for_wdt_reset();
             } else {
                 /* Wait for some time */
-                retries++;
+                retries += XBEE_TX_TIMEOUT_DELAY;
                 _delay_ms(1);
             }
         }
@@ -821,6 +830,9 @@ int main(void) {
         /* Disable ADC */
         adc_disable();
 #endif
+        
+        /* Disable the self-diagnostics */
+        diag_disable();
         
 #if ENABLE_RUNTIME
         /* Stop timer1 to save runtime measurement */

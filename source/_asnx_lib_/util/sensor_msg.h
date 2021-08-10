@@ -64,7 +64,7 @@ typedef enum {
     /* Special */
     SEN_MSG_TYPE_IGNORE         = 0x00,     /**< Ignore value; uint16; 0 (dec) */
     SEN_MSG_TYPE_INCIDENTS      = 0x01,     /**< Incident counter; uint16; 1 (dec) */
-    SEN_MSG_TYPE_REBOOT         = 0x02,     /**< Reboot source; uint16; 2 (dec) */
+    SEN_MSG_TYPE_REBOOT         = 0x02,     /**< Reboot source; float; 2 (dec) */
     /* Temperature (0x1.) */
     SEN_MSG_TYPE_TEMP_RES       = 0x10,     /**< RESERVED; float; 16 (dec) */
     SEN_MSG_TYPE_TEMP_AIR       = 0x11,     /**< Air temperature; float; 17 (dec) */
