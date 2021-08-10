@@ -25,7 +25,7 @@ hw_io_t rden = {NULL, NULL, NULL, 0};
  */
 void diag_init(void) {
     /* Fill the R_divider enable signal structure */
-    hw_get_io(&rden, &RDEN_DDR, &RDEN_PORT, &RDEN_PIN, RDEN_GPIO);
+    hw_get_io(&rden, &DIAG_RDEN_DDR, &DIAG_RDEN_PORT, &DIAG_RDEN_PIN, DIAG_RDEN_GPIO);
     /* Set the R_divider enable signal to output */
     hw_set_output(&rden);
     /* Set the R_divider enable signal state to low */
@@ -80,4 +80,22 @@ float diag_read_vcc(void) {
  */
 float diag_read_vbat(void) {
     return 2.0 * (adc_read_input(ADC_CH1) * (diag_read_vcc() / 1023.0));
+}
+
+
+/*!
+ * Update the reset-source indicator based on the current MCUSR value.
+ *
+ * @param[in]   mcusr       Current MCUSR value
+ * @return      Updated reset-source indicator
+ */
+float diag_update_rsource(uint8_t mcusr) {
+    static float value = 0.0;
+    /* Calculate new value */
+    value = (value * DIAG_DECAY_RATE) + (float)mcusr;
+    /* Check thresholds */
+    value = (value < DIAG_DECAY_MIN) ? 0.0 : value;
+    value = (value > DIAG_DECAY_MAX) ? DIAG_DECAY_MAX : value;
+    /* Return updated value */
+    return value;
 }
