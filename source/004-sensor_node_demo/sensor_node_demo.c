@@ -12,27 +12,27 @@
  *
  * @file    /004-sensor_node_demo/sensor_node_demo.c
  * @author  Dominik Widhalm
- * @version 1.3.1
+ * @version 1.3.2
  * @date    2021/08/10
  */
 
 
 /*** DEMO CONFIGURATION ***/
-#define ENABLE_DBG                  (1)     /**< Enable debug output via UART1 (9600 BAUD) */
-#define UPDATE_INTERVAL             (1)     /**< Update interval [min] */
+#define ENABLE_DBG                  (0)     /**< Enable debug output via UART1 (9600 BAUD) */
+#define UPDATE_INTERVAL             (10)    /**< Update interval [min] */
 
 /*** Enable (1) or disable (0) measurements/sensors ***/
-#define ENABLE_ADC_SELF             (0)     /**< Enable the ADC self-test (via ADC) */
+#define ENABLE_ADC_SELF             (1)     /**< Enable the ADC self-test (via ADC) */
 #define ENABLE_MCU_V                (1)     /**< Enable the MCU supply voltage (V) measurement (via ADC) */
-#define ENABLE_BAT_V                (0)     /**< Enable the battery voltage (V) measurement (via ADC) */
+#define ENABLE_BAT_V                (1)     /**< Enable the battery voltage (V) measurement (via ADC) */
 #define ENABLE_XBEE_T               (1)     /**< Enable the XBEE radio temperature (T) measurement (via UART) */
 #define ENABLE_XBEE_V               (1)     /**< Enable the XBEE radio supply voltage (V) measurement (via UART) */
-#define ENABLE_103JT_T              (0)     /**< Enable the 103JT thermistor temperature (T) measurement (via ADC) */
+#define ENABLE_103JT_T              (1)     /**< Enable the 103JT thermistor temperature (T) measurement (via ADC) */
 #define ENABLE_TMP275_T             (1)     /**< Enable the TMP275 sensor temperature (T) measurement (via TWI) */
 #define ENABLE_DS18B20_T            (0)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
 #define ENABLE_STEMMA_H             (0)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
-#define ENABLE_AM2302_T             (1)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_AM2302_H             (1)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
+#define ENABLE_AM2302_T             (0)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_AM2302_H             (0)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
 #define ENABLE_RUNTIME              (1)     /**< Enable the transmission of the last runtime value */
 #define ENABLE_INCIDENT             (1)     /**< Enable the transmission of the cumulative incident counter */
 #define ENABLE_REBOOT               (1)     /**< Enable the transmission of the last reset source (MCUSR) */
