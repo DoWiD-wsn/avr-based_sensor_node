@@ -12,8 +12,8 @@
  *
  * @file    /004-sensor_node_demo/sensor_node_demo.c
  * @author  Dominik Widhalm
- * @version 1.3.0
- * @date    2021/08/09
+ * @version 1.3.1
+ * @date    2021/08/10
  */
 
 
@@ -68,6 +68,7 @@
 
 /***** INCLUDES *******************************************************/
 /*** AVR ***/
+#include <avr/eeprom.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
@@ -249,6 +250,11 @@ int main(void) {
     /* Initialize the diagnostic circuitry */
     diag_init();
     diag_disable();
+    /* Check if EEPROM was written before */
+    if(eeprom_read_byte((const uint8_t *)DIAG_DECAY_ADDRESS) != 0xFF) {
+        /* Read the previous reset-source indicator from EEPROM */
+        diag_rsource_set(eeprom_read_float((float *)DIAG_DECAY_ADDRESS));
+    }
     
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
@@ -764,10 +770,15 @@ int main(void) {
         /* Last reboot source */
         msg.struc.values[index].type = SEN_MSG_TYPE_REBOOT;
         /* Update value with MCUSR value (ignoring the JTAG Reset Flag (JTRF)) */
-        msg.struc.values[index].value = fp_float_to_fixed16_10to6(diag_update_rsource(MCUSR_dump & 0x0F));
+        measurement = fp_float_to_fixed16_10to6(diag_rsource_update(MCUSR_dump & 0x0F));
+        msg.struc.values[index].value = measurement;
         index++;
         /* Reset reboot source */
         MCUSR_dump = 0;
+        /* Update reset-source indicator in EEPROM if value > 0 */
+        if(measurement > 0.0) {
+            eeprom_write_float((float *)DIAG_DECAY_ADDRESS,measurement);
+        }
 #endif
         
         /* Reset the Xbee buffer */
