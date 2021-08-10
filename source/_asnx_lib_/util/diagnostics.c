@@ -16,6 +16,8 @@
 /***** GLOBAL VARIABLES ***********************************************/
 /*! GPIO struct for the R_divider enable signal */
 hw_io_t rden = {NULL, NULL, NULL, 0};
+/*! Reset-source value */
+float rsource = 0.0;
 
 
 /***** FUNCTIONS ******************************************************/
@@ -84,18 +86,57 @@ float diag_read_vbat(void) {
 
 
 /*!
+ * Reset the reset-source indicator value.
+ * Uses the global "rsource" variable.
+ */
+void diag_rsource_reset(void) {
+    /* Reset value */
+    rsource = 0.0;
+}
+
+
+/*!
+ * Set the reset-source indicator to a given value.
+ * Uses the global "rsource" variable.
+ *
+ * @param[in]   value       Desired indicator value
+ */
+void diag_rsource_set(float value) {
+    /* Set value */
+    rsource = value;
+}
+
+
+/*!
  * Update the reset-source indicator based on the current MCUSR value.
+ * Uses the global "rsource" variable.
  *
  * @param[in]   mcusr       Current MCUSR value
  * @return      Updated reset-source indicator
  */
-float diag_update_rsource(uint8_t mcusr) {
-    static float value = 0.0;
-    /* Calculate new value */
-    value = (value * DIAG_DECAY_RATE) + (float)mcusr;
+float diag_rsource_update(uint8_t mcusr) {
+    /* Decrease previous value */
+    rsource = (rsource * DIAG_DECAY_RATE);
+    /* Add value based on MCUSR */
+    if(mcusr & _BV(WDRF)) {
+        /* Watchdog */
+        rsource += DIAG_DECAY_WDRF;
+    } else if(mcusr & _BV(BORF)) {
+        /* Brown-out */
+        rsource += DIAG_DECAY_BORF;
+    } else if(mcusr & _BV(EXTRF)) {
+        /* External reset */
+        rsource += DIAG_DECAY_EXTRF;
+    } else if(mcusr & _BV(PORF)) {
+        /* Power-on */
+        rsource += DIAG_DECAY_PORF;
+    }
     /* Check thresholds */
-    value = (value < DIAG_DECAY_MIN) ? 0.0 : value;
-    value = (value > DIAG_DECAY_MAX) ? DIAG_DECAY_MAX : value;
+    if(rsource < DIAG_DECAY_MIN) {
+        rsource = 0.0;
+    } else if(rsource > DIAG_DECAY_MAX) {
+        rsource = DIAG_DECAY_MAX;
+    }
     /* Return updated value */
-    return value;
+    return rsource;
 }

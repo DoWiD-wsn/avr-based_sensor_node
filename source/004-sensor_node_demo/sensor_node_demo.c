@@ -121,6 +121,11 @@
 #endif
 
 
+/***** GLOBAL VARIABLES ***********************************************/
+/*! Previous reset-source indicator */
+float rsource_prev = 0.0;
+
+
 /***** LOCAL FUNCTIONS ************************************************/
 /*!
  * Put a MCUSR register dump into the .noinit section.
@@ -253,7 +258,8 @@ int main(void) {
     /* Check if EEPROM was written before */
     if(eeprom_read_byte((const uint8_t *)DIAG_DECAY_ADDRESS) != 0xFF) {
         /* Read the previous reset-source indicator from EEPROM */
-        diag_rsource_set(eeprom_read_float((float *)DIAG_DECAY_ADDRESS));
+        rsource_prev = eeprom_read_float((float *)DIAG_DECAY_ADDRESS);
+        diag_rsource_set(rsource_prev);
     }
     
     /* Print welcome message */
@@ -770,15 +776,16 @@ int main(void) {
         /* Last reboot source */
         msg.struc.values[index].type = SEN_MSG_TYPE_REBOOT;
         /* Update value with MCUSR value (ignoring the JTAG Reset Flag (JTRF)) */
-        measurement = fp_float_to_fixed16_10to6(diag_rsource_update(MCUSR_dump & 0x0F));
-        msg.struc.values[index].value = measurement;
+        measurement = diag_rsource_update(MCUSR_dump & 0x0F);
+        msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
         index++;
         /* Reset reboot source */
         MCUSR_dump = 0;
         /* Update reset-source indicator in EEPROM if value > 0 */
-        if(measurement > 0.0) {
+        if(measurement != rsource_prev) {
             eeprom_write_float((float *)DIAG_DECAY_ADDRESS,measurement);
         }
+        rsource_prev = measurement;
 #endif
         
         /* Reset the Xbee buffer */

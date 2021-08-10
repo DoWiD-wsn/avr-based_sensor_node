@@ -34,11 +34,21 @@
 
 /* Reset-source decay parameters */
 /*! decay rate (damping per update) */
-#define DIAG_DECAY_RATE                     0.75
+#define DIAG_DECAY_RATE                     0.9
 /*! decay minimum threshold */
-#define DIAG_DECAY_MIN                      0.5
+#define DIAG_DECAY_MIN                      0.1
 /*! decay maximum threshold */
-#define DIAG_DECAY_MAX                      16.0
+#define DIAG_DECAY_MAX                      25.0
+/*! EEPROM address */
+#define DIAG_DECAY_ADDRESS                  0x00
+/*! WDT increment value */
+#define DIAG_DECAY_WDRF                     8.0
+/*! BOD increment value */
+#define DIAG_DECAY_BORF                     4.0
+/*! EXT increment value */
+#define DIAG_DECAY_EXTRF                    2.0
+/*! PWR increment value */
+#define DIAG_DECAY_PORF                     1.0
 
 
 /***** FUNCTION PROTOTYPES ********************************************/
@@ -51,6 +61,8 @@ uint16_t diag_adc_check(void);
 float diag_read_vcc(void);
 float diag_read_vbat(void);
 /* reset-source handling */
-float diag_update_rsource(uint8_t mcusr);
+void diag_rsource_reset(void);
+void diag_rsource_set(float value);
+float diag_rsource_update(uint8_t mcusr);
 
 #endif // _ASNX_DIAG_H_
