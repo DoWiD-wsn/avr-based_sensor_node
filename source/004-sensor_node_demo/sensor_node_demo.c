@@ -162,6 +162,7 @@ int main(void) {
     /*** Local variables ***/
     /* Message data structure */
     SEN_MSG_u msg;
+    msg.struc.time = 0;
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
 #if (ENABLE_BAT_V || ENABLE_XBEE_T || ENABLE_XBEE_V || ENABLE_103JT_T || ENABLE_TMP275_T || ENABLE_DS18B20_T || ENABLE_STEMMA_H || ENABLE_AM2302_T || ENABLE_AM2302_H)
