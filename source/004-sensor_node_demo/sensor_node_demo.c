@@ -555,7 +555,7 @@ int main(void) {
         if(en_tmp275) {
             /* Start a single conversion */
             if(tmp275_set_config(&tmp275, 0xA1) == TMP275_RET_OK) {
-                /* Wait for the conversion to finish (55ms) */
+                /* Wait for the conversion to finish (~55ms; take 60 to be sure) */
                 _delay_ms(60);
                 /* Get temperature in degree Celsius (°C) */
                 if(tmp275_get_temperature(&tmp275, &measurement) == TMP275_RET_OK) {
@@ -826,13 +826,13 @@ int main(void) {
         while(xbee_tx_cnt()>0) {
             /* Check if timeout has been reached */
             if(retries >= XBEE_TX_TIMEOUT) {
-                printf("UART0 TX buffer didn't become empty ... aborting!\n");
+                printf("UART0 TX buffer didn't become empty (still %d bytes) ... aborting!\n",xbee_tx_cnt());
                 /* Wait for watchdog reset */
                 wait_for_wdt_reset();
             } else {
                 /* Wait for some time */
                 retries += XBEE_TX_TIMEOUT_DELAY;
-                _delay_ms(1);
+                _delay_ms(XBEE_TX_TIMEOUT_DELAY);
             }
         }
         printf("%d sensor values sent! (#%d)\n\n",index,msg.struc.time++);
