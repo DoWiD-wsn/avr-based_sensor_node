@@ -659,7 +659,7 @@ int main(void) {
                 index++;
                 /* Humidity */
                 msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_AIR;
-                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement2);
                 index++;
                 
                 /* Decrement incident counter */
