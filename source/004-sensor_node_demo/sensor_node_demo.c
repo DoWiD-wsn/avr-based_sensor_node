@@ -453,8 +453,8 @@ int main(void) {
         /* Constant voltage divider (1:1) */
         msg.struc.values[index].type = SEN_MSG_TYPE_CHK_ADC;
         msg.struc.values[index].value = adc_read_input(ADC_CH0);
-        index++;
         printf("... ADC self-diagnosis: %d\n", msg.struc.values[index].value);
+        index++;
 #endif
        
 #if ENABLE_MCU_V
