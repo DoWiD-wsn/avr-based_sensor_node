@@ -24,9 +24,9 @@
 
 
 /***** DEFINES ********************************************************/
-/*! Use UART blocking (0) or non-blocking (1) functions
- * @note    Use non-blocking mode for now; blocking mode needs major rework */
-#define XBEE_WRITE_NONBLOCKING              (1)
+/*! Use UART blocking (0) or non-blocking (1) write functions */
+#define XBEE_WRITE_NONBLOCKING              (0)
+/* @todo: need rework for blocking-read functions */
 
 /* Xbee sleep-request pin (default) */
 #define XBEE_SLEEP_REQ_DDR                  (DDRC)

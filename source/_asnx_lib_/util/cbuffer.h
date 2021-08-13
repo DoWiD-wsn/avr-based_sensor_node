@@ -20,7 +20,7 @@
 
 /***** MACROS *********************************************************/
 /*! Ring buffer size [byte] */
-#define CBUF_SIZE                   (200)
+#define CBUF_SIZE                   (100)
 /* Buffer status */
 #define CBUF_STAT_NORMAL            (0)     /**< Buffer status normal */
 #define CBUF_STAT_EMPTY             (1)     /**< Buffer status empty */

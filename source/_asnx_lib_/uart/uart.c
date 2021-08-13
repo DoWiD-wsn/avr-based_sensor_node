@@ -503,7 +503,7 @@ uint8_t uart0_read(uint8_t* data, uint16_t len) {
         if(ret == CBUF_RET_OK) {
             /* Copy byte to data array */
             data[i] = tmp;
-        } else {
+        } else if(ret == CBUF_RET_EMPTY) {
             /* Nothing left to pop */
             break;
         }
@@ -531,7 +531,7 @@ uint8_t uart1_read(uint8_t* data, uint16_t len) {
         if(ret == CBUF_RET_OK) {
             /* Copy byte to data array */
             data[i] = tmp;
-        } else {
+        } else if(ret == CBUF_RET_EMPTY) {
             /* Nothing left to pop */
             break;
         }
@@ -685,7 +685,7 @@ ISR(USART0_UDRE_vect) {
     if(ret == CBUF_RET_OK) {
         /* Send byte via UART */
         UDR0 = tmp;
-    } else {
+    } else if(ret == CBUF_RET_EMPTY) {
         /* Clear receive interrupt */
         UCSR0B &= ~(_BV(UDRIE0));
         /* Check if a callback function was defined */
@@ -709,7 +709,7 @@ ISR(USART1_UDRE_vect) {
     if(ret == CBUF_RET_OK) {
         /* Send byte via UART */
         UDR1 = tmp;
-    } else {
+    } else if(ret == CBUF_RET_EMPTY) {
         /* Clear receive interrupt */
         UCSR1B &= ~(_BV(UDRIE1));
         /* Check if a callback function was defined */

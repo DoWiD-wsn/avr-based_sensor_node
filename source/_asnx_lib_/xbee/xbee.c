@@ -47,9 +47,7 @@ void xbee_init(uint32_t baud) {
     /* Initialize the UART interface */
     uart0_init();
     uart0_set_baudrate(baud);
-#if XBEE_WRITE_NONBLOCKING
     uart0_interrupt_enable();
-#endif
     /* Fill the sleep signal GPIO structures (default) */
     hw_get_io(&xbee_sleep_req, &XBEE_SLEEP_REQ_DDR, &XBEE_SLEEP_REQ_PORT, &XBEE_SLEEP_REQ_PIN, XBEE_SLEEP_REQ_GPIO);
     hw_get_io(&xbee_sleep_ind, &XBEE_SLEEP_IND_DDR, &XBEE_SLEEP_IND_PORT, &XBEE_SLEEP_IND_PIN, XBEE_SLEEP_IND_GPIO);
