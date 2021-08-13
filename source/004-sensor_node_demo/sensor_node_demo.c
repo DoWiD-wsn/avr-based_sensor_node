@@ -350,9 +350,8 @@ int main(void) {
     printf("... AMS2302 ready\n");
 #endif
 
-    /* Reset the Xbee buffer */
+    /* Reset the XBee RX buffer */
     xbee_rx_flush();
-    xbee_tx_flush();
     /* Check Xbee module connection */
     uint32_t retries = 0;
     /* Check Xbee module connection */
@@ -469,9 +468,8 @@ int main(void) {
         
 #if ENABLE_XBEE_T
         /*** Xbee3 temperature ***/
-        /* Reset the Xbee buffer */
+        /* Reset the XBee RX buffer */
         xbee_rx_flush();
-        xbee_tx_flush();
         /* Temperature in degree Celsius (°C) */
         if(xbee_cmd_get_temperature(&measurement) == XBEE_RET_OK) {
             printf("... Xbee temperature: %.2f\n", measurement);
@@ -497,9 +495,8 @@ int main(void) {
         
 #if ENABLE_XBEE_V
         /*** Xbee3 supply voltage ***/
-        /* Reset the Xbee buffer */
+        /* Reset the XBee RX buffer */
         xbee_rx_flush();
-        xbee_tx_flush();
         /* Supply voltage in volts (V) */
         if(xbee_cmd_get_vss(&measurement) == XBEE_RET_OK) {
             printf("... Xbee supply voltage: %.2f\n", measurement);
@@ -772,9 +769,8 @@ int main(void) {
         rsource_prev = measurement;
 #endif
         
-        /* Reset the Xbee buffer */
+        /* Reset the XBee RX buffer */
         xbee_rx_flush();
-        xbee_tx_flush();
         /* Set the measurements count in data structure */
         msg.struc.cnt = index;
         /* Check Xbee module connection */
@@ -791,7 +787,6 @@ int main(void) {
                 _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
             }
         }
-        
         /* Send the measurement to the CH */
         int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, msg.byte, SEN_MSG_SIZE(index), 0x00);
         if(ret != XBEE_RET_OK) {
@@ -805,18 +800,21 @@ int main(void) {
                 wait_for_wdt_reset();
             }
         }
-        /* Wait until the xbee/uart0 TX buffer is empty */
-        retries = 0;
-        while(xbee_tx_cnt()>0) {
-            /* Check if timeout has been reached */
-            if(retries >= XBEE_TX_TIMEOUT) {
-                printf("UART0 TX buffer didn't become empty (still %d bytes) ... aborting!\n",xbee_tx_cnt());
-                /* Wait for watchdog reset */
-                wait_for_wdt_reset();
-            } else {
-                /* Wait for some time */
-                retries += XBEE_TX_TIMEOUT_DELAY;
-                _delay_ms(XBEE_TX_TIMEOUT_DELAY);
+        /* Check if non-blocking UART/XBee mode is used */
+        if(XBEE_WRITE_NONBLOCKING == 1) {
+            /* Wait until the xbee/uart0 TX buffer is empty */
+            retries = 0;
+            while(xbee_tx_cnt()>0) {
+                /* Check if timeout has been reached */
+                if(retries >= XBEE_TX_TIMEOUT) {
+                    printf("UART0 TX buffer didn't become empty (still %d bytes) ... aborting!\n",xbee_tx_cnt());
+                    /* Wait for watchdog reset */
+                    wait_for_wdt_reset();
+                } else {
+                    /* Wait for some time */
+                    retries += XBEE_TX_TIMEOUT_DELAY;
+                    _delay_ms(XBEE_TX_TIMEOUT_DELAY);
+                }
             }
         }
         printf("%d sensor values sent! (#%d)\n\n",index,msg.struc.time++);
