@@ -34,7 +34,7 @@
 
 /* Reset-source decay parameters */
 /*! decay rate (damping per update) */
-#define DIAG_DECAY_RATE                     0.95
+#define DIAG_DECAY_RATE                     0.92
 /*! decay minimum threshold */
 #define DIAG_DECAY_MIN                      0.10
 /*! decay maximum threshold */
