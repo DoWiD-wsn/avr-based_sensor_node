@@ -100,7 +100,7 @@ XBEE_RET_t xbee_sleep_enable(void) {
     uint32_t retries = 0;
     while(hw_read_input(&xbee_sleep_ind) == HW_STATE_HIGH) {
         /* Check if timeout [s] has been reached (counter in [ms]) */
-        if(retries >= XBEE_WAKE_TIMEOUT) {
+        if(retries >= ((uint32_t)XBEE_WAKE_TIMEOUT*1000)) {
             /* Couldn't send xbee to sleep */
             return XBEE_RET_ERROR;
         } else {
@@ -126,7 +126,7 @@ XBEE_RET_t xbee_sleep_disable(void) {
     uint32_t retries = 0;
     while(hw_read_input(&xbee_sleep_ind) == HW_STATE_LOW) {
         /* Check if timeout [s] has been reached (counter in [ms]) */
-        if(retries >= XBEE_WAKE_TIMEOUT) {
+        if(retries >= ((uint32_t)XBEE_WAKE_TIMEOUT*1000)) {
             /* Couldn't wake xbee up */
             return XBEE_RET_ERROR;
         } else {
@@ -291,13 +291,14 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
     /* Number of bytes of the response value received */
     uint8_t resp_cnt = 0;
     /* Temporary variables for frame length (depends on value) and timeout */
-    uint16_t len, diff, timeout=0;
+    uint16_t len, diff;
+    uint32_t timeout=0;
     /* Check if first byte in RX buffer is the Frame Delimiter */
     do {
         /* Check if a byte has been received */
         while(uart0_read(&data[0], 1) != 1) {
             /* Check if timeout has been reached */
-            if(timeout >= XBEE_RX_TIMEOUT) {
+            if(timeout >= ((uint32_t)XBEE_RX_TIMEOUT*1000)) {
                 /* No frame was received */
                 return XBEE_RET_ERROR;
             }
@@ -313,7 +314,7 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
     /* Check if 7 more bytes are available already (incl. the length and cmd status) */
     while(uart0_rx_buffer_cnt() < 7) {
         /* Check if timeout has been reached */
-        if(timeout >= XBEE_RX_TIMEOUT) {
+        if(timeout >= ((uint32_t)XBEE_RX_TIMEOUT*1000)) {
             /* No frame was received */
             return XBEE_RET_ERROR;
         }
@@ -356,7 +357,7 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
     /* Check if "diff" (+1 for crc) more bytes are available */
     while(uart0_rx_buffer_cnt() < (diff+1)) {
         /* Check if timeout has been reached */
-        if(timeout >= XBEE_RX_TIMEOUT) {
+        if(timeout >= ((uint32_t)XBEE_RX_TIMEOUT*1000)) {
             /* No frame was received */
             return XBEE_RET_ERROR;
         }
@@ -753,13 +754,14 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
     /* Number of bytes of the response value received */
     uint8_t resp_cnt = 0;
     /* Temporary variables for frame length (depends on value) and timeout */
-    uint16_t len, diff, timeout=0;
+    uint16_t len, diff;
+    uint32_t timeout=0;
     /* Check if first byte in RX buffer is the Frame Delimiter */
     do {
         /* Check if a byte has been received */
         while(uart0_read(&data[0], 1) != 1) {
             /* Check if timeout has been reached */
-            if(timeout >= XBEE_RX_TIMEOUT) {
+            if(timeout >= ((uint32_t)XBEE_RX_TIMEOUT*1000)) {
                 /* No frame was received */
                 return XBEE_RET_ERROR;
             }
@@ -775,7 +777,7 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
     /* Check if 17 more bytes are available already (incl. the length and cmd status) */
     while(uart0_rx_buffer_cnt() < 17) {
         /* Check if timeout has been reached */
-        if(timeout >= XBEE_RX_TIMEOUT) {
+        if(timeout >= ((uint32_t)XBEE_RX_TIMEOUT*1000)) {
             /* No frame was received */
             return XBEE_RET_ERROR;
         }
@@ -830,7 +832,7 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
     /* Check if "diff" (+1 for crc) more bytes are available */
     while(uart0_rx_buffer_cnt() < (diff+1)) {
         /* Check if timeout has been reached */
-        if(timeout >= XBEE_RX_TIMEOUT) {
+        if(timeout >= ((uint32_t)XBEE_RX_TIMEOUT*1000)) {
             /* No frame was received */
             return XBEE_RET_ERROR;
         }
@@ -1166,13 +1168,13 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
     /* Data array for the frame (max. length: 23 bytes) */
     uint8_t data[11] = {0};
     /* Temporary variables for frame length (depends on value) and timeout */
-    uint16_t timeout=0;
+    uint32_t timeout=0;
     /* Check if first byte in RX buffer is the Frame Delimiter */
     do {
         /* Check if a byte has been received */
         while(uart0_read(&data[0], 1) != 1) {
             /* Check if timeout has been reached */
-            if(timeout >= XBEE_RX_TIMEOUT) {
+            if(timeout >= ((uint32_t)XBEE_RX_TIMEOUT*1000)) {
                 /* No frame was received */
                 return XBEE_RET_TIMEOUT;
             }
@@ -1188,7 +1190,7 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
     /* Check if the remaining 10 bytes are available already */
     while(uart0_rx_buffer_cnt() < 10) {
         /* Check if timeout has been reached */
-        if(timeout >= XBEE_RX_TIMEOUT) {
+        if(timeout >= ((uint32_t)XBEE_RX_TIMEOUT*1000)) {
             /* No frame was received */
             return XBEE_RET_TIMEOUT;
         }
@@ -1235,13 +1237,13 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
     /* Data array for the frame (max. length: 23 bytes) */
     uint8_t data[11] = {0};
     /* Temporary variables for frame length (depends on value) and timeout */
-    uint16_t timeout=0;
+    uint32_t timeout=0;
     /* Check if first byte in RX buffer is the Frame Delimiter */
     do {
         /* Check if a byte has been received */
         while(uart0_read(&data[0], 1) != 1) {
             /* Check if timeout has been reached */
-            if(timeout >= XBEE_RX_TIMEOUT) {
+            if(timeout >= ((uint32_t)XBEE_RX_TIMEOUT*1000)) {
                 /* No frame was received */
                 return XBEE_RET_ERROR;
             }
@@ -1257,7 +1259,7 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
     /* Check if the remaining 10 bytes are available already */
     while(uart0_rx_buffer_cnt() < 10) {
         /* Check if timeout has been reached */
-        if(timeout >= XBEE_RX_TIMEOUT) {
+        if(timeout >= ((uint32_t)XBEE_RX_TIMEOUT*1000)) {
             /* No frame was received */
             return XBEE_RET_ERROR;
         }

@@ -34,9 +34,9 @@
 
 /* Reset-source decay parameters */
 /*! decay rate (damping per update) */
-#define DIAG_DECAY_RATE                     0.9
+#define DIAG_DECAY_RATE                     0.95
 /*! decay minimum threshold */
-#define DIAG_DECAY_MIN                      0.1
+#define DIAG_DECAY_MIN                      0.10
 /*! decay maximum threshold */
 #define DIAG_DECAY_MAX                      25.0
 /*! EEPROM address */

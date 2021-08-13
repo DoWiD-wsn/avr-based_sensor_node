@@ -44,18 +44,18 @@
 /*! Join network delay between tries [ms] */
 #define XBEE_JOIN_TIMEOUT_DELAY             (500)
 
-/*! Wake-up timeout [ms] */
-#define XBEE_WAKE_TIMEOUT                   (2000UL)
+/*! Wake-up timeout [s] */
+#define XBEE_WAKE_TIMEOUT                   (25)
 /*! Wake-up delay between tries [ms] */
 #define XBEE_WAKE_TIMEOUT_DELAY             (10)
 
-/*! RX timeout [ms] */
-#define XBEE_RX_TIMEOUT                     (5000UL)
+/*! RX timeout [s] */
+#define XBEE_RX_TIMEOUT                     (15)
 /*! RX delay between tries [ms] */
 #define XBEE_RX_TIMEOUT_DELAY               (100)
 
-/*! TX timeout [ms] */
-#define XBEE_TX_TIMEOUT                     (5000UL)
+/*! TX timeout [s] */
+#define XBEE_TX_TIMEOUT                     (15)
 /*! TX delay between tries [ms] */
 #define XBEE_TX_TIMEOUT_DELAY               (100)
 

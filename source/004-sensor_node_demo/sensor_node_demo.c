@@ -45,23 +45,6 @@
 /*! Incident counter single threshold */
 #define INCIDENT_SINGLE_MAX         (10)
 
-/* Measurement message data indices (derived from enable value above) */
-#define MSG_VALUE_ADC_SELF          (0)
-#define MSG_VALUE_MCU_V             (MSG_VALUE_ADC_SELF  + ENABLE_ADC_SELF)
-#define MSG_VALUE_BAT_V             (MSG_VALUE_MCU_V     + ENABLE_MCU_V)
-#define MSG_VALUE_XBEE_T            (MSG_VALUE_BAT_V     + ENABLE_BAT_V)
-#define MSG_VALUE_XBEE_V            (MSG_VALUE_XBEE_T    + ENABLE_XBEE_T)
-#define MSG_VALUE_103JT_T           (MSG_VALUE_XBEE_V    + ENABLE_XBEE_V)
-#define MSG_VALUE_TMP275_T          (MSG_VALUE_103JT_T   + ENABLE_103JT_T)
-#define MSG_VALUE_DS18B20_T         (MSG_VALUE_TMP275_T  + ENABLE_TMP275_T)
-#define MSG_VALUE_STEMMA_H          (MSG_VALUE_DS18B20_T + ENABLE_DS18B20_T)
-#define MSG_VALUE_AM2302_T          (MSG_VALUE_STEMMA_H  + ENABLE_STEMMA_H)
-#define MSG_VALUE_AM2302_H          (MSG_VALUE_AM2302_T  + ENABLE_AM2302_T)
-#define MSG_VALUE_RUNTIME           (MSG_VALUE_AM2302_H  + ENABLE_AM2302_H)
-#define MSG_VALUE_INCIDENT          (MSG_VALUE_RUNTIME   + ENABLE_RUNTIME)
-#define MSG_VALUE_REBOOT            (MSG_VALUE_INCIDENT  + ENABLE_INCIDENT)
-
-/* Derive number of sensor values to be transmitted (passed to sensor_msg.h) */
 /*! Maximum number of sensor readings per message */
 #define SEN_MSG_NUM_MEASUREMENTS    (14)
 

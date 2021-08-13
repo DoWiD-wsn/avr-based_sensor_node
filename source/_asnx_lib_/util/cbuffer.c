@@ -144,7 +144,7 @@ int8_t cbuf_pop(cbuf_t* cb, uint8_t* byte) {
 int8_t cbuf_getcnt(cbuf_t* cb) {
     /* Check if the pointer is valid */
     if(cb != NULL) {
-        /* Check if buffer is empty */
+        /* Return number of bytes in buffer */
         return cb->cnt;
     }
     /* return error */
