@@ -6,6 +6,12 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
+### Changed
+### Removed
+
+
+## [1.3.0] - 2021-08-09
+### Added
 - Added SPI signals from Xbee to MCU for future radio extensions
 - MOSFET to enable/disable diagnostic voltage dividers (via PC2; active high)
 - Bridged solder jumper to disable diagnostic voltage dividers if not needed
