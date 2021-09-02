@@ -17,7 +17,7 @@ It was designed with a focus on energy efficiency and robustness.
     * one for debug purposes or loopback self-tests
 * Programmable via [6-pin AVR-ISP](https://www.mikrocontroller.net/wikifiles/9/97/Avr-isp-pinout.png) connector
 * On-board [TMP275](docs/datasheets/TMP275.pdf) temperature sensor (I²C)
-* On-board [PCF85263A](docs/datasheets/PCF85263A.pdf) RTC as MCU wake-up source (I²C; INT2)
+* On-board [PCF85263ATT](docs/datasheets/PCF85263A.pdf) RTC as MCU wake-up source (I²C; INT2)
 * Fixed 3.3V DC/DC converter [TPS63031DSKR](docs/datasheets/TPS63031DSKR.pdf)
     * Input voltage range: 1.8V to 5.5V
     * Energy efficiency (node power-down): >= 65%
