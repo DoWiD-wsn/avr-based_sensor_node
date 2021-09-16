@@ -817,7 +817,9 @@ int main(void) {
                 }
             }
         }
-        printf("%d sensor values sent! (#%d)\n\n",index,msg.struc.time++);
+        /* Increment message number ("time") */
+        msg.struc.time++;
+        printf("%d sensor values sent! (#%d)\n\n",index,msg.struc.time);
         
         /* Send xbee to sleep */
         if(xbee_sleep_enable() != XBEE_RET_OK) {
