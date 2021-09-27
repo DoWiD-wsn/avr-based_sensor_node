@@ -40,6 +40,13 @@ typedef enum {
     I2C_RET_ERROR = -1,     /**< ERROR return value */
     I2C_RET_OK = 0          /**< OK return value */
 } I2C_RET_t;
+
+/*! Enumeration for the endianess of data words */
+typedef enum {
+    I2C_ENDIAN_BIG = 1,     /**< big endian */
+    I2C_ENDIAN_LITTLE = 0   /**< little endian */
+} I2C_ENDIAN_t;
+
 /*! Enumeration for the I2C data direction */
 typedef enum {
     I2C_READ = 1,           /**< READ access */
@@ -52,8 +59,18 @@ typedef enum {
 void i2c_init(void);
 void i2c_reset(void);
 I2C_RET_t i2c_is_available(uint8_t addr);
+
+/* Basic I2C functionality */
+I2C_RET_t i2c_stop(void);
+I2C_RET_t i2c_start(uint8_t addr, I2C_DIR_t dir);
+I2C_RET_t i2c_start_wait(uint8_t addr, I2C_DIR_t dir);
+I2C_RET_t i2c_put(uint8_t data);
+I2C_RET_t i2c_get_ack(uint8_t* data);
+I2C_RET_t i2c_get_nack(uint8_t* data);
+
 /* Raw Write/Read */
 I2C_RET_t i2c_write_raw(uint8_t addr, uint8_t value);
+I2C_RET_t i2c_write16_raw(uint8_t addr, uint16_t value);
 I2C_RET_t i2c_read_raw(uint8_t addr, uint8_t* value);
 
 /*** 8-bit register addresses ***/
@@ -69,6 +86,14 @@ I2C_RET_t i2c_read_U16LE(uint8_t addr, uint8_t reg, uint16_t* value);
 I2C_RET_t i2c_read_U16BE(uint8_t addr, uint8_t reg, uint16_t* value);
 I2C_RET_t i2c_read_S16LE(uint8_t addr, uint8_t reg, int16_t* value);
 I2C_RET_t i2c_read_S16BE(uint8_t addr, uint8_t reg, int16_t* value);
+
+/*** Read with endianess ***/
+/* 8-bit register addresses */
+I2C_RET_t i2c_read_U16(uint8_t addr, uint8_t reg, uint16_t* value, I2C_ENDIAN_t endian);
+I2C_RET_t i2c_read_S16(uint8_t addr, uint8_t reg, int16_t* value, I2C_ENDIAN_t endian);
+/* 16-bit register addresses */
+I2C_RET_t i2c_read16_U16(uint8_t addr, uint16_t reg, uint16_t* value, I2C_ENDIAN_t endian);
+I2C_RET_t i2c_read16_S16(uint8_t addr, uint16_t reg, int16_t* value, I2C_ENDIAN_t endian);
 
 /*** 16-bit register addresses ***/
 /* Write */
