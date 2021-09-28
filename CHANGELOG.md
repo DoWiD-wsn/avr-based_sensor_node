@@ -6,6 +6,7 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
+- Software library to support the SHTC3 humidity/temperature sensor
 ### Changed
 ### Removed
 
