@@ -45,8 +45,6 @@
 #define SHTC3_RH_FIRST                  0
 /*! Use clock stretching during measurement (default: 0) */
 #define SHTC3_CLOCK_STRETCHING          0
-/*! Use low-power mode for measurements (default: 1) */
-#define SHTC3_LOW_POWER_MODE            1
 
 /*** I2C commands ***/
 /*! Read ID register */
@@ -77,33 +75,32 @@
 #define SHTC3_COM_MEAS_RHT_CST_LPOW     0x44DE
 
 /*! Actual read command depends on settings */
-#if SHTC3_LOW_POWER_MODE
-#  if SHTC3_RH_FIRST
-#    if SHTC3_CLOCK_STRETCHING
-#      define SHTC3_COM_MEAS      SHTC3_COM_MEAS_RHT_CST_LPOW
-#    else
-#      define SHTC3_COM_MEAS      SHTC3_COM_MEAS_RHT_POL_LPOW
-#    endif
+// Low-power mode
+#if SHTC3_RH_FIRST
+#  if SHTC3_CLOCK_STRETCHING
+#    define SHTC3_COM_MEAS_LPOW     SHTC3_COM_MEAS_RHT_CST_LPOW
 #  else
-#    if SHTC3_CLOCK_STRETCHING
-#      define SHTC3_COM_MEAS      SHTC3_COM_MEAS_TRH_CST_LPOW
-#    else
-#      define SHTC3_COM_MEAS      SHTC3_COM_MEAS_TRH_POL_LPOW
-#    endif
+#    define SHTC3_COM_MEAS_LPOW     SHTC3_COM_MEAS_RHT_POL_LPOW
 #  endif
 #else
-#  if SHTC3_RH_FIRST
-#    if SHTC3_CLOCK_STRETCHING
-#      define SHTC3_COM_MEAS      SHTC3_COM_MEAS_RHT_CST_NORM
-#    else
-#      define SHTC3_COM_MEAS      SHTC3_COM_MEAS_RHT_POL_NORM
-#    endif
+#  if SHTC3_CLOCK_STRETCHING
+#    define SHTC3_COM_MEAS_LPOW     SHTC3_COM_MEAS_TRH_CST_LPOW
 #  else
-#    if SHTC3_CLOCK_STRETCHING
-#      define SHTC3_COM_MEAS      SHTC3_COM_MEAS_TRH_CST_NORM
-#    else
-#      define SHTC3_COM_MEAS      SHTC3_COM_MEAS_TRH_POL_NORM
-#    endif
+#    define SHTC3_COM_MEAS_LPOW     SHTC3_COM_MEAS_TRH_POL_LPOW
+#  endif
+#endif
+// Normal mode
+#if SHTC3_RH_FIRST
+#  if SHTC3_CLOCK_STRETCHING
+#    define SHTC3_COM_MEAS_NORM     SHTC3_COM_MEAS_RHT_CST_NORM
+#  else
+#    define SHTC3_COM_MEAS_NORM     SHTC3_COM_MEAS_RHT_POL_NORM
+#  endif
+#else
+#  if SHTC3_CLOCK_STRETCHING
+#    define SHTC3_COM_MEAS_NORM     SHTC3_COM_MEAS_TRH_CST_NORM
+#  else
+#    define SHTC3_COM_MEAS_NORM     SHTC3_COM_MEAS_TRH_POL_NORM
 #  endif
 #endif
 
@@ -135,13 +132,13 @@ SHTC3_RET_t shtc3_get_id(SHTC3_t* dev, uint16_t *id);
 SHTC3_RET_t shtc3_sleep_enable(SHTC3_t* dev);
 SHTC3_RET_t shtc3_sleep_disable(SHTC3_t* dev);
 /* Sensor readings */
-SHTC3_RET_t shtc3_get_temperature(SHTC3_t* dev, float* temperature);
-SHTC3_RET_t shtc3_get_humidity(SHTC3_t* dev, float* humidity);
-SHTC3_RET_t shtc3_get_temperature_humidity(SHTC3_t* dev, float* temperature, float* humidity);
+SHTC3_RET_t shtc3_get_temperature(SHTC3_t* dev, float* temperature, uint8_t lp_en);
+SHTC3_RET_t shtc3_get_humidity(SHTC3_t* dev, float* humidity, uint8_t lp_en);
+SHTC3_RET_t shtc3_get_temperature_humidity(SHTC3_t* dev, float* temperature, float* humidity, uint8_t lp_en);
 /* Composed functions */
 // start: init + sleep
 SHTC3_RET_t shtc3_start(SHTC3_t* dev, uint8_t address);
 // read: wakeup + measure + sleep
-SHTC3_RET_t shtc3_read(SHTC3_t* dev, float* temperature, float* humidity);
+SHTC3_RET_t shtc3_read(SHTC3_t* dev, float* temperature, float* humidity, uint8_t lp_en);
 
 #endif // _ASNX_SHTC3_H_

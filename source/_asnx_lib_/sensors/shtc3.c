@@ -307,14 +307,17 @@ static float SHTC3_raw2humidity(uint16_t raw) {
  * @param[in]   dev             Pointer to the device structure
  * @param[out]  temperature     Temperature reading in degree Celsius (°C)
  * @param[out]  humidity        Relative humidity reading (%RH)
+ * @param[in]   lp_en           Enable low-power mode (1..enabled/0..disabled)
  * @return      OK in case of success; ERROR otherwise
  */
-SHTC3_RET_t shtc3_get_temperature_humidity(SHTC3_t* dev, float* temperature, float* humidity) {
+SHTC3_RET_t shtc3_get_temperature_humidity(SHTC3_t* dev, float* temperature, float* humidity, uint8_t lp_en) {
 #if SHTC3_CLOCK_STRETCHING==0
     uint8_t timeout = 0;        /* Timeout counter for polling */
 #endif
     uint16_t temp_raw;          /* Raw temperature value from sensor */
     uint16_t humid_raw;         /* Raw humidity value from sensor */
+    /* Measurement command depends on mode setting */
+    uint16_t cmd_meas = lp_en ? SHTC3_COM_MEAS_LPOW : SHTC3_COM_MEAS_NORM;
 
     /* Issue a I2C start with write condition */
     if(i2c_start(dev->address, I2C_WRITE) != I2C_RET_OK) {
@@ -323,12 +326,12 @@ SHTC3_RET_t shtc3_get_temperature_humidity(SHTC3_t* dev, float* temperature, flo
     }
     
     /* Write read command upper byte */
-    if(i2c_put(SHTC3_COM_MEAS >> 8) != I2C_RET_OK) {
+    if(i2c_put(cmd_meas >> 8) != I2C_RET_OK) {
         /* Return ERROR */
         return SHTC3_RET_ERROR;
     }
     /* Write read command lower byte */
-    if(i2c_put(SHTC3_COM_MEAS & 0xFF) != I2C_RET_OK) {
+    if(i2c_put(cmd_meas & 0xFF) != I2C_RET_OK) {
         /* Return ERROR */
         return SHTC3_RET_ERROR;
     }
@@ -395,12 +398,13 @@ SHTC3_RET_t shtc3_get_temperature_humidity(SHTC3_t* dev, float* temperature, flo
  * 
  * @param[in]   dev             Pointer to the device structure
  * @param[out]  temperature     Temperature reading in degree Celsius (°C)
+ * @param[in]   lp_en           Enable low-power mode (1..enabled/0..disabled)
  * @return      OK in case of success; ERROR otherwise
  */
-SHTC3_RET_t shtc3_get_temperature(SHTC3_t* dev, float* temperature) {
+SHTC3_RET_t shtc3_get_temperature(SHTC3_t* dev, float* temperature, uint8_t lp_en) {
     float tmp;
     /* Call reading function */
-    return shtc3_get_temperature_humidity(dev, temperature, &tmp);
+    return shtc3_get_temperature_humidity(dev, temperature, &tmp, lp_en);
 }
 
 
@@ -409,12 +413,13 @@ SHTC3_RET_t shtc3_get_temperature(SHTC3_t* dev, float* temperature) {
  * 
  * @param[in]   dev             Pointer to the device structure
  * @param[out]  humidity        Relative humidity reading (%RH)
+ * @param[in]   lp_en           Enable low-power mode (1..enabled/0..disabled)
  * @return      OK in case of success; ERROR otherwise
  */
-SHTC3_RET_t shtc3_get_humidity(SHTC3_t* dev, float* humidity) {
+SHTC3_RET_t shtc3_get_humidity(SHTC3_t* dev, float* humidity, uint8_t lp_en) {
     float tmp;
     /* Call reading function */
-    return shtc3_get_temperature_humidity(dev, &tmp, humidity);
+    return shtc3_get_temperature_humidity(dev, &tmp, humidity, lp_en);
 }
 
 
@@ -449,9 +454,10 @@ SHTC3_RET_t shtc3_start(SHTC3_t* dev, uint8_t address) {
  * @param[in]   dev             Pointer to the device structure
  * @param[out]  temperature     Temperature reading in degree Celsius (°C)
  * @param[out]  humidity        Relative humidity reading (%RH)
+ * @param[in]   lp_en           Enable low-power mode (1..enabled/0..disabled)
  * @return      OK in case of success; ERROR otherwise
  */
-SHTC3_RET_t shtc3_read(SHTC3_t* dev, float* temperature, float* humidity) {
+SHTC3_RET_t shtc3_read(SHTC3_t* dev, float* temperature, float* humidity, uint8_t lp_en) {
     int8_t ret;
     /* Wake-up the sensor */
     ret = shtc3_sleep_disable(dev);
@@ -459,7 +465,7 @@ SHTC3_RET_t shtc3_read(SHTC3_t* dev, float* temperature, float* humidity) {
         return ret;
     }
     /* Read measurements */
-    ret = shtc3_get_temperature_humidity(dev, temperature, humidity);
+    ret = shtc3_get_temperature_humidity(dev, temperature, humidity, lp_en);
     if(ret != SHTC3_RET_OK) {
         return ret;
     }
