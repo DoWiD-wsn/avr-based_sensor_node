@@ -70,7 +70,6 @@ I2C_RET_t i2c_get_nack(uint8_t* data);
 
 /* Raw Write/Read */
 I2C_RET_t i2c_write_raw(uint8_t addr, uint8_t value);
-I2C_RET_t i2c_write16_raw(uint8_t addr, uint16_t value);
 I2C_RET_t i2c_read_raw(uint8_t addr, uint8_t* value);
 
 /*** 8-bit register addresses ***/

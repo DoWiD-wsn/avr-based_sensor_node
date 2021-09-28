@@ -5,11 +5,12 @@
  *
  * @file    /_asnx_lib_/sensors/shtc3.c
  * @author  Dominik Widhalm
- * @version 1.0.0
- * @date    2021/09/27
+ * @version 1.1.0
+ * @date    2021/09/28
  * 
  * @see     https://github.com/Sensirion/shtc3-stm-sample-project/
  * @note    Based on the SHTC3 sample code for STM32 by Sensirion
+ * @todo    Clock-stretching did not work in combination with sleep
  */
 
 
@@ -127,11 +128,29 @@ static SHTC3_RET_t shtc3_check_crc(uint8_t* data, uint8_t len, uint8_t checksum)
  * @return      OK in case of success; ERROR otherwise
  */
 SHTC3_RET_t shtc3_reset(SHTC3_t* dev) {
-    /* Write the 16-bit command to the sensor */
-    if(i2c_write16_raw(dev->address, SHTC3_COM_SOFT_RESET) != I2C_RET_OK) {
+    /* Issue a I2C start with write condition */
+    if(i2c_start(dev->address, I2C_WRITE) != I2C_RET_OK) {
         /* Return ERROR */
         return SHTC3_RET_ERROR;
     }
+    
+    /* Write ID read command upper byte */
+    if(i2c_put(SHTC3_COM_SOFT_RESET >> 8) != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
+    /* Write ID read command lower byte */
+    if(i2c_put(SHTC3_COM_SOFT_RESET & 0xFF) != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
+    
+    /* Issue a I2C stop condition */
+    if(i2c_stop() != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
+
     /* Return OK */
     return SHTC3_RET_OK;
 }
@@ -190,11 +209,29 @@ SHTC3_RET_t shtc3_get_id(SHTC3_t* dev, uint16_t *id) {
  * @return      OK in case of success; ERROR otherwise
  */
 SHTC3_RET_t shtc3_sleep_enable(SHTC3_t* dev) {
-    /* Write the 16-bit command to the sensor */
-    if(i2c_write16_raw(dev->address, SHTC3_COM_SLEEP) != I2C_RET_OK) {
+    /* Issue a I2C start with write condition */
+    if(i2c_start(dev->address, I2C_WRITE) != I2C_RET_OK) {
         /* Return ERROR */
         return SHTC3_RET_ERROR;
     }
+    
+    /* Write ID read command upper byte */
+    if(i2c_put(SHTC3_COM_SLEEP >> 8) != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
+    /* Write ID read command lower byte */
+    if(i2c_put(SHTC3_COM_SLEEP & 0xFF) != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
+    
+    /* Issue a I2C stop condition */
+    if(i2c_stop() != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
+
     /* Return OK */
     return SHTC3_RET_OK;
 }
@@ -207,15 +244,32 @@ SHTC3_RET_t shtc3_sleep_enable(SHTC3_t* dev) {
  * @return      OK in case of success; ERROR otherwise
  */
 SHTC3_RET_t shtc3_sleep_disable(SHTC3_t* dev) {
-    /* Write the 16-bit command to the sensor */
-    if(i2c_write16_raw(dev->address, SHTC3_COM_WAKEUP) != I2C_RET_OK) {
+    /* Issue a I2C start with write condition */
+    if(i2c_start(dev->address, I2C_WRITE) != I2C_RET_OK) {
         /* Return ERROR */
         return SHTC3_RET_ERROR;
     }
     
-    /* Give the sensor some time to finish waking up */
-    _delay_ms(SHTC3_WAKEUP_DELAY);
+    /* Write ID read command upper byte */
+    if(i2c_put(SHTC3_COM_WAKEUP >> 8) != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
+    /* Write ID read command lower byte */
+    if(i2c_put(SHTC3_COM_WAKEUP & 0xFF) != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
     
+    /* Issue a I2C stop condition */
+    if(i2c_stop() != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
+    
+    /* Give the device some time to wake-up */
+    _delay_us(SHTC3_WAKEUP_DELAY);
+
     /* Return OK */
     return SHTC3_RET_OK;
 }
@@ -230,7 +284,7 @@ SHTC3_RET_t shtc3_sleep_disable(SHTC3_t* dev) {
  */
 static float SHTC3_raw2temperature(uint16_t raw) {
   /* Calculate resulting temperature [°C] */
-  return 175.0 * (float)raw / 65536.0 - 45.0;
+  return 175.0 * ((float)raw / 65536.0) - 45.0;
 }
 
 
@@ -243,7 +297,7 @@ static float SHTC3_raw2temperature(uint16_t raw) {
  */
 static float SHTC3_raw2humidity(uint16_t raw) {
   /* Calculate resulting relative humidity [%RH] */
-  return 100.0 * (float)raw / 65536.0;
+  return 100.0 * ((float)raw / 65536.0);
 }
 
 
@@ -253,7 +307,7 @@ static float SHTC3_raw2humidity(uint16_t raw) {
  * @param[in]   dev             Pointer to the device structure
  * @param[out]  temperature     Temperature reading in degree Celsius (°C)
  * @param[out]  humidity        Relative humidity reading (%RH)
- * @return      OK* in case of success; ERROR* otherwise
+ * @return      OK in case of success; ERROR otherwise
  */
 SHTC3_RET_t shtc3_get_temperature_humidity(SHTC3_t* dev, float* temperature, float* humidity) {
 #if SHTC3_CLOCK_STRETCHING==0
@@ -293,8 +347,8 @@ SHTC3_RET_t shtc3_get_temperature_humidity(SHTC3_t* dev, float* temperature, flo
             /* Exit loop */
             break;
         }
-        /* Wait for 1ms */
-        _delay_ms(1000);
+        /* Wait some time */
+        _delay_ms(SHTC3_POLLING_DELAY);
     }
 #endif
 
@@ -341,7 +395,7 @@ SHTC3_RET_t shtc3_get_temperature_humidity(SHTC3_t* dev, float* temperature, flo
  * 
  * @param[in]   dev             Pointer to the device structure
  * @param[out]  temperature     Temperature reading in degree Celsius (°C)
- * @return      OK* in case of success; ERROR* otherwise
+ * @return      OK in case of success; ERROR otherwise
  */
 SHTC3_RET_t shtc3_get_temperature(SHTC3_t* dev, float* temperature) {
     float tmp;
@@ -355,10 +409,65 @@ SHTC3_RET_t shtc3_get_temperature(SHTC3_t* dev, float* temperature) {
  * 
  * @param[in]   dev             Pointer to the device structure
  * @param[out]  humidity        Relative humidity reading (%RH)
- * @return      OK* in case of success; ERROR* otherwise
+ * @return      OK in case of success; ERROR otherwise
  */
 SHTC3_RET_t shtc3_get_humidity(SHTC3_t* dev, float* humidity) {
     float tmp;
     /* Call reading function */
     return shtc3_get_temperature_humidity(dev, &tmp, humidity);
+}
+
+
+/*!
+ * Initialize the sensor and put it to sleep.
+ * 
+ *
+ * @param[out]  dev         Pointer to the device structure to be filled
+ * @param[in]   address     Device I2C address
+ * @return      OK in case of success; ERROR otherwise
+ */
+SHTC3_RET_t shtc3_start(SHTC3_t* dev, uint8_t address) {
+    int8_t ret;
+    /* Initialize the sensor */
+    ret = shtc3_init(dev, address);
+    if(ret != SHTC3_RET_OK) {
+        return ret;
+    }
+    /* Put the sensor to sleep */
+    ret = shtc3_sleep_enable(dev);
+    if(ret != SHTC3_RET_OK) {
+        return ret;
+    }
+    /* Return OK */
+    return SHTC3_RET_OK;
+}
+
+
+/*!
+ * Read both temperature and humidity from the sensor (incl. sleep/wakeup).
+ * 
+ * @param[in]   dev             Pointer to the device structure
+ * @param[out]  temperature     Temperature reading in degree Celsius (°C)
+ * @param[out]  humidity        Relative humidity reading (%RH)
+ * @return      OK in case of success; ERROR otherwise
+ */
+SHTC3_RET_t shtc3_read(SHTC3_t* dev, float* temperature, float* humidity) {
+    int8_t ret;
+    /* Wake-up the sensor */
+    ret = shtc3_sleep_disable(dev);
+    if(ret != SHTC3_RET_OK) {
+        return ret;
+    }
+    /* Read measurements */
+    ret = shtc3_get_temperature_humidity(dev, temperature, humidity);
+    if(ret != SHTC3_RET_OK) {
+        return ret;
+    }
+    /* Put the sensor to sleep */
+    ret = shtc3_sleep_enable(dev);
+    if(ret != SHTC3_RET_OK) {
+        return ret;
+    }
+    /* Return OK */
+    return SHTC3_RET_OK;
 }

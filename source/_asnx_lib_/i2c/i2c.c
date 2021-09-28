@@ -309,39 +309,6 @@ I2C_RET_t i2c_write_raw(uint8_t addr, uint8_t value) {
 
 
 /*!
- * Write 16-bit data to a given I2C address.
- *
- * @param[in]   addr        Address of I2C device
- * @param[in]   value       Data byte to be written
- * @return      OK in case of success; ERROR otherwise
- */
-I2C_RET_t i2c_write16_raw(uint8_t addr, uint16_t value) {
-    /* Start in writing mode */
-    if(i2c_start_wait(addr, I2C_WRITE) != I2C_RET_OK) {
-        /* Start failed */
-        return I2C_RET_ERROR;
-    }
-    /* Write value low byte */
-    if(i2c_put(value & 0x00FF) != I2C_RET_OK) {
-        /* Write address failed */
-        return I2C_RET_ERROR;
-    }
-    /* Write value high byte */
-    if(i2c_put((value & 0xFF00)>>8) != I2C_RET_OK) {
-        /* Write address failed */
-        return I2C_RET_ERROR;
-    }
-    /* Stop writing mode */
-    if(i2c_stop() != I2C_RET_OK) {
-        /* Stop failed */
-        return I2C_RET_ERROR;
-    }
-    /* Return with success */
-    return I2C_RET_OK;
-}
-
-
-/*!
  * Read 8-bit data from a given I2C address.
  *
  * @param[in]   addr        Address of I2C device
