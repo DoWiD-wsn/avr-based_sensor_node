@@ -51,8 +51,7 @@ SHTC3_RET_t shtc3_init(SHTC3_t* dev, uint8_t address) {
 /*!
  * Read 16-bit from the SHTC3 sensor and perform CRC check.
  *
- * @param[in]   dev         Pointer to the device structure to be filled
- * @param[in]   reg         Device I2C address
+ * @param[out]  value       Pointer to the location of the 16-bit variable to be read
  * @return      OK in case of success; ERROR otherwise
  */
 SHTC3_RET_t shtc3_read16_crc(uint16_t* value) {
@@ -91,8 +90,9 @@ SHTC3_RET_t shtc3_read16_crc(uint16_t* value) {
 /*!
  * Perform a CRC check.
  *
- * @param[in]   dev         Pointer to the device structure to be filled
- * @param[in]   reg         Device I2C address
+ * @param[in]   data        Input data to be checked
+ * @param[in]   len         Number of bytes to be checked
+ * @param[in]   checksum    Received CRC checksum
  * @return      OK in case of success; ERROR otherwise
  */
 static SHTC3_RET_t shtc3_check_crc(uint8_t* data, uint8_t len, uint8_t checksum) {
@@ -124,7 +124,7 @@ static SHTC3_RET_t shtc3_check_crc(uint8_t* data, uint8_t len, uint8_t checksum)
 /*!
  * Soft-reset the sensor.
  *
- * @param[in]   dev         Pointer to the device structure to be filled
+ * @param[in]   dev         Pointer to the device structure
  * @return      OK in case of success; ERROR otherwise
  */
 SHTC3_RET_t shtc3_reset(SHTC3_t* dev) {
@@ -159,7 +159,7 @@ SHTC3_RET_t shtc3_reset(SHTC3_t* dev) {
 /*!
  * Read the SHTC3 sensor's ID.
  *
- * @param[in]   dev         Pointer to the device structure to be filled
+ * @param[in]   dev         Pointer to the device structure
  * @param[out]  id          Location where the ID should be stored
  * @return      OK in case of success; ERROR otherwise
  */
@@ -205,7 +205,7 @@ SHTC3_RET_t shtc3_get_id(SHTC3_t* dev, uint16_t *id) {
 /*!
  * Request the SHTC3 sensor to sleep.
  *
- * @param[in]   dev         Pointer to the device structure to be filled
+ * @param[in]   dev         Pointer to the device structure
  * @return      OK in case of success; ERROR otherwise
  */
 SHTC3_RET_t shtc3_sleep_enable(SHTC3_t* dev) {
@@ -240,7 +240,7 @@ SHTC3_RET_t shtc3_sleep_enable(SHTC3_t* dev) {
 /*!
  * Request the SHTC3 sensor to wake-up.
  *
- * @param[in]   dev         Pointer to the device structure to be filled
+ * @param[in]   dev         Pointer to the device structure
  * @return      OK in case of success; ERROR otherwise
  */
 SHTC3_RET_t shtc3_sleep_disable(SHTC3_t* dev) {
@@ -355,7 +355,7 @@ SHTC3_RET_t shtc3_get_temperature_humidity(SHTC3_t* dev, float* temperature, flo
     }
 #endif
 
-#if SHTC3_TH_FIRST
+#if SHTC3_RH_FIRST
     /* Read two humidty bytes and perform CRC check */
     if(shtc3_read16_crc(&humid_raw) != SHTC3_RET_OK) {
         /* Return ERROR */
@@ -427,7 +427,7 @@ SHTC3_RET_t shtc3_get_humidity(SHTC3_t* dev, float* humidity, uint8_t lp_en) {
  * Initialize the sensor and put it to sleep.
  * 
  *
- * @param[out]  dev         Pointer to the device structure to be filled
+ * @param[out]  dev         Pointer to the device structure
  * @param[in]   address     Device I2C address
  * @return      OK in case of success; ERROR otherwise
  */
