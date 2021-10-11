@@ -12,6 +12,7 @@
 #
 ## Target specifics ##
 TARGET      	?= $(shell basename $$PWD)
+# Serial port for programmer (e.g., /dev/ttyACM0 (Linux), or COM3 (Windows))
 PORT        	?= /dev/ttyACM0
 MCU			 	 = atmega1284p
 TARGET_ARCH  	 = -mmcu=$(MCU)
@@ -95,10 +96,12 @@ dbg:
 all: hex
 
 $(OBJS): $(BUILDDIR)/%.o: %.c | $(BUILDDIR)
-	mkdir -p $(dir $@) && $(CC) -c $(CFLAGS) $(INCS) $< -o $@
+	mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(INCS) $< -o $@
 
 $(ASNXOBJS): $(BUILDDIR)/%.o: ../%.c | $(BUILDDIR)
-	mkdir -p $(dir $@) && $(CC) -c $(CFLAGS) $(INCS) $< -o $@
+	mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) $(INCS) $< -o $@
 
 elf: $(BUILDDIR)/$(TARGET).elf
 $(BUILDDIR)/$(TARGET).elf: $(OBJS) $(ASNXOBJS) | $(BUILDDIR)
