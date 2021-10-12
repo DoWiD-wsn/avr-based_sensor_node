@@ -7,12 +7,22 @@ The build system is makefile-based and requires only a minimum number of other l
 
 ## Prerequisites ##
 
+In the following, the software requirements for Debian/Ubuntu and Windows machines are listed.
+
+### Debian/Ubuntu ###
+
 To use the *ASN(x) C Code Library*, you need to have `avr-gcc`, `AVR Libc`, and `AVRDUDE` installed:  
   `sudo apt install gcc-avr avr-libc avrdude`  
 That's basically it :)
 
 Additionally, to generate the doxygen-based documentation, `doxygen` and `graphviz` are required where the latter one is needed to generate the call-graphs:  
   `sudo apt install doxygen graphviz`
+
+### Windows ###
+
+For Windows-based machines, the `WinAVR` tool can be used. Just download it from [Sourceforge](https://sourceforge.net/projects/winavr/) and install it; it includes `gcc-avr`, `avr-libc`, and `avrdude`. After installing it, you can use the tools from the [windows command prompt](https://www.makeuseof.com/tag/a-beginners-guide-to-the-windows-command-line/).
+
+`Doxygen` can be acquired from [here](https://www.doxygen.nl/download.html) and `Graphviz` can be downloaded from [here](https://graphviz.org/download/).
 
 
 ## Directory Structure ##
