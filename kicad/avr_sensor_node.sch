@@ -5,8 +5,8 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title "AVR-based Sensor Node with Xbee (ASN(x))"
-Date "2021-08-09"
-Rev "1.3"
+Date "2021-10-14"
+Rev "1.4"
 Comp "UAS Technikum Wien"
 Comment1 ""
 Comment2 ""
@@ -182,17 +182,6 @@ F 3 "~" H 8500 7250 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Switch:SW_Push SW1
-U 1 1 60518608
-P 4900 1200
-F 0 "SW1" H 4900 1350 50  0000 C CNN
-F 1 "SW_Push" H 4900 1100 50  0000 C CNN
-F 2 "Button_Switch_SMD:SW_SPST_PTS645" H 4900 1400 50  0001 C CNN
-F 3 "http://www.farnell.com/datasheets/2706291.pdf" H 4900 1400 50  0001 C CNN
-	1    4900 1200
-	1    0    0    -1  
-$EndComp
-$Comp
 L power:GND #PWR033
 U 1 1 6051AB35
 P 6050 4300
@@ -225,22 +214,7 @@ F 3 "" H 4600 3900 50  0001 C CNN
 	1    4600 3900
 	1    0    0    -1  
 $EndComp
-$Comp
-L power:GND #PWR026
-U 1 1 6051F23F
-P 4600 1200
-F 0 "#PWR026" H 4600 950 50  0001 C CNN
-F 1 "GND" H 4605 1027 50  0000 C CNN
-F 2 "" H 4600 1200 50  0001 C CNN
-F 3 "" H 4600 1200 50  0001 C CNN
-	1    4600 1200
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	5200 1200 5100 1200
 Connection ~ 5200 1200
-Wire Wire Line
-	4700 1200 4600 1200
 $Comp
 L Device:Crystal Y1
 U 1 1 60523393
@@ -649,45 +623,43 @@ Wire Wire Line
 	6800 3800 6900 3800
 Wire Wire Line
 	6800 3900 6900 3900
-Text Label 5150 5700 2    50   ~ 0
+Text Label 5000 5700 2    50   ~ 0
 OWI1
-Text Label 5150 5900 2    50   ~ 0
+Text Label 5000 5900 2    50   ~ 0
 OWI2
 $Comp
 L Device:R R6
 U 1 1 606BB9DA
-P 5300 5700
-F 0 "R6" V 5200 5700 50  0000 C CNN
-F 1 "10k" V 5300 5700 50  0000 C CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" V 5230 5700 50  0001 C CNN
-F 3 "~" H 5300 5700 50  0001 C CNN
-	1    5300 5700
+P 5150 5700
+F 0 "R6" V 5050 5700 50  0000 C CNN
+F 1 "10k" V 5150 5700 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 5080 5700 50  0001 C CNN
+F 3 "~" H 5150 5700 50  0001 C CNN
+	1    5150 5700
 	0    1    1    0   
 $EndComp
 $Comp
 L Device:R R7
 U 1 1 606BB9E0
-P 5300 5900
-F 0 "R7" V 5200 5900 50  0000 C CNN
-F 1 "10k" V 5300 5900 50  0000 C CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" V 5230 5900 50  0001 C CNN
-F 3 "~" H 5300 5900 50  0001 C CNN
-	1    5300 5900
+P 5150 5900
+F 0 "R7" V 5050 5900 50  0000 C CNN
+F 1 "10k" V 5150 5900 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 5080 5900 50  0001 C CNN
+F 3 "~" H 5150 5900 50  0001 C CNN
+	1    5150 5900
 	0    1    1    0   
 $EndComp
 $Comp
 L power:+3V3 #PWR031
 U 1 1 606BB9E6
-P 5600 5900
-F 0 "#PWR031" H 5600 5750 50  0001 C CNN
-F 1 "+3V3" H 5615 6073 50  0000 C CNN
-F 2 "" H 5600 5900 50  0001 C CNN
-F 3 "" H 5600 5900 50  0001 C CNN
-	1    5600 5900
+P 5600 5650
+F 0 "#PWR031" H 5600 5500 50  0001 C CNN
+F 1 "+3V3" H 5615 5823 50  0000 C CNN
+F 2 "" H 5600 5650 50  0001 C CNN
+F 3 "" H 5600 5650 50  0001 C CNN
+	1    5600 5650
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	5450 5700 5450 5900
 Text Notes 7650 750  0    50   ~ 0
 Expansion Header
 Text Label 6900 1600 0    50   ~ 0
@@ -1409,9 +1381,6 @@ Wire Notes Line
 Wire Wire Line
 	5450 5200 5600 5200
 Connection ~ 5450 5200
-Wire Wire Line
-	5450 5900 5600 5900
-Connection ~ 5450 5900
 Wire Notes Line
 	4800 4700 4800 6200
 Wire Notes Line
@@ -2013,17 +1982,6 @@ Wire Wire Line
 Connection ~ 6050 5700
 Wire Wire Line
 	6050 5700 6050 5750
-$Comp
-L Device:R R14
-U 1 1 613934C2
-P 8400 4850
-F 0 "R14" V 8300 4850 50  0000 C CNN
-F 1 "10k" V 8400 4850 50  0000 C CNN
-F 2 "Resistor_SMD:R_0603_1608Metric" V 8330 4850 50  0001 C CNN
-F 3 "~" H 8400 4850 50  0001 C CNN
-	1    8400 4850
-	0    1    1    0   
-$EndComp
 Text Label 6350 5450 0    50   ~ 0
 RDEN
 Wire Notes Line
@@ -2078,8 +2036,34 @@ Wire Notes Line
 	9350 5400 9350 6200
 Wire Notes Line
 	9350 6200 8450 6200
-Text Label 8950 4850 0    50   ~ 0
-PC2
+Wire Notes Line
+	5900 4700 9350 4700
+Wire Notes Line
+	9350 4700 9350 5300
+Wire Notes Line
+	9350 5300 8350 5300
+Wire Notes Line
+	8350 5300 8350 6200
+Text Notes 9300 5250 2    50   ~ 0
+Enable\ndiagnostics
+Connection ~ 8600 4850
+Wire Wire Line
+	8600 4850 8650 4850
+Wire Wire Line
+	8550 4850 8600 4850
+$Comp
+L Jumper:SolderJumper_2_Bridged JP8
+U 1 1 614FE856
+P 8800 4850
+F 0 "JP8" H 8800 4950 50  0000 C CNN
+F 1 "Jumper_Bridged" H 8950 4750 50  0000 C CNN
+F 2 "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm" H 8800 4850 50  0001 C CNN
+F 3 "~" H 8800 4850 50  0001 C CNN
+	1    8800 4850
+	1    0    0    -1  
+$EndComp
+Text Label 8250 4850 2    50   ~ 0
+RDEN
 $Comp
 L Device:R R15
 U 1 1 614B7A6E
@@ -2091,18 +2075,18 @@ F 3 "~" H 8600 5000 50  0001 C CNN
 	1    8600 5000
 	-1   0    0    1   
 $EndComp
-Text Label 8250 4850 2    50   ~ 0
-RDEN
+Text Label 8950 4850 0    50   ~ 0
+PC2
 $Comp
-L Jumper:SolderJumper_2_Bridged JP8
-U 1 1 614FE856
-P 8800 4850
-F 0 "JP8" H 8800 4950 50  0000 C CNN
-F 1 "Jumper_Bridged" H 8950 4750 50  0000 C CNN
-F 2 "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm" H 8800 4850 50  0001 C CNN
-F 3 "~" H 8800 4850 50  0001 C CNN
-	1    8800 4850
-	1    0    0    -1  
+L Device:R R14
+U 1 1 613934C2
+P 8400 4850
+F 0 "R14" V 8300 4850 50  0000 C CNN
+F 1 "10k" V 8400 4850 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 8330 4850 50  0001 C CNN
+F 3 "~" H 8400 4850 50  0001 C CNN
+	1    8400 4850
+	0    1    1    0   
 $EndComp
 $Comp
 L power:GND #PWR045
@@ -2115,19 +2099,31 @@ F 3 "" H 8600 5150 50  0001 C CNN
 	1    8600 5150
 	1    0    0    -1  
 $EndComp
+$Comp
+L Jumper:SolderJumper_2_Open JP9
+U 1 1 616D79DC
+P 5450 5700
+F 0 "JP9" H 5450 5800 50  0000 C CNN
+F 1 "Jumper_Open" H 5450 5600 50  0000 C CNN
+F 2 "Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm" H 5450 5700 50  0001 C CNN
+F 3 "~" H 5450 5700 50  0001 C CNN
+	1    5450 5700
+	1    0    0    -1  
+$EndComp
+$Comp
+L Jumper:SolderJumper_2_Open JP10
+U 1 1 61700979
+P 5450 5900
+F 0 "JP10" H 5450 6000 50  0000 C CNN
+F 1 "Jumper_Open" H 5450 5800 50  0000 C CNN
+F 2 "Jumper:SolderJumper-2_P1.3mm_Open_RoundedPad1.0x1.5mm" H 5450 5900 50  0001 C CNN
+F 3 "~" H 5450 5900 50  0001 C CNN
+	1    5450 5900
+	1    0    0    -1  
+$EndComp
 Wire Wire Line
-	8550 4850 8600 4850
+	5600 5900 5600 5700
 Wire Wire Line
-	8600 4850 8650 4850
-Connection ~ 8600 4850
-Wire Notes Line
-	5900 4700 9350 4700
-Wire Notes Line
-	9350 4700 9350 5300
-Wire Notes Line
-	9350 5300 8350 5300
-Wire Notes Line
-	8350 5300 8350 6200
-Text Notes 9300 5250 2    50   ~ 0
-Enable\ndiagnostics
+	5600 5700 5600 5650
+Connection ~ 5600 5700
 $EndSCHEMATC

@@ -7,8 +7,12 @@ However, the major and minor number are used to express the version of the hardw
 ## [dev]
 ### Added
 - Software library to support the SHTC3 humidity/temperature sensor
+- Solder jumpers (open) to OWI pull-ups
+- Added pad clearance to mounting holes
 ### Changed
+- Changed location of THMS header pins (moved towards MCU center)
 ### Removed
+- Removed reset switch (not used in normal operation)
 
 
 ## [1.3.0] - 2021-08-09
