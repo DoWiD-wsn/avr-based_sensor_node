@@ -6,6 +6,12 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
+### Changed
+### Removed
+
+
+## [1.4] - 2021-10-14
+### Added
 - Software library to support the SHTC3 humidity/temperature sensor
 - Solder jumpers (open) to OWI pull-ups
 - Added pad clearance to mounting holes
@@ -15,7 +21,7 @@ However, the major and minor number are used to express the version of the hardw
 - Removed reset switch (not used in normal operation)
 
 
-## [1.3.0] - 2021-08-09
+## [1.3] - 2021-08-09
 ### Added
 - Added SPI signals from Xbee to MCU for future radio extensions
 - MOSFET to enable/disable diagnostic voltage dividers (via PC2; active high)
@@ -27,7 +33,7 @@ However, the major and minor number are used to express the version of the hardw
 - Capacitors for diagnostic voltage dividers
 - Legacy pull-up resistors R12 and R13
 
-## [1.2.0] - 2021-06-04
+## [1.2] - 2021-06-04
 ### Added
 - Added solder-jumper (bridged) for ADC2 input
 - Added doxygen support for ASNX LIB documentation (incl. makefile rule)
@@ -42,7 +48,7 @@ However, the major and minor number are used to express the version of the hardw
 - Removed Xbee sleep pin pull-up resistors (Xbee has internal pull-ups)
 - Removed Xbee reset pin pull-up resistors (reset not used)
 
-## [1.1.0] - 2021-05-26
+## [1.1] - 2021-05-26
 ### Added
 - Schematic/PCB: pull-up resistors for xbee sleep-request and sleep-indicator signals
 - Schematic/PCB: voltage divider connected to ADC2 for Vbat measurement (ratio 1:2)
@@ -56,7 +62,7 @@ However, the major and minor number are used to express the version of the hardw
 - ASNX LIB: updated MCU component libraries to better support sleep modes
 - DOCU: updated ASN(x) PCB docu and BOM; added Farnell part links
 
-## [1.0.0] - 2021-03-12
+## [1.0] - 2021-03-12
 ### Added
 - First design of the ASN(x)
 - Initial software library
