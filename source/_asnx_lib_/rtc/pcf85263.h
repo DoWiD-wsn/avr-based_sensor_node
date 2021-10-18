@@ -342,6 +342,7 @@ typedef struct {
 /*** General ***/
 /* Init */
 PCF85263_RET_t pcf85263_init(void);
+PCF85263_RET_t pcf85263_init_wakeup_src(PCF85263_CNTTIME_t* time);
 /* Datetime/time structure */
 void pcf85263_clear_rtc_datetime(PCF85263_DATETIME_t* data);
 void pcf85263_clear_stw_time(PCF85263_CNTTIME_t* data);

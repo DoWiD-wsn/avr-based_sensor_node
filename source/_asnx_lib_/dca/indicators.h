@@ -58,10 +58,14 @@
 /* Software incident counter (X_IC) */
 /*! maximum value for normalization */
 #define X_IC_MAX                            10.0
+/*! increment value for "normal" incident */
+#define X_IC_INC_NORM                       1
+/*! increment value for "serious" incident */
+#define X_IC_INC_SERIOUS                    3
+/*! decrement value */
+#define X_IC_DEC_NORM                       1
 /*! threshold for maximum number of incidents in total */
-#define X_IC_TH_TOTAL                       50
-/*! threshold for maximum number of incidents per module */
-#define X_IC_TH_SINGLE                      10
+#define X_IC_THRESHOLD                      50
 
 /* ADC self-check (X_ADC) */
 /*! maximum value for normalization */
@@ -79,24 +83,28 @@
 void indicators_init(void);
 
 /* Node temperature monitor (X_NT) */
-float x_nt_get_update(float t_mcu, float t_brd, float t_trx);
+float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx);
 /* Supply voltage monitor (X_VS) */
-float x_vs_get_update(float v_mcu, float v_trx);
+float x_vs_get_normalized(float v_mcu, float v_trx);
 /* Battery voltage monitor (X_BAT) */
 void x_bat_reset(void);
-float x_bat_get_update(float v_bat);
+float x_bat_get_normalized(float v_bat);
 /* Active runtime monitor (X_ART) */
 void x_art_reset(void);
-float x_art_get_update(uint32_t t_art);
+float x_art_get_normalized(uint32_t t_art);
 /* Reset monitor (X_RST) */
 void x_rst_reset(void);
 void x_rst_set(float x_rst);
-float x_rst_get_update(uint8_t mcusr);
+float x_rst_get_normalized(uint8_t mcusr);
 /* Software incident counter (X_IC) */
-float x_ic_get_update(uint8_t incidents);
+void x_ic_reset(void);
+void x_ic_inc(uint8_t value);
+void x_ic_dec(uint8_t value);
+uint16_t x_ic_get(void);
+float x_ic_get_normalized(void);
 /* ADC self-check (X_ADC) */
-float x_adc_get_update(uint16_t adc_value);
+float x_adc_get_normalized(uint16_t adc_value);
 /* USART self-check (X_USART) */
-float x_usart_get_update(uint8_t* tx, uint8_t* rx, uint8_t len);
+float x_usart_get_normalized(uint8_t* tx, uint8_t* rx, uint8_t len);
 
 #endif // _ASNX_INDICATORS_H_

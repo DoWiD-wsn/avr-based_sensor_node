@@ -19,6 +19,7 @@
 /*** ASNX LIB ***/
 #include "adc/adc.h"
 #include "hw/hw.h"
+#include "sensors/jt103.h"
 
 
 /***** DEFINES ********************************************************/
@@ -32,6 +33,14 @@
 /*! R_divider enable portpin index */
 #define DIAG_RDEN_GPIO                      PC2
 
+/* ADC channel assignment */
+/*! ADC self-check channel */
+#define DIAG_ADC_CH                         ADC_CH0
+/*! Battery voltage ADC channel */
+#define DIAG_VBAT_CH                        ADC_CH1
+/*! MCU surface temperature ADC channel */
+#define DIAG_TMCU_CH                        ADC_CH2
+
 
 /***** FUNCTION PROTOTYPES ********************************************/
 /* voltage-divider setup */
@@ -42,5 +51,6 @@ void diag_disable(void);
 uint16_t diag_adc_check(void);
 float diag_read_vcc(void);
 float diag_read_vbat(void);
+float diag_read_tsurface(void);
 
 #endif // _ASNX_DIAG_H_

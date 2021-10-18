@@ -24,6 +24,8 @@ uint32_t x_art_values[X_ART_N] = {0};
 uint8_t x_art_index = 99;
 /*! Reset monitor previous value */
 float x_rst_prev = 0.0;
+/*! software incident counter value */
+uint16_t x_ic = 0;
 
 
 /***** FUNCTIONS ******************************************************/
@@ -38,6 +40,7 @@ void indicators_init(void) {
     x_bat_reset();
     x_art_reset();
     x_rst_reset();
+    x_ic_reset();
     /* Check if X_RST value in EEPROM was written before */
     if(eeprom_read_byte((const uint8_t *)X_RST_EEPROM) != 0xFF) {
         /* Read the previous reset-source indicator from EEPROM */
@@ -48,14 +51,14 @@ void indicators_init(void) {
 
 /* Node temperature monitor (X_NT) */
 /*!
- * Update the node temperature monitor fault indicator (X_NT) value.
+ * Get the normalized node temperature monitor fault indicator (X_NT) value.
  * 
  * @param[in]   t_mcu       MCU surface temperature (°C)
  * @param[in]   t_brd       sensor node board temperature (°C)
  * @param[in]   t_trx       radio core temperature (°C)
- * @return      Updated temperature monitor fault indicator (X_NT) value
+ * @return      normalized temperature monitor fault indicator (X_NT) value
  */
-float x_nt_get_update(float t_mcu, float t_brd, float t_trx) {
+float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
     /* Calculate the mean value of the three temperatures */
     float mu_nt = (t_mcu + t_brd + t_trx) / 3.0;
     /* Calculate the standard deviation of the three temperatures */
@@ -70,13 +73,13 @@ float x_nt_get_update(float t_mcu, float t_brd, float t_trx) {
 
 /* Supply voltage monitor (X_VS) */
 /*!
- * Update the supply voltage monitor fault indicator (X_VS) value.
+ * Get the normalized supply voltage monitor fault indicator (X_VS) value.
  * 
  * @param[in]   v_mcu       MCU supply voltage level (V)
  * @param[in]   v_trx       radio supply voltage level (V)
- * @return      Updated supply voltage monitor fault indicator (X_VS) value
+ * @return      normalized supply voltage monitor fault indicator (X_VS) value
  */
-float x_vs_get_update(float v_mcu, float v_trx) {
+float x_vs_get_normalized(float v_mcu, float v_trx) {
     /* Calculate and return the normalized difference between both voltages */
     if(v_mcu > v_trx) {
         return ((v_mcu-v_trx) / X_VS_MAX);
@@ -100,12 +103,12 @@ void x_bat_reset(void) {
 }
 
 /*!
- * Update the battery voltage monitor fault indicator (X_BAT) value.
+ * Get the normalized battery voltage monitor fault indicator (X_BAT) value.
  * 
  * @param[in]   v_bat       battery voltage level (V)
- * @return      Updated battery voltage monitor fault indicator (X_BAT) value
+ * @return      normalized battery voltage monitor fault indicator (X_BAT) value
  */
-float x_bat_get_update(float v_bat) {
+float x_bat_get_normalized(float v_bat) {
     /* Check if value array is empty */
     if(x_bat_index==99) {
         /* Fill entire array with current value */
@@ -152,12 +155,12 @@ void x_art_reset(void) {
 }
 
 /*!
- * Update the active runtime monitor fault indicator (X_ART) value.
+ * Get the normalized active runtime monitor fault indicator (X_ART) value.
  * 
  * @param[in]   t_art       length of the last active phase (ms)
- * @return      Updated active runtime monitor fault indicator (X_ART) value
+ * @return      normalized active runtime monitor fault indicator (X_ART) value
  */
-float x_art_get_update(uint32_t t_art) {
+float x_art_get_normalized(uint32_t t_art) {
     /* Check if value array is empty */
     if(x_art_index==99) {
         /* Fill entire array with current value */
@@ -208,12 +211,12 @@ void x_rst_set(float x_rst) {
 }
 
 /*!
- * Update the reset monitor fault indicator (X_RST) value.
+ * Get the normalized reset monitor fault indicator (X_RST) value.
  * 
  * @param[in]   mcusr       value of the AVR's MCUSR
- * @return      Updated reset monitor fault indicator (X_RST) value
+ * @return      normalized reset monitor fault indicator (X_RST) value
  */
-float x_rst_get_update(uint8_t mcusr) {
+float x_rst_get_normalized(uint8_t mcusr) {
     /* Decrease previous value of X_RST */
     float x_rst = (x_rst_prev * X_RST_DECAY);
     /* Add normalized MCUSR value */
@@ -233,25 +236,64 @@ float x_rst_get_update(uint8_t mcusr) {
 
 /* Software incident counter (X_IC) */
 /*!
- * Update the software incident counter fault indicator (X_IC) value.
- * 
- * @param[in]   incidents   number of current software incidents
- * @return      Updated software incident counter fault indicator (X_IC) value
+ * Reset the software incident counter fault indicator (X_IC) value.
  */
-float x_ic_get_update(uint8_t incidents) {
+void x_ic_reset(void) {
+    x_ic = 0;
+}
+
+/*!
+ * Increment the software incident counter fault indicator (X_IC) value.
+ *
+ * @param[in]   value   Value by which X_IC should be incremented
+ */
+void x_ic_inc(uint8_t value) {
+    x_ic += value;
+}
+
+/*!
+ * Decrement the software incident counter fault indicator (X_IC) value.
+ *
+ * @param[in]   value   Value by which X_IC should be decremented
+ */
+void x_ic_dec(uint8_t value) {
+    /* Check if X_IC is bigger than the given value */
+    if(x_ic > value) {
+        x_ic -= value;
+    } else {
+        x_ic = 0;
+    }
+}
+
+/*!
+ * Get the software incident counter fault indicator (X_IC) value.
+ * 
+ * @return      software incident counter fault indicator (X_IC) value
+ */
+uint16_t x_ic_get(void) {
+    /* Return the value */
+    return x_ic;
+}
+
+/*!
+ * Get the normalized software incident counter fault indicator (X_IC) value.
+ * 
+ * @return      normalized software incident counter fault indicator (X_IC) value
+ */
+float x_ic_get_normalized(void) {
     /* Return normalized value */
-    return ((float)incidents / X_IC_MAX);
+    return ((float)x_ic / X_IC_MAX);
 }
 
 
 /* ADC self-check (X_ADC) */
 /*!
- * Update the ADC self-check fault indicator (X_ADC) value.
+ * Get the normalized ADC self-check fault indicator (X_ADC) value.
  * 
  * @param[in]   adc_value   latest ADC conversion result
- * @return      Updated ADC self-check fault indicator (X_ADC) value
+ * @return      normalized ADC self-check fault indicator (X_ADC) value
  */
-float x_adc_get_update(uint16_t adc_value) {
+float x_adc_get_normalized(uint16_t adc_value) {
     /* Calculate and return the normalized difference between acquired and expected value */
     if(adc_value > X_ADC_EXPECTED) {
         return ((adc_value-X_ADC_EXPECTED) / X_ADC_MAX);
@@ -263,14 +305,14 @@ float x_adc_get_update(uint16_t adc_value) {
 
 /* USART self-check (X_USART) */
 /*!
- * Update the USART self-check fault indicator (X_USART) value.
+ * Get the normalized USART self-check fault indicator (X_USART) value.
  * 
  * @param[in]   tx          pointer to the transmit buffer array
  * @param[in]   rx          pointer to the receive buffer array
  * @param[in]   len         length of both arrays (should be identical)
- * @return      Updated USART self-check fault indicator (X_USART) value
+ * @return      normalized USART self-check fault indicator (X_USART) value
  */
-float x_usart_get_update(uint8_t* tx, uint8_t* rx, uint8_t len) {
+float x_usart_get_normalized(uint8_t* tx, uint8_t* rx, uint8_t len) {
     /* Variable to count number of different bytes */
     uint8_t diff = 0;
     /* Iterate over the arrays */

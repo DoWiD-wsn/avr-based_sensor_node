@@ -86,6 +86,54 @@ PCF85263_RET_t pcf85263_init(void) {
 
 
 /*!
+ * Initialize the PCF85263 RTC as a wake-up source for the AVR MCU.
+ * 
+ * @param[in]   time    Time structure with the wake-up delay
+ * @return      OK in case of success; ERROR otherwise
+ */
+PCF85263_RET_t pcf85263_init_wakeup_src(PCF85263_CNTTIME_t* time) {
+    /* Temporary 8-bit register value */
+    uint8_t reg = 0;
+    
+    /* Initialize the RTC */
+    if(pcf85263_init() != PCF85263_RET_OK) {
+        return PCF85263_RET_ERROR;
+    }
+    /* Disable the battery switch */
+    if(pcf85263_set_batteryswitch(PCF85263_CTL_BATTERY_BSOFF) != PCF85263_RET_OK) {
+        return PCF85263_RET_ERROR;
+    }
+    /* Disable CLK pin; INTA output */
+    if(pcf85263_set_pin_io(PCF85263_CTL_CLKPM | PCF85263_CTL_INTAPM_INTA) != PCF85263_RET_OK) {
+        return PCF85263_RET_ERROR;
+    }
+    /* Enable stop-watch mode (read first to get 100TH and STOPM bits) */
+    if(pcf85263_get_function(&reg) != PCF85263_RET_OK) {
+        return PCF85263_RET_ERROR;
+    }
+    reg |= PCF85263_CTL_FUNC_RTCM;
+    if(pcf85263_set_function(reg) != PCF85263_RET_OK) {
+        return PCF85263_RET_ERROR;
+    }
+    /* Set desired wake-up time */
+    if(pcf85263_set_stw_alarm1(time) != PCF85263_RET_OK) {
+        return PCF85263_RET_ERROR;
+    }
+    /* Enable the alarm */
+    if(pcf85263_set_stw_alarm_enables(PCF85263_RTC_ALARM_MIN_A1E) != PCF85263_RET_OK) {
+        return PCF85263_RET_ERROR;
+    }
+    /* Enable the alarm interrupt */
+    if(pcf85263_set_inta_en(PCF85263_CTL_INTA_A1IEA) != PCF85263_RET_OK) {
+        return PCF85263_RET_ERROR;
+    }
+    
+    /* Initialization and configuration successful */
+    return PCF85263_RET_OK;
+}
+
+
+/*!
  * Clear (reset) a given datetime structure (set all elements to 0).
  * 
  * @param[in]   data    Pointer to the datetime structure to be cleared.

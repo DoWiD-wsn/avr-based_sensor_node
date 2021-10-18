@@ -58,7 +58,7 @@ void diag_disable(void) {
  */
 uint16_t diag_adc_check(void){
     /* Basically, return the ADC value of channel 0 */
-    return adc_read_input(ADC_CH0);
+    return adc_read_input(DIAG_ADC_CH);
 }
 
 
@@ -79,5 +79,15 @@ float diag_read_vcc(void) {
  * @return      Battery voltage in volts (V)
  */
 float diag_read_vbat(void) {
-    return 2.0 * (adc_read_input(ADC_CH1) * (diag_read_vcc() / 1023.0));
+    return 2.0 * (adc_read_input(DIAG_VBAT_CH) * (diag_read_vcc() / 1023.0));
+}
+
+
+/*!
+ * Read the MCU surface temperature using the thermistor via ADC.
+ *
+ * @return      MCU surface temperature in degrees Celsius (°C)
+ */
+float diag_read_tsurface(void) {
+    return jt103_get_temperature(adc_read_input(DIAG_TMCU_CH));
 }
