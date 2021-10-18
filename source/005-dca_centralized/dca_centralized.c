@@ -26,7 +26,7 @@
 
 
 /*** APP CONFIGURATION ***/
-#define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
+#define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
 #define UPDATE_INTERVAL             1               /**< Update interval [min] */
 #define XBEE_DESTINATION_MAC        SEN_MSG_MAC_CH  /**< MAC address of the destination */
 /* Enable (1) or disable (0) sensor measurements */
@@ -106,6 +106,23 @@ void wait_for_wdt_reset(void) {
     /* Wait for reset */
     while(1);
 }
+
+
+/*!
+ * Debug: print the contents of a given sensor message structure
+ */
+#if ENABLE_DBG
+void dbg_print_msg(SEN_MSG_u* msg) {
+    printf("===== SENSOR MESSAGE CONTENTS =====\n");
+    printf("%05d. message update\n",msg->struc.time);
+    printf("   %2d sensor values\n",msg->struc.cnt);
+    printf("=== SENSOR VALUES ===\n");
+    for(uint8_t i=0; i<msg->struc.cnt; i++) {
+        printf("Value: %5d | Type: %02X\n\n",msg->struc.values[i].value,msg->struc.values[i].type);
+    }
+    printf("===================================\n\n");
+}
+#endif
 
 
 /***** MAIN ***********************************************************/
@@ -531,6 +548,10 @@ int main(void) {
                 _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
             }
         }
+#if ENABLE_DBG
+        /* Print the contents of the message to be sent */
+        dbg_print_msg(&msg);
+#endif
         /* Send the measurement to the CH */
         int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, msg.byte, SEN_MSG_SIZE(index), 0x00);
         if(ret != XBEE_RET_OK) {
