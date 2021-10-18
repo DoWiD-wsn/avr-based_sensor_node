@@ -6,10 +6,24 @@
  * the detection is augmented by the node-level fault indicators that
  * are reported by every sensor node in the network.
  *
+ * The procedure is as follows:
+ * 1.)  initialize modules
+ * 2.)  connect to the Zigbee network
+ * 3.1) reset RTC (stop-watch mode)  <--+
+ * 3.2) enable modules/sensors          |
+ * 3.3) query sensors                   |
+ * 3.4) perform self-diagnostics        |
+ * 3.5) send values via Zigbee          |
+ * 3.6) disable modules/sensors         |
+ * 3.7) put MCU to sleep                |
+ *  +-----------------------------------+
+ *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
  * @version 0.1.0
  * @date    2021/10/18
+ *
+ * @todo    Simplify code and restructure as listed above
  */
 
 
@@ -18,20 +32,14 @@
 #define UPDATE_INTERVAL             (1)     /**< Update interval [min] */
 
 /*** Enable (1) or disable (0) sensor measurements ***/
-#define ENABLE_103JT_T              (1)     /**< Enable the 103JT thermistor temperature (T) measurement (via ADC) */
-#define ENABLE_TMP275_T             (1)     /**< Enable the TMP275 sensor temperature (T) measurement (via TWI) */
-#define ENABLE_DS18B20_T            (0)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_STEMMA_H             (0)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
-#define ENABLE_AM2302_T             (0)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_AM2302_H             (0)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
+#define ENABLE_DS18B20_T            (1)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_AM2302_T             (1)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_AM2302_H             (1)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
+#define ENABLE_SHTC3_T              (1)     /**< Enable the SHTC3 sensor temperature (T) measurement (via TWI) */
+#define ENABLE_SHTC3_H              (1)     /**< Enable the SHTC3 sensor humidity (H) measurement (via TWI) */
 
 /*! MAC address of the destination */
 #define XBEE_DESTINATION_MAC        SEN_MSG_MAC_CH
-
-/*! Incident counter total threshold */
-#define INCIDENT_TOTAL_MAX          (100)
-/*! Incident counter single threshold */
-#define INCIDENT_SINGLE_MAX         (10)
 
 /*! Maximum number of sensor readings per message */
 #define SEN_MSG_NUM_MEASUREMENTS    (14)
@@ -39,7 +47,6 @@
 
 /***** INCLUDES *******************************************************/
 /*** AVR ***/
-#include <avr/eeprom.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
@@ -58,24 +65,20 @@
 #include "rtc/pcf85263.h"
 /* Sensors */
 // 103JT
-#if ENABLE_103JT_T
-#  include "sensors/jt103.h"
-#endif
+#include "sensors/jt103.h"
 // TMP275
-#if ENABLE_TMP275_T
-#  include "sensors/tmp275.h"
-#endif
+#include "sensors/tmp275.h"
 // DS18B20
 #if ENABLE_DS18B20_T
 #  include "sensors/ds18x20.h"
 #endif
-// STEMMA
-#if ENABLE_STEMMA_H
-#  include "sensors/stemma_soil.h"
-#endif
 // AM2302
 #if (ENABLE_AM2302_T || ENABLE_AM2302_H)
 #  include "sensors/dht.h"
+#endif
+// SHTC3
+#if (ENABLE_SHTC3_T || ENABLE_SHTC3_H)
+#  include "sensors/shtc3.h"
 #endif
 /* Misc */
 #include "util/diagnostics.h"
@@ -86,6 +89,8 @@
 #else
 #  define printf(...) do { } while (0)
 #endif
+/* DCA */
+#include "dca/indicators.h"
 
 
 /***** GLOBAL VARIABLES ***********************************************/
@@ -112,7 +117,7 @@ void get_mcusr(void) {
 
 
 /*!
- * Activate WDT with minimal delay and wait for reset.
+ * Activate WDT with shortest delay and wait for reset.
  */
 void wait_for_wdt_reset(void) {
     /* Enable Watchdog (time: 15ms) */
@@ -132,12 +137,12 @@ int main(void) {
     msg.struc.time = 0;
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
-    /* Temporary variables */
+    /* Temporary 8-bit register value */
     uint8_t reg = 0;
-    /* Temporary variable for sensor measurements */
+    /* Temporary sensor measurement variables */
     float vcc = 0.0;
     float measurement = 0.0;
-#if (ENABLE_AM2302_T && ENABLE_AM2302_H)
+#if (ENABLE_AM2302_T && ENABLE_AM2302_H) || (ENABLE_SHTC3_T && ENABLE_SHTC3_H)
     float measurement2 = 0.0;
 #endif
     /* Message index counter */
@@ -146,26 +151,27 @@ int main(void) {
     /* Sensor/measurement-specific variables */
     uint16_t inc_xbee = 0;          /* Incident counter for Xbee functions */
     uint16_t inc_sum = 0;           /* Total incident counter (sum of others) */
-#if ENABLE_TMP275_T
+    // TMP275
     TMP275_t tmp275;                /* TMP275 sensor device structure */
     uint16_t inc_tmp275 = 0;        /* Incident counter for TMP275 functions */
     uint8_t en_tmp275 = 0;          /* TMP275 is available (1) or has failed (0) */
-#endif
 #if ENABLE_DS18B20_T
+    // DS18B20
     DS18X20_t ds18b20;              /* DS18B20 sensor device structure */
     uint16_t inc_ds18b20 = 0;       /* Incident counter for DS18B20 functions */
     uint8_t en_ds18b20 = 0;         /* DS18B20 is available (1) or has failed (0)  */
 #endif
-#if ENABLE_STEMMA_H
-    STEMMA_t stemma;                /* STEMMA sensor device structure */
-    uint16_t inc_stemma = 0;        /* Incident counter for STEMMA SOIL functions */
-    uint8_t en_stemma = 0;          /* STEMMA is available (1) or has failed (0) */
-    STEMMA_AVG_t avg_stemma = {0};  /* Structure for the STEMMA floating average values */
-#endif
 #if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+    // AM2302
     DHT_t am2302;                   /* AM2302 sensor device structure */
     uint16_t inc_am2302 = 0;        /* Incident counter for AM2302 functions */
     uint8_t en_am2302 = 0;          /* AM2302 is available (1) or has failed (0) */
+#endif
+#if (ENABLE_SHTC3_T || ENABLE_SHTC3_H)
+    // SHTC3
+    SHTC3_t shtc3;                  /* SHTC3 sensor device structure */
+    uint16_t inc_shtc3 = 0;         /* Incident counter for SHTC3 functions */
+    uint8_t en_shtc3 = 0;           /* SHTC3 is available (1) or has failed (0) */
 #endif
 
     /* Disable unused hardware modules */
@@ -194,21 +200,15 @@ int main(void) {
     PRR0 |= _BV(PRUSART1);
 #endif
 
-    /* Reset timer1 registers */
-    timer1_reset();
-
     /* Initialize Xbee 3 (uses UART0) */
     xbee_init(9600UL);
 
     /* Initialize the diagnostic circuitry */
     diag_init();
     diag_disable();
-    /* Check if EEPROM was written before */
-    if(eeprom_read_byte((const uint8_t *)DIAG_DECAY_ADDRESS) != 0xFF) {
-        /* Read the previous reset-source indicator from EEPROM */
-        rsource_prev = eeprom_read_float((float *)DIAG_DECAY_ADDRESS);
-        diag_rsource_set(rsource_prev);
-    }
+    
+    /* Initialize the fault indicators */
+    indicators_init();
 
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
@@ -268,7 +268,6 @@ int main(void) {
     /* Enable interrupts globally */
     sei();
 
-#if ENABLE_TMP275_T
     /* Initialize the TMP275 sensor */
     if(tmp275_init(&tmp275, TMP275_I2C_ADDRESS) != TMP275_RET_OK) {
         en_tmp275 = 0;
@@ -282,7 +281,6 @@ int main(void) {
         en_tmp275 = 1;
         printf("... TMP275 ready\n");
     }
-#endif
 
 #if ENABLE_DS18B20_T
     /* Initialize the DS18B20 sensor */
@@ -295,22 +293,22 @@ int main(void) {
     }
 #endif
 
-#if ENABLE_STEMMA_H
-    /* Initialize the STEMMA SOIL sensor */
-    if(stemma_init(&stemma, STEMMA_I2C_ADDRESS) != STEMMA_RET_OK) {
-        en_stemma = 0;
-        printf("Couldn't initialize STEMMA!\n");
-    } else {
-        en_stemma = 1;
-        printf("... STEMMA ready\n");
-    }
-#endif
-
 #if (ENABLE_AM2302_T || ENABLE_AM2302_H)
     /* Initialize the AMS2302 sensor */
     dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
     en_am2302 = 1;
     printf("... AMS2302 ready\n");
+#endif
+
+#if (ENABLE_SHTC3_T || ENABLE_SHTC3_H)
+    /* Initialize the SHTC3 sensor */
+    if(shtc3_init(&shtc3, SHTC3_I2C_ADDRESS) != SHTC3_RET_OK) {
+        en_shtc3 = 0;
+        printf("Couldn't initialize SHTC3!\n");
+    } else {
+        en_shtc3 = 1;
+        printf("... SHTC3 ready\n");
+    }
 #endif
 
     /* Reset the XBee RX buffer */
@@ -386,20 +384,20 @@ int main(void) {
         pcf85263_set_stw_time(&time);
         /* Start RTC */
         if(pcf85263_start() != PCF85263_RET_OK) {
-            printf("Couldn't start RTC ... aborting!\n");
+            printf("Couldn't re-start RTC ... aborting!\n");
             wait_for_wdt_reset();
         }
 
         /*** ADC self-diagnosis (via ADC CH0) ***/
         /* Constant voltage divider (1:1) */
         msg.struc.values[index].type = SEN_MSG_TYPE_CHK_ADC;
-        msg.struc.values[index].value = adc_read_input(ADC_CH0);
+        msg.struc.values[index].value = diag_adc_check();
         printf("... ADC self-diagnosis: %d\n", msg.struc.values[index].value);
         index++;
 
         /*** MCU supply voltage (via ADC) ***/
         /* Supply voltage in volts (V) */
-        vcc = adc_read_vcc();
+        vcc = diag_read_vcc();
         printf("... Supply voltage: %.2f\n", vcc);
         /* Pack measurement into msg as fixed-point number */
         msg.struc.values[index].type = SEN_MSG_TYPE_VSS_MCU;
@@ -407,10 +405,8 @@ int main(void) {
         index++;
 
         /*** Battery voltage (via ADC) ***/
-        /* Supply voltage in volts (V) */
-        vcc = adc_read_vcc();
         /* Calculate voltage from value (voltage divider 1:1) */
-        measurement = 2.0 * (adc_read_input(ADC_CH1) * (vcc / 1023.0));
+        measurement = diag_read_vbat();
         printf("... Battery voltage: %.2f\n", measurement);
         /* Pack measurement into msg as fixed-point number */
         msg.struc.values[index].type = SEN_MSG_TYPE_VSS_BAT;
@@ -434,7 +430,7 @@ int main(void) {
         } else {
             printf("... Xbee temperature: FAILED!\n");
             /* Increment incident counter */
-            if(inc_xbee < INCIDENT_SINGLE_MAX) {
+            if(inc_xbee < X_IC_TH_SINGLE) {
                 inc_xbee++;
             } else {
                 /* Wait for watchdog reset */
@@ -459,7 +455,7 @@ int main(void) {
         } else {
             printf("... Xbee temperature: FAILED!\n");
             /* Increment incident counter */
-            if(inc_xbee < INCIDENT_SINGLE_MAX) {
+            if(inc_xbee < X_IC_TH_SINGLE) {
                 inc_xbee++;
             } else {
                 /* Wait for watchdog reset */
@@ -467,7 +463,6 @@ int main(void) {
             }
         }
 
-#if ENABLE_103JT_T
         /*** 103JT thermistor (via ADC CH1) ***/
         /* Temperature in degree Celsius (°C) */
         measurement = jt103_get_temperature(adc_read_input(ADC_CH2));
@@ -476,9 +471,7 @@ int main(void) {
         msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_SURFACE;
         msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
         index++;
-#endif
 
-#if ENABLE_TMP275_T
         /*** TMP275 ***/
         if(en_tmp275) {
             /* Start a single conversion */
@@ -499,7 +492,7 @@ int main(void) {
                 } else {
                     printf("... TMP275 temperature: FAILED!\n");
                     /* Increment incident counter */
-                    if(inc_tmp275 < INCIDENT_SINGLE_MAX) {
+                    if(inc_tmp275 < X_IC_TH_SINGLE) {
                         inc_tmp275++;
                     } else {
                         en_tmp275 = 0;
@@ -508,14 +501,13 @@ int main(void) {
             }  else {
                 printf("... TMP275 query one-shot (OS): FAILED!\n");
                 /* Increment incident counter */
-                if(inc_tmp275 < INCIDENT_SINGLE_MAX) {
+                if(inc_tmp275 < X_IC_TH_SINGLE) {
                     inc_tmp275++;
                 } else {
                     en_tmp275 = 0;
                 }
             }
         }
-#endif
 
 #if ENABLE_DS18B20_T
         /*** DS18B20 ***/
@@ -534,36 +526,10 @@ int main(void) {
             } else {
                 printf("... DS18B20 temperature: FAILED!\n");
                 /* Increment incident counter */
-                if(inc_ds18b20 < INCIDENT_SINGLE_MAX) {
+                if(inc_ds18b20 < X_IC_TH_SINGLE) {
                     inc_ds18b20++;
                 } else {
                     en_ds18b20 = 0;
-                }
-            }
-        }
-#endif
-
-#if ENABLE_STEMMA_H
-        /*** STEMMA SOIL ***/
-        if(en_stemma) {
-            /* Relative humidity in percent (% RH) */
-            if(stemma_get_humidity_avg(&stemma, &avg_stemma, &measurement) == STEMMA_RET_OK) {
-                printf("... STEMMA humidity: %.2f\n", measurement);
-                /* Pack measurement into msg as fixed-point number */
-                msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_SOIL;
-                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-                index++;
-                /* Decrement incident counter */
-                if(inc_stemma > 0) {
-                    inc_stemma--;
-                }
-            } else {
-                printf("... STEMMA humidity: FAILED!\n");
-                /* Increment incident counter */
-                if(inc_stemma < INCIDENT_SINGLE_MAX) {
-                    inc_stemma++;
-                } else {
-                    en_stemma = 0;
                 }
             }
         }
@@ -597,7 +563,7 @@ int main(void) {
             } else {
                 printf("... AM2302 temperature & humidity: FAILED!\n");
                 /* Increment incident counter */
-                if(inc_am2302 < INCIDENT_SINGLE_MAX) {
+                if(inc_am2302 < X_IC_TH_SINGLE) {
                     inc_am2302++;
                 } else {
                     en_am2302 = 0;
@@ -623,7 +589,7 @@ int main(void) {
             } else {
                 printf("... AM2302 temperature: FAILED!\n");
                 /* Increment incident counter */
-                if(inc_am2302 < INCIDENT_SINGLE_MAX) {
+                if(inc_am2302 < X_IC_TH_SINGLE) {
                     inc_am2302++;
                 } else {
                     en_am2302 = 0;
@@ -649,7 +615,7 @@ int main(void) {
             } else {
                 printf("... AM2302 humidity: FAILED!\n");
                 /* Increment incident counter */
-                if(inc_am2302 < INCIDENT_SINGLE_MAX) {
+                if(inc_am2302 < X_IC_TH_SINGLE) {
                     inc_am2302++;
                 } else {
                     en_am2302 = 0;
@@ -658,34 +624,118 @@ int main(void) {
         }
 #endif
 
+/* For SHTC3, we have three distinct cases, too: (1) T&H, (2) T, (3) H
+ */
+#if (ENABLE_SHTC3_T && ENABLE_SHTC3_H)
+        /*** SHTC3 (T & H) ***/
+        if(en_shtc3) {
+            /* Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
+            if(shtc3_get_temperature_humidity(&shtc3, &measurement, &measurement2, 1) == SHTC3_RET_OK) {
+                printf("... SHTC3 temperature: %.2f\n", measurement);
+                printf("... SHTC3 humidity: %.2f\n", measurement2);
+
+                /* Pack measurement into msg as fixed-point number */
+                /* Temperature */
+                msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_AIR;
+                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+                index++;
+                /* Humidity */
+                msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_AIR;
+                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement2);
+                index++;
+
+                /* Decrement incident counter */
+                if(inc_shtc3 > 0) {
+                    inc_shtc3--;
+                }
+            } else {
+                printf("... SHTC3 temperature & humidity: FAILED!\n");
+                /* Increment incident counter */
+                if(inc_shtc3 < X_IC_TH_SINGLE) {
+                    inc_shtc3++;
+                } else {
+                    en_shtc3 = 0;
+                }
+            }
+        }
+#endif
+
+#if (ENABLE_SHTC3_T && !ENABLE_SHTC3_H)
+        /*** SHTC3 (T) ***/
+        if(en_shtc3) {
+            /* Temperature in degree Celsius (°C) */
+            if(shtc3_get_temperature(&shtc3, &measurement) == SHTC3_RET_OK) {
+                printf("... SHTC3 temperature: %.2f\n", measurement);
+                /* Pack measurement into msg as fixed-point number */
+                msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_AIR;
+                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+                index++;
+                /* Decrement incident counter */
+                if(inc_shtc3 > 0) {
+                    inc_shtc3--;
+                }
+            } else {
+                printf("... SHTC3 temperature: FAILED!\n");
+                /* Increment incident counter */
+                if(inc_shtc3 < X_IC_TH_SINGLE) {
+                    inc_shtc3++;
+                } else {
+                    en_shtc3 = 0;
+                }
+            }
+        }
+#endif
+
+#if (!ENABLE_SHTC3_T && ENABLE_SHTC3_H)
+        /*** SHTC3 (H) ***/
+        if(en_shtc3) {
+            /* Relative humidity in percent (% RH) */
+            if(shtc3_get_humidity(&shtc3, &measurement) == DHT_RET_OK) {
+                printf("... SHTC3 humidity: %.2f\n", measurement);
+                /* Pack measurement into msg as fixed-point number */
+                msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_AIR;
+                msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
+                index++;
+                /* Decrement incident counter */
+                if(inc_shtc3 > 0) {
+                    inc_shtc3--;
+                }
+            } else {
+                printf("... SHTC3 humidity: FAILED!\n");
+                /* Increment incident counter */
+                if(inc_shtc3 < X_IC_TH_SINGLE) {
+                    inc_shtc3++;
+                } else {
+                    en_shtc3 = 0;
+                }
+            }
+        }
+#endif
+
         /*** INCIDENT COUNTER ***/
         inc_sum = inc_xbee;
-#  if ENABLE_TMP275_T
         inc_sum += inc_tmp275;
-#  endif
 #  if ENABLE_DS18B20_T
         inc_sum += inc_ds18b20;
-#  endif
-#  if ENABLE_STEMMA_H
-        inc_sum += inc_stemma;
 #  endif
 #  if (ENABLE_AM2302_T || ENABLE_AM2302_H)
         inc_sum += inc_am2302;
 #  endif
+#  if (ENABLE_SHTC3_T || ENABLE_SHTC3_H)
+        inc_sum += inc_shtc3;
+#  endif
 
         printf("... INCIDENT COUNTER (ENABLE):\n");
         printf("    ... XBEE:    %d\n", inc_xbee);
-#  if ENABLE_TMP275_T
         printf("    ... TMP275:  %d (%d)\n", inc_tmp275, en_tmp275);
-#  endif
 #  if ENABLE_DS18B20_T
         printf("    ... DS18B20: %d (%d)\n", inc_ds18b20, en_ds18b20);
 #  endif
-#  if ENABLE_STEMMA_H
-        printf("    ... STEMMA:  %d (%d)\n", inc_stemma, en_stemma);
-#  endif
 #  if (ENABLE_AM2302_T || ENABLE_AM2302_H)
         printf("    ... AM2302:  %d (%d)\n", inc_am2302, en_am2302);
+#  endif
+#  if (ENABLE_SHTC3_T || ENABLE_SHTC3_H)
+        printf("    ... SHTC3:  %d (%d)\n", inc_shtc3, en_shtc3);
 #  endif
         printf("    ... TOTAL:   %d\n", inc_sum);
         /* Counter value between 0 and defined threshold */
@@ -693,7 +743,7 @@ int main(void) {
         msg.struc.values[index].value = inc_sum;
         index++;
         /* Check total incident counter */
-        if(inc_sum >= INCIDENT_TOTAL_MAX) {
+        if(inc_sum >= X_IC_TH_TOTAL) {
             /* Wait for watchdog reset */
             wait_for_wdt_reset();
         }
@@ -701,16 +751,11 @@ int main(void) {
         /* Last reboot source */
         msg.struc.values[index].type = SEN_MSG_TYPE_REBOOT;
         /* Update value with MCUSR value (ignoring the JTAG Reset Flag (JTRF)) */
-        measurement = diag_rsource_update(MCUSR_dump & 0x0F);
+        measurement = x_rst_get_update(MCUSR_dump & 0x0F);
         msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
         index++;
         /* Reset reboot source */
         MCUSR_dump = 0;
-        /* Update reset-source indicator in EEPROM if value > 0 */
-        if(measurement != rsource_prev) {
-            eeprom_write_float((float *)DIAG_DECAY_ADDRESS,measurement);
-        }
-        rsource_prev = measurement;
 
         /* Reset the XBee RX buffer */
         xbee_rx_flush();
@@ -735,7 +780,7 @@ int main(void) {
         if(ret != XBEE_RET_OK) {
             printf("ERROR sending message (%d)!\n",ret);
             /* Increment incident counter */
-            if(inc_xbee < INCIDENT_SINGLE_MAX) {
+            if(inc_xbee < X_IC_TH_SINGLE) {
                 /* Severe issue, increment by 2 */
                 inc_xbee += 2;
             } else {
