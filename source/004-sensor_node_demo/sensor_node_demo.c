@@ -5,19 +5,20 @@
  * periodically measures certain physical quantities and transmits the
  * data to a central cluster head via Zigbee (Xbee). After the sensor
  * value update the Xbee and the AVR are put to sleep and are woken
- * up after a defined period by the onboard RTC. Additionally, the 
- * runtime of the active phase can be measure using the MCU's timer1 
+ * up after a defined period by the onboard RTC. Additionally, the
+ * runtime of the active phase can be measure using the MCU's timer1
  * unit. In case of an error that cannot be resolved, the WDT is
  * started and the MCU waits for a WDT reset.
  *
  * @file    /004-sensor_node_demo/sensor_node_demo.c
  * @author  Dominik Widhalm
- * @version 1.3.2
- * @date    2021/08/10
+ * @version 1.4.0
+ * @date    2021/10/18
  */
 
 
 /*** DEMO CONFIGURATION ***/
+#define ASNX_VERSION_MINOR          (4)     /**< Used ASN(x) board version minor number (i.e., 0 to 4) */
 #define ENABLE_DBG                  (0)     /**< Enable debug output via UART1 (9600 BAUD) */
 #define UPDATE_INTERVAL             (10)    /**< Update interval [min] */
 
@@ -64,14 +65,18 @@
 #endif
 #include "hw/led.h"
 #include "i2c/i2c.h"
-#include "uart/uart.h"
 #if ENABLE_RUNTIME
 #  include "timer/timer.h"
 #endif
+#include "uart/uart.h"
 /* Radio */
 #include "xbee/xbee.h"
+#if ASNX_VERSION_MINOR<1
+#include "timer/systick.h"
+#else
 /* RTC */
-#include "rtc/pcf85263.h"
+#  include "rtc/pcf85263.h"
+#endif
 /* Sensors */
 // 103JT
 #if ENABLE_103JT_T
@@ -105,6 +110,10 @@
 
 
 /***** GLOBAL VARIABLES ***********************************************/
+#if ASNX_VERSION_MINOR<1
+/*! Variable (flag) for barrier synchronization */
+uint8_t barrier = 1;
+#endif
 /*! Previous reset-source indicator */
 float rsource_prev = 0.0;
 
@@ -138,6 +147,23 @@ void wait_for_wdt_reset(void) {
 }
 
 
+#if ASNX_VERSION_MINOR<1
+/***
+ * Callback function to be called by the systick timer.
+ ***/
+void update(void) {
+    static uint8_t cnt = 0;
+    /* Check if update time has elapsed */
+    if(++cnt >= UPDATE_INTERVAL) {
+        /* Reset counter */
+        cnt = 0;
+        /* Set barrier sync flag */
+        barrier = 1;
+    }
+}
+#endif
+
+
 /*!
  * Main function of the demo application.
  */
@@ -146,8 +172,12 @@ int main(void) {
     /* Message data structure */
     SEN_MSG_u msg;
     msg.struc.time = 0;
+#if ASNX_VERSION_MINOR>=1
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
+    /* Temporary variables */
+    uint8_t reg = 0;
+#endif
 #if (ENABLE_BAT_V || ENABLE_XBEE_T || ENABLE_XBEE_V || ENABLE_103JT_T || ENABLE_TMP275_T || ENABLE_DS18B20_T || ENABLE_STEMMA_H || ENABLE_AM2302_T || ENABLE_AM2302_H)
     /* Temporary variable for sensor measurements */
     float measurement = 0.0;
@@ -158,8 +188,6 @@ int main(void) {
 #if (ENABLE_MCU_V || ENABLE_BAT_V)
     float vcc = 0.0;
 #endif
-    /* Temporary variables */
-    uint8_t reg = 0;
     /* Message index counter */
     uint8_t index = 0;
 #if ENABLE_RUNTIME
@@ -191,17 +219,23 @@ int main(void) {
 #if ENABLE_INCIDENT
     uint16_t inc_sum = 0;           /* Total incident counter (sum of others) */
 #endif
-    
+
     /* Disable unused hardware modules */
+#if ASNX_VERSION_MINOR<1
+    PRR0 = _BV(PRTIM2) | _BV(PRSPI);
+#else
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
+#endif
 #if ENABLE_RUNTIME==0
     PRR0 |= _BV(PRTIM1);
 #endif
     PRR1 = _BV(PRTIM3);
-    
+
+#if ASNX_VERSION_MINOR>=1
     /* Configure the sleep mode */
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-    
+#endif
+
     /* Initialize the user LEDs and disable both by default */
     led_init();
     led1_high();
@@ -227,15 +261,15 @@ int main(void) {
     /* Disable UART1 */
     PRR0 |= _BV(PRUSART1);
 #endif
-    
+
 #if ENABLE_RUNTIME
     /* Reset timer1 registers */
     timer1_reset();
 #endif
-    
+
     /* Initialize Xbee 3 (uses UART0) */
     xbee_init(9600UL);
-    
+
     /* Initialize the diagnostic circuitry */
     diag_init();
     diag_disable();
@@ -245,10 +279,16 @@ int main(void) {
         rsource_prev = eeprom_read_float((float *)DIAG_DECAY_ADDRESS);
         diag_rsource_set(rsource_prev);
     }
-    
+
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
-    
+
+#if ASNX_VERSION_MINOR<1
+    /* Initialize the systick timer */
+    systick_init();
+    /* Set a systick callback function to be called every second */
+    systick_set_callback_min(update);
+#else
     /* Initialize the RTC */
     if(pcf85263_init() != PCF85263_RET_OK) {
         printf("Couldn't initialize RTC ... aborting!\n");
@@ -297,11 +337,12 @@ int main(void) {
     } else {
         printf("... RTC started\n");
     }
-    
     /* Configure INT2 to fire interrupt when logic level is "low" */
     EICRA = 0x00;
     EIMSK = _BV(INT2);
-    
+#endif
+
+
     /* Enable interrupts globally */
     sei();
 
@@ -320,7 +361,7 @@ int main(void) {
         printf("... TMP275 ready\n");
     }
 #endif
-    
+
 #if ENABLE_DS18B20_T
     /* Initialize the DS18B20 sensor */
     if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) != DS18X20_RET_OK) {
@@ -331,7 +372,7 @@ int main(void) {
         printf("... DS18B20 ready\n");
     }
 #endif
-    
+
 #if ENABLE_STEMMA_H
     /* Initialize the STEMMA SOIL sensor */
     if(stemma_init(&stemma, STEMMA_I2C_ADDRESS) != STEMMA_RET_OK) {
@@ -342,7 +383,7 @@ int main(void) {
         printf("... STEMMA ready\n");
     }
 #endif
-    
+
 #if (ENABLE_AM2302_T || ENABLE_AM2302_H)
     /* Initialize the AMS2302 sensor */
     dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
@@ -373,13 +414,23 @@ int main(void) {
 
     /***** MAIN ROUTINE ***********************************************/
     while(1) {
+#if ASNX_VERSION_MINOR<1
+        /*** Barrier synchronization */
+        /* Wait until the barrier sync flag is set */
+        while(barrier == 0) {
+            _delay_ms(100);
+        }
+        /* Reset barrier sync flag */
+        barrier = 0;
+#endif
+
         /* Reset sensor message */
         for(index=0; index<SEN_MSG_NUM_MEASUREMENTS; index++) {
             msg.struc.values[index].type = SEN_MSG_TYPE_IGNORE;
             msg.struc.values[index].value = 0;
         }
         index = 0;
-        
+
 #if ENABLE_RUNTIME
         /* Reset timer1 counter value to 0 */
         timer1_set_tcnt(0);
@@ -394,26 +445,28 @@ int main(void) {
             printf("... TIMER1 runtime = %d.%03d.%03d us\n",(uint16_t)(runtime_us/1000000UL),(uint16_t)((runtime_us/1000UL)%1000),(uint16_t)(runtime_us%1000));
 #  endif
         }
-        /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16,78s] */
+        /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16.78s] */
         timer1_start(TIMER_PRESCALER_1024);
 #endif
-        
+
+#if ASNX_VERSION_MINOR>1
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
             printf("Couldn't stop RTC ... aborting!\n");
             wait_for_wdt_reset();
         }
-        
+#endif
+
         /* Enable the self-diagnostics */
         diag_enable();
-        
+
         /* Wake-up xbee */
         if(xbee_sleep_disable() != XBEE_RET_OK) {
             printf("Couldn't wake-up xbee radio ... aborting!\n");
             /* Wait for watchdog reset */
             wait_for_wdt_reset();
         }
-        
+
         /* Reset the TWI */
         i2c_reset();
 #if (ENABLE_ADC_SELF || ENABLE_MCU_V || ENABLE_BAT_V || ENABLE_103JT_T)
@@ -421,6 +474,7 @@ int main(void) {
         adc_enable();
 #endif
 
+#if ASNX_VERSION_MINOR>=1
         /* Reset time structure for stop-watch reset below */
         pcf85263_clear_stw_time(&time);
         /* Reset stop-watch time */
@@ -430,7 +484,8 @@ int main(void) {
             printf("Couldn't start RTC ... aborting!\n");
             wait_for_wdt_reset();
         }
-        
+#endif
+
 #if ENABLE_ADC_SELF
         /*** ADC self-diagnosis (via ADC CH0) ***/
         /* Constant voltage divider (1:1) */
@@ -439,7 +494,7 @@ int main(void) {
         printf("... ADC self-diagnosis: %d\n", msg.struc.values[index].value);
         index++;
 #endif
-       
+
 #if ENABLE_MCU_V
         /*** MCU supply voltage (via ADC) ***/
         /* Supply voltage in volts (V) */
@@ -450,7 +505,7 @@ int main(void) {
         msg.struc.values[index].value = fp_float_to_fixed16_10to6(vcc);
         index++;
 #endif
-        
+
 #if ENABLE_BAT_V
         /*** Battery voltage (via ADC) ***/
 #  if ENABLE_MCU_V==0
@@ -458,14 +513,18 @@ int main(void) {
         vcc = adc_read_vcc();
 #  endif
         /* Calculate voltage from value (voltage divider 1:1) */
+#if ASNX_VERSION_MINOR<1
+        measurement = 2.0 * (adc_read_input(ADC_CH2) * (vcc / 1023.0));
+#else
         measurement = 2.0 * (adc_read_input(ADC_CH1) * (vcc / 1023.0));
+#endif
         printf("... Battery voltage: %.2f\n", measurement);
         /* Pack measurement into msg as fixed-point number */
         msg.struc.values[index].type = SEN_MSG_TYPE_VSS_BAT;
         msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
         index++;
 #endif
-        
+
 #if ENABLE_XBEE_T
         /*** Xbee3 temperature ***/
         /* Reset the XBee RX buffer */
@@ -492,7 +551,7 @@ int main(void) {
             }
         }
 #endif
-        
+
 #if ENABLE_XBEE_V
         /*** Xbee3 supply voltage ***/
         /* Reset the XBee RX buffer */
@@ -519,11 +578,15 @@ int main(void) {
             }
         }
 #endif
-        
+
 #if ENABLE_103JT_T
         /*** 103JT thermistor (via ADC CH1) ***/
         /* Temperature in degree Celsius (°C) */
+#if ASNX_VERSION_MINOR<1
+        measurement = jt103_get_temperature(adc_read_input(ADC_CH1));
+#else
         measurement = jt103_get_temperature(adc_read_input(ADC_CH2));
+#endif
         printf("... 103JT thermistor: %.2f\n", measurement);
         /* Pack measurement into msg as fixed-point number */
         msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_SURFACE;
@@ -536,7 +599,7 @@ int main(void) {
         if(en_tmp275) {
             /* Start a single conversion */
             if(tmp275_set_config(&tmp275, 0xA1) == TMP275_RET_OK) {
-                /* Wait for the conversion to finish (~55ms; take 60 to be sure) */
+                /* Wait for the conversion to finish (55ms) */
                 _delay_ms(60);
                 /* Get temperature in degree Celsius (°C) */
                 if(tmp275_get_temperature(&tmp275, &measurement) == TMP275_RET_OK) {
@@ -595,7 +658,7 @@ int main(void) {
             }
         }
 #endif
-        
+
 #if ENABLE_STEMMA_H
         /*** STEMMA SOIL ***/
         if(en_stemma) {
@@ -632,7 +695,7 @@ int main(void) {
             if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
                 printf("... AM2302 temperature: %.2f\n", measurement);
                 printf("... AM2302 humidity: %.2f\n", measurement2);
-                
+
                 /* Pack measurement into msg as fixed-point number */
                 /* Temperature */
                 msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_AIR;
@@ -642,7 +705,7 @@ int main(void) {
                 msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_AIR;
                 msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement2);
                 index++;
-                
+
                 /* Decrement incident counter */
                 if(inc_am2302 > 0) {
                     inc_am2302--;
@@ -684,7 +747,7 @@ int main(void) {
             }
         }
 #endif
-        
+
 #if (!ENABLE_AM2302_T && ENABLE_AM2302_H)
         /*** AM2302 (H) ***/
         if(en_am2302) {
@@ -752,7 +815,7 @@ int main(void) {
             wait_for_wdt_reset();
         }
 #endif
-        
+
 #if ENABLE_REBOOT
         /* Last reboot source */
         msg.struc.values[index].type = SEN_MSG_TYPE_REBOOT;
@@ -768,7 +831,6 @@ int main(void) {
         }
         rsource_prev = measurement;
 #endif
-        
         /* Reset the XBee RX buffer */
         xbee_rx_flush();
         /* Set the measurements count in data structure */
@@ -806,8 +868,8 @@ int main(void) {
             retries = 0;
             while(xbee_tx_cnt()>0) {
                 /* Check if timeout has been reached */
-                if(retries >= XBEE_TX_TIMEOUT) {
-                    printf("UART0 TX buffer didn't become empty (still %d bytes) ... aborting!\n",xbee_tx_cnt());
+                if(retries >= ((uint32_t)XBEE_TX_TIMEOUT*1000)) {
+                    printf("UART0 TX buffer didn't become empty (%d bytes left) ... aborting!\n",xbee_tx_cnt());
                     /* Wait for watchdog reset */
                     wait_for_wdt_reset();
                 } else {
@@ -820,39 +882,42 @@ int main(void) {
         /* Increment message number ("time") */
         msg.struc.time++;
         printf("%d sensor values sent! (#%d)\n\n",index,msg.struc.time);
-        
+
         /* Send xbee to sleep */
         if(xbee_sleep_enable() != XBEE_RET_OK) {
             printf("Couldn't send xbee radio to sleep ... aborting!\n");
             /* Wait for watchdog reset */
             wait_for_wdt_reset();
         }
-        
+
 #if (ENABLE_ADC_SELF || ENABLE_MCU_V || ENABLE_BAT_V || ENABLE_103JT_T)
         /* Disable ADC */
         adc_disable();
 #endif
-        
+
         /* Disable the self-diagnostics */
         diag_disable();
-        
+
 #if ENABLE_RUNTIME
         /* Stop timer1 to save runtime measurement */
         timer1_stop();
         /* Save timer1 counter value */
         runtime = timer1_get_tcnt();
 #endif
-        
+
+#if ASNX_VERSION_MINOR>1
         /* Enter power down mode */
         sleep_enable();
         sleep_bod_disable();
         sleep_cpu();
+#endif
     }
 
     return 0;
 }
 
 
+#if ASNX_VERSION_MINOR>1
 /*!
  * INT2 external interrupt 2 interrupt.
  */
@@ -862,3 +927,4 @@ ISR(INT2_vect) {
     /* Wait some time to fully wake up */
     _delay_ms(5);
 }
+#endif
