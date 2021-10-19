@@ -20,19 +20,20 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 0.1.0
- * @date    2021/10/18
+ * @version 0.2.0
+ * @date    2021/10/19
  */
 
 
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
 #define UPDATE_INTERVAL             1               /**< Update interval [min] */
+#define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 #define XBEE_DESTINATION_MAC        SEN_MSG_MAC_CH  /**< MAC address of the destination */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
-#define ENABLE_AM2302               1               /**< enable AM2302 sensor */
-#define ENABLE_SHTC3                0               /**< enable SHTC3 sensor */
+#define ENABLE_AM2302               0               /**< enable AM2302 sensor */
+#define ENABLE_SHTC3                1               /**< enable SHTC3 sensor */
 /* Check configuration */
 #if (ENABLE_AM2302 && ENABLE_SHTC3)
 #  error "Use either AM2302 or SHTC3 for air measurements, not both!"
@@ -54,8 +55,13 @@
 #include "uart/uart.h"
 /* Radio */
 #include "xbee/xbee.h"
+#if ASNX_VERSION_MINOR>0
 /* RTC */
-#include "rtc/pcf85263.h"
+#  include "rtc/pcf85263.h"
+#else
+/* SysTick */
+#  include "timer/systick.h"
+#endif
 /* Sensors */
 #include "sensors/tmp275.h"
 #if ENABLE_DS18B20
@@ -104,6 +110,13 @@ typedef struct {
 } MSG_t;
 
 
+/***** GLOBAL VARIABLES ***********************************************/
+#if ASNX_VERSION_MINOR==0
+/*! Variable (flag) for barrier synchronization */
+uint8_t barrier = 1;
+#endif
+
+
 /***** LOCAL FUNCTIONS ************************************************/
 /*!
  * Put a MCUSR register dump into the .noinit section.
@@ -131,6 +144,23 @@ void wait_for_wdt_reset(void) {
     /* Wait for reset */
     while(1);
 }
+
+
+#if ASNX_VERSION_MINOR==0
+/***
+ * Callback function to be called by the systick timer.
+ ***/
+void update(void) {
+    static uint8_t cnt = 0;
+    /* Check if update time has elapsed */
+    if(++cnt >= UPDATE_INTERVAL) {
+        /* Reset counter */
+        cnt = 0;
+        /* Set barrier sync flag */
+        barrier = 1;
+    }
+}
+#endif
 
 
 /*!
@@ -188,8 +218,10 @@ int main(void) {
     MSG_t msg;
     msg.time = 0;
     msg_reset(&msg);
+#if ASNX_VERSION_MINOR>0
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
+#endif
     /* Sensor handles */
     TMP275_t tmp275;                /* TMP275 sensor device structure */
 #if ENABLE_DS18B20
@@ -218,9 +250,13 @@ int main(void) {
     printf("=== STARTING UP ... ===\n");
     
     /* Disable unused hardware modules */
+#if ASNX_VERSION_MINOR>0
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
     /* Configure the sleep mode */
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+#else
+    PRR0 = _BV(PRTIM2) | _BV(PRSPI);
+#endif
     
 #if ENABLE_DBG
     /* Initialize UART1 for debug purposes */
@@ -247,6 +283,7 @@ int main(void) {
     /* Initialize the fault indicators */
     indicators_init();
 
+#if ASNX_VERSION_MINOR>0
     /* Initialize the RTC */
     time.minutes = UPDATE_INTERVAL;
     if(pcf85263_init_wakeup_src(&time) != PCF85263_RET_OK) {
@@ -256,6 +293,13 @@ int main(void) {
     /* Configure INT2 to fire interrupt when logic level is "low" */
     EICRA = 0x00;
     EIMSK = _BV(INT2);
+#else
+    /* Initialize the systick timer */
+    systick_init();
+    /* Set a systick callback function to be called every second */
+    systick_set_callback_min(update);
+#endif
+
     /* Enable interrupts globally */
     sei();
 
@@ -316,9 +360,7 @@ int main(void) {
 
 
     while(1) {
-        /* Reset message structure contents */
-        msg_reset(&msg);
-        
+#if ASNX_VERSION_MINOR>0
         /*** 3.1) reset RTC (stop-watch mode) *************************/
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
@@ -334,7 +376,15 @@ int main(void) {
             printf("Couldn't re-start RTC ... aborting!\n");
             wait_for_wdt_reset();
         }
-
+#else
+        /*** 3.1) barrier synchronization *****************************/
+        /* Wait until the barrier sync flag is set */
+        while(barrier == 0) {
+            _delay_ms(100);
+        }
+        /* Reset barrier sync flag */
+        barrier = 0;
+#endif
 
         /*** 3.2) enable modules/sensors ******************************/
         /* Wake-up xbee */
@@ -358,6 +408,9 @@ int main(void) {
 
         
         /*** 3.3) query sensors ***************************************/
+        /* Reset message structure contents */
+        msg_reset(&msg);
+        
 #if ENABLE_DS18B20
         /* DS18B20 - Temperature in degree Celsius (°C) */
         if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
@@ -430,6 +483,7 @@ int main(void) {
         } else {
             x_ic_inc(X_IC_INC_NORM);
         }
+        
         /* Node temperature monitor (X_NT) */
         msg.x_nt = fp_float_to_fixed16_10to6(x_nt_get_normalized(t_mcu, t_brd, t_trx));
         /* Supply voltage monitor (X_VS) */
@@ -514,16 +568,18 @@ int main(void) {
         runtime = timer1_get_tcnt();
 
 
+#if ASNX_VERSION_MINOR>0
         /*** 3.7) put MCU to sleep ************************************/
         sleep_enable();
         sleep_bod_disable();
-        sleep_cpu();
+#endif
     }
 
     return 0;
 }
 
 
+#if ASNX_VERSION_MINOR>0
 /*!
  * INT2 external interrupt 2 interrupt.
  */
@@ -533,3 +589,4 @@ ISR(INT2_vect) {
     /* Wait some time to fully wake up */
     _delay_ms(5);
 }
+#endif
