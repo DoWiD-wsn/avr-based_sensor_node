@@ -30,12 +30,13 @@
 #define UPDATE_INTERVAL             1               /**< Update interval [min] */
 #define XBEE_DESTINATION_MAC        SEN_MSG_MAC_CH  /**< MAC address of the destination */
 /* Enable (1) or disable (0) sensor measurements */
-#define ENABLE_DS18B20_T            1               /**< DS18B20 sensor temperature (T) */
-#define ENABLE_AM2302_T             1               /**< AM2302 sensor temperature (T) */
-#define ENABLE_AM2302_H             1               /**< AM2302 sensor humidity (H) */
-#define ENABLE_SHTC3_T              1               /**< SHTC3 sensor temperature (T) */
-#define ENABLE_SHTC3_H              1               /**< SHTC3 sensor humidity (H) */
-
+#define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
+#define ENABLE_AM2302               1               /**< enable AM2302 sensor */
+#define ENABLE_SHTC3                0               /**< enable SHTC3 sensor */
+/* Check configuration */
+#if (ENABLE_AM2302 && ENABLE_SHTC3)
+#  error "Use either AM2302 or SHTC3 for air measurements, not both!"
+#endif
 
 /***** INCLUDES *******************************************************/
 /*** AVR ***/
@@ -57,13 +58,13 @@
 #include "rtc/pcf85263.h"
 /* Sensors */
 #include "sensors/tmp275.h"
-#if ENABLE_DS18B20_T
+#if ENABLE_DS18B20
 #  include "sensors/ds18x20.h"
 #endif
-#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+#if ENABLE_AM2302
 #  include "sensors/dht.h"
 #endif
-#if (ENABLE_SHTC3_T || ENABLE_SHTC3_H)
+#if ENABLE_SHTC3
 #  include "sensors/shtc3.h"
 #endif
 /* Misc */
@@ -77,6 +78,30 @@
 #endif
 /* DCA */
 #include "dca/indicators.h"
+
+
+/***** STRUCTURES *****************************************************/
+/*!
+ * A structure to store the sensor and fault indicator values.
+ */
+typedef struct {
+    /* additional data */
+    uint16_t time;          /**< timestamp (2 byte) */
+    /* use case data */
+    uint16_t t_air;         /**< air temperature (fixed point) */
+    uint16_t t_soil;        /**< soil temperature (fixed point) */
+    uint16_t h_air;         /**< air humidity (fixed point) */
+    uint16_t h_soil;        /**< soil humidity (fixed point) */
+    /* fault indicator */
+    uint16_t x_nt;          /**< X_NT */
+    uint16_t x_vs;          /**< X_VS */
+    uint16_t x_bat;         /**< X_BAT */
+    uint16_t x_art;         /**< X_ART */
+    uint16_t x_rst;         /**< X_RST */
+    uint16_t x_ic;          /**< X_IC */
+    uint16_t x_adc;         /**< X_ADC */
+    uint16_t x_usart;       /**< X_USART */
+} MSG_t;
 
 
 /***** LOCAL FUNCTIONS ************************************************/
@@ -109,17 +134,45 @@ void wait_for_wdt_reset(void) {
 
 
 /*!
+ * Reset the contents of a message.
+ */
+void msg_reset(MSG_t* msg) {
+    msg->t_air = 0;
+    msg->t_soil = 0;
+    msg->h_air = 0;
+    msg->h_soil = 0;
+    msg->x_nt = 0;
+    msg->x_vs = 0;
+    msg->x_bat = 0;
+    msg->x_art = 0;
+    msg->x_rst = 0;
+    msg->x_ic = 0;
+    msg->x_adc = 0;
+    msg->x_usart = 0;
+}
+
+
+/*!
  * Debug: print the contents of a given sensor message structure
  */
 #if ENABLE_DBG
-void dbg_print_msg(SEN_MSG_u* msg) {
-    printf("===== SENSOR MESSAGE CONTENTS =====\n");
-    printf("%05d. message update\n",msg->struc.time);
-    printf("   %2d sensor values\n",msg->struc.cnt);
+void dbg_print_msg(MSG_t* msg) {
+    printf("\n===== SENSOR MESSAGE CONTENTS =====\n");
+    printf("%d message updates\n",msg->time);
     printf("=== SENSOR VALUES ===\n");
-    for(uint8_t i=0; i<msg->struc.cnt; i++) {
-        printf("Value: %5d | Type: %02X\n\n",msg->struc.values[i].value,msg->struc.values[i].type);
-    }
+    printf("T_air:   %.2f C\n",fp_fixed16_to_float_10to6(msg->t_air));
+    printf("T_soil:  %.2f C\n",fp_fixed16_to_float_10to6(msg->t_soil));
+    printf("H_air:   %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_air));
+    printf("H_soil:  %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_soil));
+    printf("=== SENSOR VALUES ===\n");
+    printf("X_NT:    %.2f\n",fp_fixed16_to_float_10to6(msg->x_nt));
+    printf("X_VS:    %.2f\n",fp_fixed16_to_float_10to6(msg->x_vs));
+    printf("X_BAT:   %.2f\n",fp_fixed16_to_float_10to6(msg->x_bat));
+    printf("X_ART:   %.2f\n",fp_fixed16_to_float_10to6(msg->x_art));
+    printf("X_RST:   %.2f\n",fp_fixed16_to_float_10to6(msg->x_rst));
+    printf("X_IC:    %.2f\n",fp_fixed16_to_float_10to6(msg->x_ic));
+    printf("X_ADC:   %.2f\n",fp_fixed16_to_float_10to6(msg->x_adc));
+    printf("X_USART: %.2f\n",fp_fixed16_to_float_10to6(msg->x_usart));
     printf("===================================\n\n");
 }
 #endif
@@ -132,31 +185,30 @@ void dbg_print_msg(SEN_MSG_u* msg) {
 int main(void) {
     /*** Local variables ***/
     /* Message data structure */
-    SEN_MSG_u msg;
-    msg.struc.time = 0;
+    MSG_t msg;
+    msg.time = 0;
+    msg_reset(&msg);
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
     /* Sensor handles */
     TMP275_t tmp275;                /* TMP275 sensor device structure */
-#if ENABLE_DS18B20_T
+#if ENABLE_DS18B20
     DS18X20_t ds18b20;              /* DS18B20 sensor device structure */
 #endif
-#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+#if ENABLE_AM2302
     DHT_t am2302;                   /* AM2302 sensor device structure */
 #endif
-#if (ENABLE_SHTC3_T || ENABLE_SHTC3_H)
+#if ENABLE_SHTC3
     SHTC3_t shtc3;                  /* SHTC3 sensor device structure */
 #endif
     /* Temporary sensor measurement variables */
     float measurement = 0.0;
-#if (ENABLE_AM2302_T && ENABLE_AM2302_H) || (ENABLE_SHTC3_T && ENABLE_SHTC3_H)
+#if (ENABLE_AM2302 || ENABLE_SHTC3)
     float measurement2 = 0.0;
 #endif
     /* Diagnostic values */
     float v_bat, v_mcu, v_trx;
     float t_mcu, t_trx, t_brd;
-    /* Message index counter */
-    uint8_t index = 0;
     /* Runtime measurement */
     uint16_t runtime = 0, runtime_ms = 0;
 
@@ -218,7 +270,7 @@ int main(void) {
         wait_for_wdt_reset();
     }
 
-#if ENABLE_DS18B20_T
+#if ENABLE_DS18B20
     /* Initialize the DS18B20 sensor */
     if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) != DS18X20_RET_OK) {
         printf("Couldn't initialize DS18B20!\n");
@@ -226,13 +278,13 @@ int main(void) {
     }
 #endif
 
-#if (ENABLE_AM2302_T || ENABLE_AM2302_H)
+#if ENABLE_AM2302
     /* Initialize the AMS2302 sensor */
     dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
     printf("... AMS2302 ready\n");
 #endif
 
-#if (ENABLE_SHTC3_T || ENABLE_SHTC3_H)
+#if ENABLE_SHTC3
     /* Initialize the SHTC3 sensor */
     if(shtc3_init(&shtc3, SHTC3_I2C_ADDRESS) != SHTC3_RET_OK) {
         printf("Couldn't initialize SHTC3!\n");
@@ -260,13 +312,12 @@ int main(void) {
         }
     }
     /* Print status message */
-    printf("... ZIGBEE connected (variable message size; maximum = %d bytes)\n", SEN_MSG_SIZE_MAX);
+    printf("... ZIGBEE connected\n");
 
 
     while(1) {
-        /* Reset sensor message index */
-        index = 0;
-        
+        /* Reset message structure contents */
+        msg_reset(&msg);
         
         /*** 3.1) reset RTC (stop-watch mode) *************************/
         /* Stop RTC */
@@ -307,123 +358,37 @@ int main(void) {
 
         
         /*** 3.3) query sensors ***************************************/
-#if ENABLE_DS18B20_T
+#if ENABLE_DS18B20
         /* DS18B20 - Temperature in degree Celsius (°C) */
         if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
             printf("... DS18B20 temperature: %.2f\n", measurement);
-            
-            /* Pack measurement into msg as fixed-point number */
-            msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_SOIL;
-            msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-            index++;
+            msg.t_soil = fp_float_to_fixed16_10to6(measurement);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
             x_ic_inc(X_IC_INC_NORM);
         }
 #endif
 
-        /* Since AM2302 allows only one result query per 2 seconds, we need to
-         * handle three distinct cases: (1) T&H, (2) T, (3) H
-         */
-// case (1)
-#if (ENABLE_AM2302_T && ENABLE_AM2302_H)
+#if ENABLE_AM2302
         /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
         if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
             printf("... AM2302 temperature: %.2f\n", measurement);
             printf("... AM2302 humidity: %.2f\n", measurement2);
-
-            /* Pack measurement into msg as fixed-point number */
-            /* Temperature */
-            msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_AIR;
-            msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-            index++;
-            /* Humidity */
-            msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_AIR;
-            msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement2);
-            index++;
-            x_ic_dec(X_IC_DEC_NORM);
-        } else {
-            x_ic_inc(X_IC_INC_NORM);
-        }
-#endif
-// case (2)
-#if (ENABLE_AM2302_T && !ENABLE_AM2302_H)
-        /* AM2302 - Temperature in degree Celsius (°C) */
-        if(dht_get_temperature(&am2302, &measurement) == DHT_RET_OK) {
-            printf("... AM2302 temperature: %.2f\n", measurement);
-            
-            /* Pack measurement into msg as fixed-point number */
-            msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_AIR;
-            msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-            index++;
-            x_ic_dec(X_IC_DEC_NORM);
-        } else {
-            x_ic_inc(X_IC_INC_NORM);
-        }
-#endif
-// case (3)
-#if (!ENABLE_AM2302_T && ENABLE_AM2302_H)
-        /* AM2302 - Relative humidity in percent (% RH) */
-        if(dht_get_humidity(&am2302, &measurement) == DHT_RET_OK) {
-            printf("... AM2302 humidity: %.2f\n", measurement);
-            
-            /* Pack measurement into msg as fixed-point number */
-            msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_AIR;
-            msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-            index++;
+            msg.t_air = fp_float_to_fixed16_10to6(measurement);
+            msg.h_air = fp_float_to_fixed16_10to6(measurement2);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
             x_ic_inc(X_IC_INC_NORM);
         }
 #endif
 
-/* For SHTC3, we have three distinct cases, too: (1) T&H, (2) T, (3) H */
-// case (1)
-#if (ENABLE_SHTC3_T && ENABLE_SHTC3_H)
+#if ENABLE_SHTC3
         /* SHTC3 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
         if(shtc3_get_temperature_humidity(&shtc3, &measurement, &measurement2, 1) == SHTC3_RET_OK) {
             printf("... SHTC3 temperature: %.2f\n", measurement);
             printf("... SHTC3 humidity: %.2f\n", measurement2);
-
-            /* Pack measurement into msg as fixed-point number */
-            /* Temperature */
-            msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_AIR;
-            msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-            index++;
-            /* Humidity */
-            msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_AIR;
-            msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement2);
-            index++;
-            x_ic_dec(X_IC_DEC_NORM);
-        } else {
-            x_ic_inc(X_IC_INC_NORM);
-        }
-#endif
-// case (2)
-#if (ENABLE_SHTC3_T && !ENABLE_SHTC3_H)
-        /* SHTC3 - Temperature in degree Celsius (°C) */
-        if(shtc3_get_temperature(&shtc3, &measurement) == SHTC3_RET_OK) {
-            printf("... SHTC3 temperature: %.2f\n", measurement);
-            
-            /* Pack measurement into msg as fixed-point number */
-            msg.struc.values[index].type = SEN_MSG_TYPE_TEMP_AIR;
-            msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-            index++;
-            x_ic_dec(X_IC_DEC_NORM);
-        } else {
-            x_ic_inc(X_IC_INC_NORM);
-        }
-#endif
-// case (3)
-#if (!ENABLE_SHTC3_T && ENABLE_SHTC3_H)
-        /*** SHTC3 - Relative humidity in percent (% RH) */
-        if(shtc3_get_humidity(&shtc3, &measurement) == DHT_RET_OK) {
-            printf("... SHTC3 humidity: %.2f\n", measurement);
-            
-            /* Pack measurement into msg as fixed-point number */
-            msg.struc.values[index].type = SEN_MSG_TYPE_HUMID_AIR;
-            msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-            index++;
+            msg.t_air = fp_float_to_fixed16_10to6(measurement);
+            msg.h_air = fp_float_to_fixed16_10to6(measurement2);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
             x_ic_inc(X_IC_INC_NORM);
@@ -465,61 +430,30 @@ int main(void) {
         } else {
             x_ic_inc(X_IC_INC_NORM);
         }
-        /* Active runtime measurement */
+        /* Node temperature monitor (X_NT) */
+        msg.x_nt = fp_float_to_fixed16_10to6(x_nt_get_normalized(t_mcu, t_brd, t_trx));
+        /* Supply voltage monitor (X_VS) */
+        msg.x_vs = fp_float_to_fixed16_10to6(x_vs_get_normalized(v_mcu, v_trx));
+        /* Battery voltage monitor (X_BAT) */
+        msg.x_bat = fp_float_to_fixed16_10to6(x_bat_get_normalized(v_bat));
+        /* Active runtime monitor (X_ART) */
         if(runtime > 0) {
             /* Subsequent cycle -> measurement available */
             // runtime_us = (uint32_t)(runtime) * 256UL;
             runtime_ms = (uint16_t)(((double)runtime * 256.0) / 1000.0);
+            msg.x_art = fp_float_to_fixed16_10to6(x_art_get_normalized(runtime_ms));
+        } else {
+            msg.x_art = fp_float_to_fixed16_10to6(0.0);
         }
-
-        /* Node temperature monitor (X_NT) */
-        measurement = x_nt_get_normalized(t_mcu, t_brd, t_trx);
-        msg.struc.values[index].type = SEN_MSG_TYPE_X_NT;
-        msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-        index++;
-        
-        /* Supply voltage monitor (X_VS) */
-        measurement = x_vs_get_normalized(v_mcu, v_trx);
-        msg.struc.values[index].type = SEN_MSG_TYPE_X_VS;
-        msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-        index++;
-        
-        /* Battery voltage monitor (X_BAT) */
-        measurement = x_bat_get_normalized(v_bat);
-        msg.struc.values[index].type = SEN_MSG_TYPE_X_BAT;
-        msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-        index++;
-        
-        /* Active runtime monitor (X_ART) */
-        measurement = x_art_get_normalized(runtime_ms);
-        msg.struc.values[index].type = SEN_MSG_TYPE_X_ART;
-        msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-        index++;
-        
         /* Reset monitor (X_RST) */
-        measurement = x_rst_get_normalized(MCUSR_dump & 0x0F);
+        msg.x_rst = fp_float_to_fixed16_10to6(x_rst_get_normalized(MCUSR_dump & 0x0F));
         MCUSR_dump = 0;
-        msg.struc.values[index].type = SEN_MSG_TYPE_X_RST;
-        msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-        index++;
-        
         /* Software incident counter (X_IC) */
-        measurement = x_ic_get_normalized();
-        msg.struc.values[index].type = SEN_MSG_TYPE_X_IC;
-        msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-        index++;
-        
+        msg.x_ic = fp_float_to_fixed16_10to6(x_ic_get_normalized());
         /* ADC self-check (X_ADC) */
-        measurement = x_adc_get_normalized(diag_adc_check());
-        msg.struc.values[index].type = SEN_MSG_TYPE_X_ADC;
-        msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-        index++;
-        
+        msg.x_adc = fp_float_to_fixed16_10to6(x_adc_get_normalized(diag_adc_check()));
         /* USART self-check (X_USART) */
-        measurement = x_usart_get_normalized(NULL, NULL, 0);            // TODO: implement USART check!?
-        msg.struc.values[index].type = SEN_MSG_TYPE_X_USART;
-        msg.struc.values[index].value = fp_float_to_fixed16_10to6(measurement);
-        index++;
+        msg.x_usart = fp_float_to_fixed16_10to6(x_usart_get_normalized(NULL, NULL, 0));
 
         /* Check incident counter value */
         if(x_ic_get() >= X_IC_THRESHOLD) {
@@ -532,8 +466,6 @@ int main(void) {
         /*** 3.5) send values via Zigbee ******************************/
         /* Reset the XBee RX buffer */
         xbee_rx_flush();
-        /* Set the measurements count in data structure */
-        msg.struc.cnt = index;
         /* Check Xbee module connection */
         retries = 0;
         while(xbee_is_connected() != XBEE_RET_OK) {
@@ -553,7 +485,7 @@ int main(void) {
         dbg_print_msg(&msg);
 #endif
         /* Send the measurement to the CH */
-        int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, msg.byte, SEN_MSG_SIZE(index), 0x00);
+        int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
         if(ret != XBEE_RET_OK) {
             printf("ERROR sending message (%d)!\n",ret);
             x_ic_inc(X_IC_INC_SERIOUS);
@@ -561,8 +493,8 @@ int main(void) {
             x_ic_dec(X_IC_DEC_NORM);
         }
         /* Increment message number ("time") */
-        msg.struc.time++;
-        printf("%d sensor values sent! (#%d)\n\n",index,msg.struc.time);
+        msg.time++;
+        printf("%d. sensor value update sent!\n\n",msg.time);
 
 
         /*** 3.6) disable modules/sensors *****************************/
