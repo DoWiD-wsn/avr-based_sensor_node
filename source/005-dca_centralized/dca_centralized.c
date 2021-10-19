@@ -20,13 +20,13 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 0.2.0
+ * @version 1.0.0
  * @date    2021/10/19
  */
 
 
 /*** APP CONFIGURATION ***/
-#define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
+#define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
 #define UPDATE_INTERVAL             1               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 #define XBEE_DESTINATION_MAC        SEN_MSG_MAC_CH  /**< MAC address of the destination */
