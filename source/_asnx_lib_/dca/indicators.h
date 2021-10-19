@@ -27,15 +27,15 @@
 /***** DEFINES ********************************************************/
 /* Node temperature monitor (X_NT) */
 /*! maximum value for normalization (degrees Celsius) */
-#define X_NT_MAX                            5.0
+#define X_NT_MAX                            15.0
 
 /* Supply voltage monitor (X_VS) */
 /*! maximum value for normalization (volts) */
-#define X_VS_MAX                            3.3
+#define X_VS_MAX                            1.0
 
 /* Battery voltage monitor (X_BAT) */
 /*! maximum value for normalization (volts) */
-#define X_BAT_MAX                           3.3
+#define X_BAT_MAX                           1.0
 /*! number of consecutive measurements (N) */
 #define X_BAT_N                             5
 
