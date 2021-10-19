@@ -13,6 +13,9 @@
 #include "indicators.h"
 
 
+#include "util/printf.h"
+
+
 /***** GLOBAL VARIABLES ***********************************************/
 /*! Battery voltage monitor value array */
 float x_bat_values[X_BAT_N] = {0};
@@ -65,7 +68,7 @@ float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
     float sigma_nt = (float)sqrt(((double)(t_mcu-mu_nt)*(double)(t_mcu-mu_nt) + \
                                   (double)(t_brd-mu_nt)*(double)(t_brd-mu_nt) + \
                                   (double)(t_trx-mu_nt)*(double)(t_trx-mu_nt) \
-                                 ) / 3.0);  
+                                 ) / 3.0);
     /* Return X_NT with normalized standard deviation */
     return (sigma_nt / X_NT_MAX);
 }
@@ -115,8 +118,8 @@ float x_bat_get_normalized(float v_bat) {
         for(uint8_t i=0; i<X_BAT_N; i++) {
             x_bat_values[i] = v_bat;
         }
-        /* Set array index to 0 */
-        x_bat_index = 0;
+        /* Set array index to 1 */
+        x_bat_index = 1;
     } else {
         /* Update oldest value with new one */
         x_bat_values[x_bat_index] = v_bat;
@@ -167,8 +170,8 @@ float x_art_get_normalized(uint32_t t_art) {
         for(uint8_t i=0; i<X_ART_N; i++) {
             x_art_values[i] = t_art;
         }
-        /* Set array index to 0 */
-        x_art_index = 0;
+        /* Set array index to 1 */
+        x_art_index = 1;
     } else {
         /* Update oldest value with new one */
         x_art_values[x_art_index] = t_art;
@@ -189,7 +192,7 @@ float x_art_get_normalized(uint32_t t_art) {
     x_art_stddev /= X_ART_N;
     x_art_stddev = sqrt(x_art_stddev);
     /* Return normalized X_ART */
-    return (float)(x_art_stddev / X_ART_MAX);
+    return (float)(x_art_stddev / (X_ART_MAX*1000.0));
 }
 
 

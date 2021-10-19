@@ -27,7 +27,7 @@
 /***** DEFINES ********************************************************/
 /* Node temperature monitor (X_NT) */
 /*! maximum value for normalization (degrees Celsius) */
-#define X_NT_MAX                            10.0
+#define X_NT_MAX                            5.0
 
 /* Supply voltage monitor (X_VS) */
 /*! maximum value for normalization (volts) */
@@ -41,7 +41,7 @@
 
 /* Active runtime monitor (X_ART) */
 /*! maximum value for normalization (seconds) */
-#define X_ART_MAX                           1.0
+#define X_ART_MAX                           0.5
 /*! number of consecutive measurements (N) */
 #define X_ART_N                             5
 
