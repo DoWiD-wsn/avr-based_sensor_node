@@ -23,6 +23,11 @@
 
 
 /***** DEFINES ********************************************************/
+/* ASN(x) hardware revision (minor) */
+#ifndef ASNX_VERSION_MINOR
+#  define ASNX_VERSION_MINOR                4
+#endif
+
 /* Voltage-divider diagnostics */
 /*! R_divider enable DDR register */
 #define DIAG_RDEN_DDR                       DDRC
@@ -36,10 +41,17 @@
 /* ADC channel assignment */
 /*! ADC self-check channel */
 #define DIAG_ADC_CH                         ADC_CH0
+#if ASNX_VERSION_MINOR>0
 /*! Battery voltage ADC channel */
-#define DIAG_VBAT_CH                        ADC_CH1
+#  define DIAG_VBAT_CH                      ADC_CH1
 /*! MCU surface temperature ADC channel */
-#define DIAG_TMCU_CH                        ADC_CH2
+#  define DIAG_TMCU_CH                      ADC_CH2
+#else
+/*! Battery voltage ADC channel */
+#  define DIAG_VBAT_CH                      ADC_CH2
+/*! MCU surface temperature ADC channel */
+#  define DIAG_TMCU_CH                      ADC_CH1
+#endif
 
 
 /***** FUNCTION PROTOTYPES ********************************************/
