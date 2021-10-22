@@ -164,25 +164,6 @@ void update(void) {
 
 
 /*!
- * Reset the contents of a message.
- */
-void msg_reset(MSG_t* msg) {
-    msg->t_air = 0;
-    msg->t_soil = 0;
-    msg->h_air = 0;
-    msg->h_soil = 0;
-    msg->x_nt = 0;
-    msg->x_vs = 0;
-    msg->x_bat = 0;
-    msg->x_art = 0;
-    msg->x_rst = 0;
-    msg->x_ic = 0;
-    msg->x_adc = 0;
-    msg->x_usart = 0;
-}
-
-
-/*!
  * Debug: print the contents of a given sensor message structure
  */
 #if ENABLE_DBG
@@ -195,14 +176,14 @@ void dbg_print_msg(MSG_t* msg) {
     printf("H_air:   %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_air));
     printf("H_soil:  %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_soil));
     printf("=== SENSOR VALUES ===\n");
-    printf("X_NT:    %.2f\n",fp_fixed16_to_float_10to6(msg->x_nt));
-    printf("X_VS:    %.2f\n",fp_fixed16_to_float_10to6(msg->x_vs));
-    printf("X_BAT:   %.2f\n",fp_fixed16_to_float_10to6(msg->x_bat));
-    printf("X_ART:   %.2f\n",fp_fixed16_to_float_10to6(msg->x_art));
-    printf("X_RST:   %.2f\n",fp_fixed16_to_float_10to6(msg->x_rst));
-    printf("X_IC:    %.2f\n",fp_fixed16_to_float_10to6(msg->x_ic));
-    printf("X_ADC:   %.2f\n",fp_fixed16_to_float_10to6(msg->x_adc));
-    printf("X_USART: %.2f\n",fp_fixed16_to_float_10to6(msg->x_usart));
+    printf("X_NT:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_nt));
+    printf("X_VS:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_vs));
+    printf("X_BAT:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_bat));
+    printf("X_ART:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_art));
+    printf("X_RST:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_rst));
+    printf("X_IC:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_ic));
+    printf("X_ADC:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_adc));
+    printf("X_USART: %.2f\n",fp_fixed8_to_float_2to6(msg->x_usart));
     printf("===================================\n\n");
 }
 #endif
@@ -408,9 +389,6 @@ int main(void) {
 
         
         /*** 3.3) query sensors ***************************************/
-        /* Reset message structure contents */
-        msg_reset(&msg);
-        
 #if ENABLE_DS18B20
         /* DS18B20 - Temperature in degree Celsius (°C) */
         if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
@@ -418,6 +396,7 @@ int main(void) {
             msg.t_soil = fp_float_to_fixed16_10to6(measurement);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
+            msg.t_soil = 0;
             x_ic_inc(X_IC_INC_NORM);
         }
 #endif
@@ -431,6 +410,8 @@ int main(void) {
             msg.h_air = fp_float_to_fixed16_10to6(measurement2);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
+            msg.t_air = 0;
+            msg.h_air = 0;
             x_ic_inc(X_IC_INC_NORM);
         }
 #endif
@@ -444,6 +425,8 @@ int main(void) {
             msg.h_air = fp_float_to_fixed16_10to6(measurement2);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
+            msg.t_air = 0;
+            msg.h_air = 0;
             x_ic_inc(X_IC_INC_NORM);
         }
 #endif
@@ -518,37 +501,21 @@ int main(void) {
 
 
         /*** 3.5) send values via Zigbee ******************************/
-        /* Reset the XBee RX buffer */
-        xbee_rx_flush();
-        /* Check Xbee module connection */
-        retries = 0;
-        while(xbee_is_connected() != XBEE_RET_OK) {
-            /* Check if timeout [s] has been reached (counter in [ms]) */
-            if(retries >= ((uint32_t)XBEE_JOIN_TIMEOUT*1000)) {
-                printf("Couldn't re-connect to the network ... aborting!\n");
-                /* Wait for watchdog reset */
-                wait_for_wdt_reset();
-            } else {
-                /* Wait for some time */
-                retries += XBEE_JOIN_TIMEOUT_DELAY;
-                _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
-            }
-        }
 #if ENABLE_DBG
         /* Print the contents of the message to be sent */
         dbg_print_msg(&msg);
 #endif
         /* Send the measurement to the CH */
         int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
-        if(ret != XBEE_RET_OK) {
+        if(ret == XBEE_RET_OK) {
+            printf("%d. sensor value update sent!\n\n",msg.time);
+            x_ic_dec(X_IC_DEC_NORM);
+        } else {
             printf("ERROR sending message (%d)!\n",ret);
             x_ic_inc(X_IC_INC_SERIOUS);
-        } else {
-            x_ic_dec(X_IC_DEC_NORM);
         }
         /* Increment message number ("time") */
         msg.time++;
-        printf("%d. sensor value update sent!\n\n",msg.time);
 
 
         /*** 3.6) disable modules/sensors *****************************/
