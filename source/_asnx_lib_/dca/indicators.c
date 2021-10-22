@@ -62,13 +62,32 @@ void indicators_init(void) {
  * @return      normalized temperature monitor fault indicator (X_NT) value
  */
 float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
-    /* Calculate the mean value of the three temperatures */
-    float mu_nt = (t_mcu + t_brd + t_trx) / 3.0;
-    /* Calculate the standard deviation of the three temperatures */
-    float sigma_nt = (float)sqrt(((double)(t_mcu-mu_nt)*(double)(t_mcu-mu_nt) + \
-                                  (double)(t_brd-mu_nt)*(double)(t_brd-mu_nt) + \
-                                  (double)(t_trx-mu_nt)*(double)(t_trx-mu_nt) \
+    /* Store the previous values */
+    static float t_mcu_prev;
+    static float t_brd_prev;
+    static float t_trx_prev;
+    /* Flag to indicator whether a previous measurement is available */
+    static uint8_t have_prev = 0;
+    /* Check if there were previous measurements */
+    if(have_prev == 0) {
+        /* First run -> no difference to calculate */
+        return 0.0;
+    }
+    /* Get the difference between the current and previous measurement */
+    float D_mcu = t_mcu - t_mcu_prev;
+    float D_brd = t_brd - t_brd_prev;
+    float D_trx = t_trx - t_trx_prev;
+    /* Calculate the mean value of the three temperature differences */
+    float mu_nt = (D_mcu + D_brd + D_trx) / 3.0;
+    /* Calculate the standard deviation of the three temperature differences */
+    float sigma_nt = (float)sqrt(((double)(D_mcu-mu_nt)*(double)(D_mcu-mu_nt) + \
+                                  (double)(D_brd-mu_nt)*(double)(D_brd-mu_nt) + \
+                                  (double)(D_trx-mu_nt)*(double)(D_trx-mu_nt) \
                                  ) / 3.0);
+    /* Remember previous measurements */
+    t_mcu_prev = t_mcu;
+    t_brd_prev = t_brd;
+    t_trx_prev = t_trx;
     /* Return X_NT with normalized standard deviation */
     return (sigma_nt / X_NT_MAX);
 }

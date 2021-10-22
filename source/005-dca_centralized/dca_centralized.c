@@ -198,7 +198,6 @@ int main(void) {
     /* Message data structure */
     MSG_t msg;
     msg.time = 0;
-    msg_reset(&msg);
 #if ASNX_VERSION_MINOR>0
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
