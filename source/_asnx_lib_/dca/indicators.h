@@ -40,8 +40,8 @@
 #define X_BAT_N                             5
 
 /* Active runtime monitor (X_ART) */
-/*! maximum value for normalization (seconds) */
-#define X_ART_MAX                           0.5
+/*! maximum value for change in magnitude */
+#define X_ART_MAX                           4.0
 /*! number of consecutive measurements (N) */
 #define X_ART_N                             5
 

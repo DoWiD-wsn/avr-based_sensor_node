@@ -13,9 +13,6 @@
 #include "indicators.h"
 
 
-#include "util/printf.h"
-
-
 /***** GLOBAL VARIABLES ***********************************************/
 /*! Battery voltage monitor value array */
 float x_bat_values[X_BAT_N] = {0};
@@ -210,8 +207,13 @@ float x_art_get_normalized(uint32_t t_art) {
     }
     x_art_stddev /= X_ART_N;
     x_art_stddev = sqrt(x_art_stddev);
-    /* Return normalized X_ART */
-    return (float)(x_art_stddev / (X_ART_MAX*1000.0));
+    /* Get magnitude of std-dev */
+    float x_art_mag = 0.0;
+    if(x_art_stddev>0) {
+        x_art_mag = log(x_art_stddev);
+    }
+    /* Return normalized X_ART depending on magnitude of difference */
+    return (float)(x_art_mag / X_ART_MAX);
 }
 
 
