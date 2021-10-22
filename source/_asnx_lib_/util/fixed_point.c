@@ -15,6 +15,46 @@
 
 /***** FUNCTIONS ******************************************************/
 /*!
+ * Convert a 8-bit fixed-point number to floating-point.
+ * 
+ * @param[in]   input       8-bit fixed-point number
+ * @param[in]   f_bits      Number of fractional bits
+ * @return      Corresponding floating-point number
+ */
+float fp_fixed8_to_float(uint8_t input, uint8_t f_bits) {
+    /* Convert fixed8 to float */
+    float tmp = ((float)(input & 0x7F) / (float)(1 << f_bits));
+    /* Check sign of input */
+    if(input & 0x80) {
+        tmp *= -1;
+    }
+    /* Return the float value */
+    return tmp;
+}
+
+
+/*!
+ * Convert a floating-point number to 8-bit fixed-point.
+ * 
+ * @param[in]   input       Floating-point number
+ * @param[in]   f_bits      Number of fractional bits
+ * @return      Corresponding 8-bit fixed-point number
+ */
+uint8_t fp_float_to_fixed8(float input, uint8_t f_bits) {
+    uint8_t tmp = 0x00;
+    /* Check sign of input */
+    if(input<0) {
+        input *= -1;
+        tmp |= 0x80;
+    }
+    /* Convert float to fixed8 */
+    tmp |= (uint8_t)(input * (1 << f_bits)) & 0x7F;
+    /* Return the fixed8 value */
+    return tmp;
+}
+
+
+/*!
  * Convert a 16-bit fixed-point number to floating-point.
  * 
  * @param[in]   input       16-bit fixed-point number
@@ -95,44 +135,66 @@ uint32_t fp_double_to_fixed32(double input, uint8_t f_bits) {
 
 
 /*!
- * Convert a 16-bit fixed-point number to floating-point with the default number fractional bits.
+ * Convert a 8-bit fixed-point number to floating-point with 6 fractional bits.
+ * 
+ * @param[in]   input       8-bit fixed-point number
+ * @return      Corresponding floating-point number
+ */
+float fp_fixed8_to_float_2to6(uint16_t input) {
+    return fp_fixed8_to_float(input, 6);
+}
+
+
+/*!
+ * Convert a floating-point number to 8-bit fixed-point with 6 fractional bits.
+ * 
+ * @param[in]   input       Floating-point number
+ * @return      Corresponding 16-bit fixed-point number
+ */
+uint8_t fp_float_to_fixed8_2to6(float input) {
+    return fp_float_to_fixed8(input, 6);
+}
+
+
+/*!
+ * Convert a 16-bit fixed-point number to floating-point with 6 fractional bits.
  * 
  * @param[in]   input       16-bit fixed-point number
  * @return      Corresponding floating-point number
  */
 inline float fp_fixed16_to_float_10to6(uint16_t input) {
-    return fp_fixed16_to_float(input, FP_FRACTIONAL_BITS_DEFAULT);
+    return fp_fixed16_to_float(input, 6);
 }
 
 
 /*!
- * Convert a floating-point number to 16-bit fixed-point with the default number fractional bits.
+ * Convert a floating-point number to 16-bit fixed-point with 6 fractional bits.
  * 
  * @param[in]   input       Floating-point number
  * @return      Corresponding 16-bit fixed-point number
  */
 inline uint16_t fp_float_to_fixed16_10to6(float input) {
-    return fp_float_to_fixed16(input, FP_FRACTIONAL_BITS_DEFAULT);
+    return fp_float_to_fixed16(input, 6);
 }
 
 
 /*!
- * Convert a 32-bit fixed-point number to floating-point with the default number fractional bits.
+ * Convert a 32-bit fixed-point number to floating-point with 6 fractional bits.
  * 
  * @param[in]   input       32-bit fixed-point number
  * @return      Corresponding floating-point number
  */
 inline double fp_fixed32_to_double_26to6(uint32_t input) {
-    return fp_fixed32_to_double(input, FP_FRACTIONAL_BITS_DEFAULT);
+    return fp_fixed32_to_double(input, 6);
 }
 
 
 /*!
- * Convert a floating-point number to 32-bit fixed-point with the default number fractional bits.
+ * Convert a floating-point number to 32-bit fixed-point with 6 fractional bits.
  * 
  * @param[in]   input       Floating-point number
  * @return      Corresponding 32-bit fixed-point number
  */
 inline uint32_t fp_double_to_fixed32_26to6(double input) {
-    return fp_double_to_fixed32(input, FP_FRACTIONAL_BITS_DEFAULT);
+    return fp_double_to_fixed32(input, 6);
 }

@@ -20,8 +20,8 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.0.0
- * @date    2021/10/19
+ * @version 1.1.0
+ * @date    2021/10/22
  */
 
 
@@ -29,7 +29,6 @@
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
 #define UPDATE_INTERVAL             1               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
-#define XBEE_DESTINATION_MAC        SEN_MSG_MAC_CH  /**< MAC address of the destination */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
 #define ENABLE_AM2302               0               /**< enable AM2302 sensor */
@@ -38,6 +37,7 @@
 #if (ENABLE_AM2302 && ENABLE_SHTC3)
 #  error "Use either AM2302 or SHTC3 for air measurements, not both!"
 #endif
+
 
 /***** INCLUDES *******************************************************/
 /*** AVR ***/
@@ -99,14 +99,14 @@ typedef struct {
     uint16_t h_air;         /**< air humidity (fixed point) */
     uint16_t h_soil;        /**< soil humidity (fixed point) */
     /* fault indicator */
-    uint16_t x_nt;          /**< X_NT */
-    uint16_t x_vs;          /**< X_VS */
-    uint16_t x_bat;         /**< X_BAT */
-    uint16_t x_art;         /**< X_ART */
-    uint16_t x_rst;         /**< X_RST */
-    uint16_t x_ic;          /**< X_IC */
-    uint16_t x_adc;         /**< X_ADC */
-    uint16_t x_usart;       /**< X_USART */
+    uint8_t x_nt;           /**< X_NT */
+    uint8_t x_vs;           /**< X_VS */
+    uint8_t x_bat;          /**< X_BAT */
+    uint8_t x_art;          /**< X_ART */
+    uint8_t x_rst;          /**< X_RST */
+    uint8_t x_ic;           /**< X_IC */
+    uint8_t x_adc;          /**< X_ADC */
+    uint8_t x_usart;        /**< X_USART */
 } MSG_t;
 
 
@@ -485,29 +485,29 @@ int main(void) {
         }
         
         /* Node temperature monitor (X_NT) */
-        msg.x_nt = fp_float_to_fixed16_10to6(x_nt_get_normalized(t_mcu, t_brd, t_trx));
+        msg.x_nt = fp_float_to_fixed8_2to6(x_nt_get_normalized(t_mcu, t_brd, t_trx));
         /* Supply voltage monitor (X_VS) */
-        msg.x_vs = fp_float_to_fixed16_10to6(x_vs_get_normalized(v_mcu, v_trx));
+        msg.x_vs = fp_float_to_fixed8_2to6(x_vs_get_normalized(v_mcu, v_trx));
         /* Battery voltage monitor (X_BAT) */
-        msg.x_bat = fp_float_to_fixed16_10to6(x_bat_get_normalized(v_bat));
+        msg.x_bat = fp_float_to_fixed8_2to6(x_bat_get_normalized(v_bat));
         /* Active runtime monitor (X_ART) */
         if(runtime > 0) {
             /* Subsequent cycle -> measurement available */
             // runtime_us = (uint32_t)(runtime) * 256UL;
             runtime_ms = (uint16_t)(((double)runtime * 256.0) / 1000.0);
-            msg.x_art = fp_float_to_fixed16_10to6(x_art_get_normalized(runtime_ms));
+            msg.x_art = fp_float_to_fixed8_2to6(x_art_get_normalized(runtime_ms));
         } else {
-            msg.x_art = fp_float_to_fixed16_10to6(0.0);
+            msg.x_art = fp_float_to_fixed8_2to6(0.0);
         }
         /* Reset monitor (X_RST) */
-        msg.x_rst = fp_float_to_fixed16_10to6(x_rst_get_normalized(MCUSR_dump & 0x0F));
+        msg.x_rst = fp_float_to_fixed8_2to6(x_rst_get_normalized(MCUSR_dump & 0x0F));
         MCUSR_dump = 0;
         /* Software incident counter (X_IC) */
-        msg.x_ic = fp_float_to_fixed16_10to6(x_ic_get_normalized());
+        msg.x_ic = fp_float_to_fixed8_2to6(x_ic_get_normalized());
         /* ADC self-check (X_ADC) */
-        msg.x_adc = fp_float_to_fixed16_10to6(x_adc_get_normalized(diag_adc_check()));
+        msg.x_adc = fp_float_to_fixed8_2to6(x_adc_get_normalized(diag_adc_check()));
         /* USART self-check (X_USART) */
-        msg.x_usart = fp_float_to_fixed16_10to6(x_usart_get_normalized(NULL, NULL, 0));
+        msg.x_usart = fp_float_to_fixed8_2to6(x_usart_get_normalized(NULL, NULL, 0));
 
         /* Check incident counter value */
         if(x_ic_get() >= X_IC_THRESHOLD) {
@@ -539,7 +539,7 @@ int main(void) {
         dbg_print_msg(&msg);
 #endif
         /* Send the measurement to the CH */
-        int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
+        int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
         if(ret != XBEE_RET_OK) {
             printf("ERROR sending message (%d)!\n",ret);
             x_ic_inc(X_IC_INC_SERIOUS);
