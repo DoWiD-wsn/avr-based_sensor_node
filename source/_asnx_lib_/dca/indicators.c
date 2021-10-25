@@ -91,8 +91,8 @@ float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
     t_mcu_prev = t_mcu;
     t_brd_prev = t_brd;
     t_trx_prev = t_trx;
-    /* Return X_NT with normalized standard deviation */
-    return (sigma_nt / X_NT_MAX);
+    /* Return X_NT with normalized standard deviation (max: 1.0) */
+    return fmin((sigma_nt/X_NT_MAX), 1.0);
 }
 
 
@@ -105,11 +105,11 @@ float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
  * @return      normalized supply voltage monitor fault indicator (X_VS) value
  */
 float x_vs_get_normalized(float v_mcu, float v_trx) {
-    /* Calculate and return the normalized difference between both voltages */
+    /* Calculate and return the normalized difference between both voltages (max: 1.0) */
     if(v_mcu > v_trx) {
-        return ((v_mcu-v_trx) / X_VS_MAX);
+        return fmin(((v_mcu-v_trx) / X_VS_MAX), 1.0);
     } else {
-        return ((v_trx-v_mcu) / X_VS_MAX);
+        return fmin(((v_trx-v_mcu) / X_VS_MAX), 1.0);
     }
 }
 
@@ -161,8 +161,8 @@ float x_bat_get_normalized(float v_bat) {
     }
     x_bat_stddev /= X_BAT_N;
     x_bat_stddev = sqrt(x_bat_stddev);
-    /* Return normalized X_BAT */
-    return (float)(x_bat_stddev / X_BAT_MAX);
+    /* Return normalized X_BAT (max: 1.0) */
+    return fmin((float)(x_bat_stddev/X_BAT_MAX), 1.0);
 }
 
 
@@ -218,8 +218,8 @@ float x_art_get_normalized(uint32_t t_art) {
     if(x_art_stddev>1.0) {
         x_art_mag = log10(x_art_stddev);
     }
-    /* Return normalized X_ART depending on magnitude of difference */
-    return (float)(x_art_mag / X_ART_MAX);
+    /* Return normalized X_ART depending on magnitude of difference (max: 1.0) */
+    return fmin((float)(x_art_mag/X_ART_MAX), 1.0);
 }
 
 
@@ -257,6 +257,8 @@ float x_rst_get_normalized(uint8_t mcusr) {
     if((a-b) > X_RST_UPDATE) {
         eeprom_write_float((float *)X_RST_EEPROM,x_rst);
     }
+    /* Check the final value (max: 1.0) */
+    x_rst = fmin(x_rst, 1.0);
     /* Updated stored previous value */
     x_rst_prev = x_rst;
     /* Return updated value */
@@ -311,8 +313,8 @@ uint16_t x_ic_get(void) {
  * @return      normalized software incident counter fault indicator (X_IC) value
  */
 float x_ic_get_normalized(void) {
-    /* Return normalized value */
-    return ((float)x_ic / X_IC_MAX);
+    /* Return normalized value (max: 1.0) */
+    return fmin(((float)x_ic / X_IC_MAX), 1.0);
 }
 
 
@@ -324,11 +326,11 @@ float x_ic_get_normalized(void) {
  * @return      normalized ADC self-check fault indicator (X_ADC) value
  */
 float x_adc_get_normalized(uint16_t adc_value) {
-    /* Calculate and return the normalized difference between acquired and expected value */
+    /* Calculate and return the normalized difference between acquired and expected value (max: 1.0) */
     if(adc_value > X_ADC_EXPECTED) {
-        return ((adc_value-X_ADC_EXPECTED) / X_ADC_MAX);
+        return fmin(((adc_value-X_ADC_EXPECTED) / X_ADC_MAX), 1.0);
     } else {
-        return ((X_ADC_EXPECTED-adc_value) / X_ADC_MAX);
+        return fmin(((X_ADC_EXPECTED-adc_value) / X_ADC_MAX), 1.0);
     }
 }
 
@@ -352,6 +354,6 @@ float x_usart_get_normalized(uint8_t* tx, uint8_t* rx, uint8_t len) {
             diff++;
         }
     }
-    /* Normalize and return value */
-    return ((float)diff / X_USART_MAX);
+    /* Normalize and return value (max: 1.0) */
+    return fmin(((float)diff / X_USART_MAX), 1.0);
 }
