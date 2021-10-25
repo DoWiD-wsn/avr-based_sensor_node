@@ -20,7 +20,7 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.1.1
+ * @version 1.1.2
  * @date    2021/10/25
  */
 
@@ -520,6 +520,10 @@ int main(void) {
 
 
         /*** 3.6) disable modules/sensors *****************************/
+        /* Stop timer1 to save runtime measurement */
+        timer1_stop();
+        /* Save timer1 counter value */
+        runtime = timer1_get_tcnt();
         /* Send xbee to sleep */
         if(xbee_sleep_enable() != XBEE_RET_OK) {
             printf("Couldn't send xbee radio to sleep ... aborting!\n");
@@ -530,10 +534,6 @@ int main(void) {
         adc_disable();
         /* Disable the self-diagnostics */
         diag_disable();
-        /* Stop timer1 to save runtime measurement */
-        timer1_stop();
-        /* Save timer1 counter value */
-        runtime = timer1_get_tcnt();
 
 
 #if ASNX_VERSION_MINOR>0

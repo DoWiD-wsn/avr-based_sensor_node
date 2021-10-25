@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/dca/indicators.h
  * @author  Dominik Widhalm
- * @version 1.4.0
- * @date    2021/10/18
+ * @version 1.4.1
+ * @date    2021/10/25
  */
 
 #ifndef _ASNX_INDICATORS_H_
@@ -26,8 +26,8 @@
 
 /***** DEFINES ********************************************************/
 /* Node temperature monitor (X_NT) */
-/*! maximum value for normalization (degrees Celsius) */
-#define X_NT_MAX                            15.0
+/*! maximum deviation for normalization (degrees Celsius) */
+#define X_NT_MAX                            5.0
 
 /* Supply voltage monitor (X_VS) */
 /*! maximum value for normalization (volts) */

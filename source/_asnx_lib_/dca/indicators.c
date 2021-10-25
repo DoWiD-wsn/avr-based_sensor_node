@@ -67,6 +67,12 @@ float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
     static uint8_t have_prev = 0;
     /* Check if there were previous measurements */
     if(have_prev == 0) {
+        /* Remember current values */
+        t_mcu_prev = t_mcu;
+        t_brd_prev = t_brd;
+        t_trx_prev = t_trx;
+        /* From now on, we have previous values */
+        have_prev = 1;
         /* First run -> no difference to calculate */
         return 0.0;
     }
