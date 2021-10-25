@@ -20,8 +20,8 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.1.0
- * @date    2021/10/22
+ * @version 1.1.1
+ * @date    2021/10/25
  */
 
 
@@ -198,6 +198,8 @@ int main(void) {
     /* Message data structure */
     MSG_t msg;
     msg.time = 0;
+    /* Soil moisture level is currently not used */
+    msg.h_soil = 0;
 #if ASNX_VERSION_MINOR>0
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};

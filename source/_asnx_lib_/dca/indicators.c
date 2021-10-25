@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/dca/indicators.c
  * @author  Dominik Widhalm
- * @version 1.4.0
- * @date    2021/10/18
+ * @version 1.4.1
+ * @date    2021/10/25
  */
 
 /***** INCLUDES *******************************************************/
@@ -209,7 +209,7 @@ float x_art_get_normalized(uint32_t t_art) {
     x_art_stddev = sqrt(x_art_stddev);
     /* Get magnitude of std-dev */
     float x_art_mag = 0.0;
-    if(x_art_stddev>0) {
+    if(x_art_stddev>1.0) {
         x_art_mag = log10(x_art_stddev);
     }
     /* Return normalized X_ART depending on magnitude of difference */
