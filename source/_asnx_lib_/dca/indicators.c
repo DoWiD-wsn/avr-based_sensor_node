@@ -210,7 +210,7 @@ float x_art_get_normalized(uint32_t t_art) {
     /* Get magnitude of std-dev */
     float x_art_mag = 0.0;
     if(x_art_stddev>0) {
-        x_art_mag = log(x_art_stddev);
+        x_art_mag = log10(x_art_stddev);
     }
     /* Return normalized X_ART depending on magnitude of difference */
     return (float)(x_art_mag / X_ART_MAX);
