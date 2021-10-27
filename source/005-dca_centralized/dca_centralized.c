@@ -129,12 +129,10 @@ void wait_for_wdt_reset(void) {
 void uart1_send_result(MSG_t* msg) {
     printf("\n===== SENSOR MESSAGE CONTENTS =====\n");
     printf("%d message updates\n",msg->time);
-    printf("=== SENSOR VALUES ===\n");
     printf("T_air = %f\n",fp_fixed16_to_float_10to6(msg->t_air));
     printf("T_soil = %f\n",fp_fixed16_to_float_10to6(msg->t_soil));
     printf("H_air = %f\n",fp_fixed16_to_float_10to6(msg->h_air));
     printf("H_soil = %f\n",fp_fixed16_to_float_10to6(msg->h_soil));
-    printf("=== INDICATOR ===\n");
     printf("X_NT = %f\n",fp_fixed8_to_float_2to6(msg->x_nt));
     printf("X_VS = %f\n",fp_fixed8_to_float_2to6(msg->x_vs));
     printf("X_BAT = %f\n",fp_fixed8_to_float_2to6(msg->x_bat));
@@ -143,7 +141,6 @@ void uart1_send_result(MSG_t* msg) {
     printf("X_IC = %f\n",fp_fixed8_to_float_2to6(msg->x_ic));
     printf("X_ADC = %f\n",fp_fixed8_to_float_2to6(msg->x_adc));
     printf("X_USART = %f\n",fp_fixed8_to_float_2to6(msg->x_usart));
-    printf("===================================\n\n");
 }
 
 
@@ -193,9 +190,6 @@ int main(void) {
 
 
     /*** 1.) initialize modules ***************************************/
-    /* Print welcome message */
-    printf("=== STARTING UP ... ===\n");
-    
     /* Initialize UART1 for debug purposes */
     uart1_init();
     /* Initialize the printf function to use the uart1_putc() function for output */
@@ -221,19 +215,16 @@ int main(void) {
 
     /* Initialize the TMP275 sensor */
     if(tmp275_init(&tmp275, TMP275_I2C_ADDRESS) != TMP275_RET_OK) {
-        printf("Couldn't initialize TMP275!\n");
         wait_for_wdt_reset();
     }
     /* Configure the TMP275 sensor (SD; 10-bit mode) */
     if(tmp275_set_config(&tmp275, 0x21) != TMP275_RET_OK) {
-        printf("Couldn't configure TMP275!\n");
         wait_for_wdt_reset();
     }
 
 #if ENABLE_DS18B20
     /* Initialize the DS18B20 sensor */
     if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) != DS18X20_RET_OK) {
-        printf("Couldn't initialize DS18B20!\n");
         wait_for_wdt_reset();
     }
 #endif
@@ -241,13 +232,11 @@ int main(void) {
 #if ENABLE_AM2302
     /* Initialize the AMS2302 sensor */
     dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
-    printf("... AMS2302 ready\n");
 #endif
 
 #if ENABLE_SHTC3
     /* Initialize the SHTC3 sensor */
     if(shtc3_init(&shtc3, SHTC3_I2C_ADDRESS) != SHTC3_RET_OK) {
-        printf("Couldn't initialize SHTC3!\n");
         wait_for_wdt_reset();
     }
 #endif
@@ -262,7 +251,6 @@ int main(void) {
     while(xbee_is_connected() != XBEE_RET_OK) {
         /* Check if timeout [s] has been reached (counter in [ms]) */
         if(retries >= ((uint32_t)XBEE_JOIN_TIMEOUT*1000)) {
-            printf("Couldn't connect to the network ... aborting!\n");
             /* Wait for watchdog reset */
             wait_for_wdt_reset();
         } else {
@@ -271,9 +259,6 @@ int main(void) {
             _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
         }
     }
-    /* Print status message */
-    printf("... ZIGBEE connected\n");
-
 
     while(1) {
         /*** 3.1) barrier synchronization with ETB ********************/
@@ -303,7 +288,6 @@ int main(void) {
 #if ENABLE_DS18B20
         /* DS18B20 - Temperature in degree Celsius (°C) */
         if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
-            printf("... DS18B20 temperature: %.2f\n", measurement);
             msg.t_soil = fp_float_to_fixed16_10to6(measurement);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
@@ -315,8 +299,6 @@ int main(void) {
 #if ENABLE_AM2302
         /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
         if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
-            printf("... AM2302 temperature: %.2f\n", measurement);
-            printf("... AM2302 humidity: %.2f\n", measurement2);
             msg.t_air = fp_float_to_fixed16_10to6(measurement);
             msg.h_air = fp_float_to_fixed16_10to6(measurement2);
             x_ic_dec(X_IC_DEC_NORM);
@@ -330,8 +312,6 @@ int main(void) {
 #if ENABLE_SHTC3
         /* SHTC3 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
         if(shtc3_get_temperature_humidity(&shtc3, &measurement, &measurement2, 1) == SHTC3_RET_OK) {
-            printf("... SHTC3 temperature: %.2f\n", measurement);
-            printf("... SHTC3 humidity: %.2f\n", measurement2);
             msg.t_air = fp_float_to_fixed16_10to6(measurement);
             msg.h_air = fp_float_to_fixed16_10to6(measurement2);
             x_ic_dec(X_IC_DEC_NORM);
@@ -405,7 +385,6 @@ int main(void) {
 
         /* Check incident counter value */
         if(x_ic_get() >= X_IC_THRESHOLD) {
-            printf("There were too many software incidents ... aborting!\n");
             /* Wait for watchdog reset */
             wait_for_wdt_reset();
         }
