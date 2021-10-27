@@ -13,7 +13,6 @@
 
 
 /*** APP CONFIGURATION ***/
-#define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
 #define ENABLE_AM2302               0               /**< enable AM2302 sensor */
@@ -66,11 +65,7 @@
 #include "util/diagnostics.h"
 #include "util/fixed_point.h"
 #include "util/sensor_msg.h"
-#if ENABLE_DBG
-#  include "util/printf.h"
-#else
-#  define printf(...) do { } while (0)
-#endif
+#include "util/printf.h"
 /* DCA */
 #include "dca/indicators.h"
 
@@ -129,29 +124,27 @@ void wait_for_wdt_reset(void) {
 
 
 /*!
- * Debug: print the contents of a given sensor message structure
+ * Send the results to the ETB via UART1
  */
-#if ENABLE_DBG
-void dbg_print_msg(MSG_t* msg) {
+void uart1_send_result(MSG_t* msg) {
     printf("\n===== SENSOR MESSAGE CONTENTS =====\n");
     printf("%d message updates\n",msg->time);
     printf("=== SENSOR VALUES ===\n");
-    printf("T_air:   %.2f C\n",fp_fixed16_to_float_10to6(msg->t_air));
-    printf("T_soil:  %.2f C\n",fp_fixed16_to_float_10to6(msg->t_soil));
-    printf("H_air:   %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_air));
-    printf("H_soil:  %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_soil));
-    printf("=== SENSOR VALUES ===\n");
-    printf("X_NT:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_nt));
-    printf("X_VS:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_vs));
-    printf("X_BAT:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_bat));
-    printf("X_ART:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_art));
-    printf("X_RST:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_rst));
-    printf("X_IC:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_ic));
-    printf("X_ADC:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_adc));
-    printf("X_USART: %.2f\n",fp_fixed8_to_float_2to6(msg->x_usart));
+    printf("T_air = %f\n",fp_fixed16_to_float_10to6(msg->t_air));
+    printf("T_soil = %f\n",fp_fixed16_to_float_10to6(msg->t_soil));
+    printf("H_air = %f\n",fp_fixed16_to_float_10to6(msg->h_air));
+    printf("H_soil = %f\n",fp_fixed16_to_float_10to6(msg->h_soil));
+    printf("=== INDICATOR ===\n");
+    printf("X_NT = %f\n",fp_fixed8_to_float_2to6(msg->x_nt));
+    printf("X_VS = %f\n",fp_fixed8_to_float_2to6(msg->x_vs));
+    printf("X_BAT = %f\n",fp_fixed8_to_float_2to6(msg->x_bat));
+    printf("X_ART = %f\n",fp_fixed8_to_float_2to6(msg->x_art));
+    printf("X_RST = %f\n",fp_fixed8_to_float_2to6(msg->x_rst));
+    printf("X_IC = %f\n",fp_fixed8_to_float_2to6(msg->x_ic));
+    printf("X_ADC = %f\n",fp_fixed8_to_float_2to6(msg->x_adc));
+    printf("X_USART = %f\n",fp_fixed8_to_float_2to6(msg->x_usart));
     printf("===================================\n\n");
 }
-#endif
 
 
 /***** MAIN ***********************************************************/
@@ -298,13 +291,6 @@ int main(void) {
 
 
         /*** 3.2) enable modules/sensors ******************************/
-        /* Wake-up xbee */
-        if(xbee_sleep_disable() != XBEE_RET_OK) {
-            printf("Couldn't wake-up xbee radio ... aborting!\n");
-            /* Wait for watchdog reset */
-            wait_for_wdt_reset();
-        }
-        
         /* Reset timer1 counter value to 0 */
         timer1_set_tcnt(0);
         /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16.78s] */
@@ -431,19 +417,8 @@ int main(void) {
 
 
         /*** 3.5) send values via Zigbee ******************************/
-#if ENABLE_DBG
-        /* Print the contents of the message to be sent */
-        dbg_print_msg(&msg);
-#endif
-        /* Send the measurement to the CH */
-        //int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
-        //if(ret == XBEE_RET_OK) {
-            //printf("%d. sensor value update sent!\n\n",msg.time);
-            //x_ic_dec(X_IC_DEC_NORM);
-        //} else {
-            //printf("ERROR sending message (%d)!\n",ret);
-            //x_ic_inc(X_IC_INC_SERIOUS);
-        //}
+        /* Send current values via UART1 */
+        uart1_send_result(&msg);
         /* Increment message number ("time") */
         msg.time++;
 
@@ -453,12 +428,6 @@ int main(void) {
         timer1_stop();
         /* Save timer1 counter value */
         runtime = timer1_get_tcnt();
-        /* Send xbee to sleep */
-        if(xbee_sleep_enable() != XBEE_RET_OK) {
-            printf("Couldn't send xbee radio to sleep ... aborting!\n");
-            /* Wait for watchdog reset */
-            wait_for_wdt_reset();
-        }
         /* Disable ADC */
         adc_disable();
         /* Disable the self-diagnostics */
