@@ -465,8 +465,8 @@ int main(void) {
         diag_disable();
 
 
-        /* Set RUN to "1" */
-        hw_set_output_high(&t_run);
+        /* Set RUN back to "0" */
+        hw_set_output_low(&t_run);
     }
 
     return 0;
