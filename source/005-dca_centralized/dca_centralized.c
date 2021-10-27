@@ -13,7 +13,7 @@
 
 
 /*** APP CONFIGURATION ***/
-#define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
+#define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
 #define ENABLE_AM2302               0               /**< enable AM2302 sensor */
@@ -436,14 +436,14 @@ int main(void) {
         dbg_print_msg(&msg);
 #endif
         /* Send the measurement to the CH */
-        int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
-        if(ret == XBEE_RET_OK) {
-            printf("%d. sensor value update sent!\n\n",msg.time);
-            x_ic_dec(X_IC_DEC_NORM);
-        } else {
-            printf("ERROR sending message (%d)!\n",ret);
-            x_ic_inc(X_IC_INC_SERIOUS);
-        }
+        //int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
+        //if(ret == XBEE_RET_OK) {
+            //printf("%d. sensor value update sent!\n\n",msg.time);
+            //x_ic_dec(X_IC_DEC_NORM);
+        //} else {
+            //printf("ERROR sending message (%d)!\n",ret);
+            //x_ic_inc(X_IC_INC_SERIOUS);
+        //}
         /* Increment message number ("time") */
         msg.time++;
 
