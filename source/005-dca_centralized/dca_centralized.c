@@ -1,34 +1,19 @@
 /*!
  * @brief   Implementation of a centralized DCA for fault detection
  *
- * Implementation of the dendritic cell algorithm (DCA) in a centralized
- * manner to detect faults. The DCA itself runs on the sink node, but
- * the detection is augmented by the node-level fault indicators that
- * are reported by every sensor node in the network.
- *
- * The procedure is as follows:
- * 1.)  initialize modules
- * 2.)  connect to the Zigbee network
- * 3.1) reset RTC (stop-watch mode)  <--+
- * 3.2) enable modules/sensors          |
- * 3.3) query sensors                   |
- * 3.4) perform self-diagnostics        |
- * 3.5) send values via Zigbee          |
- * 3.6) disable modules/sensors         |
- * 3.7) put MCU to sleep                |
- *  +-----------------------------------+
+ * Firmware adapted for the use in the ETB-controlled "fault-injection"
+ * experiments running on the SNx in order to verify the expressiveness
+ * of the implemented fault indicators for node-level fault detection.
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.1.2
- * @date    2021/10/25
+ * @version 1.1.3
+ * @date    2021/10/27
  */
 
 
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
-#define UPDATE_INTERVAL             1               /**< Update interval [min] */
-#define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
 #define ENABLE_AM2302               0               /**< enable AM2302 sensor */
@@ -37,6 +22,17 @@
 #if (ENABLE_AM2302 && ENABLE_SHTC3)
 #  error "Use either AM2302 or SHTC3 for air measurements, not both!"
 #endif
+/* Experiment control GPIOs */
+/*! Test enable (T_EN) signal */
+#define T_EN_DDR                            DDRC
+#define T_EN_PORT                           PORTC
+#define T_EN_PIN                            PINC
+#define T_EN_GPIO                           PC5
+/*! Test running (T_RUN) signal */
+#define T_RUN_DDR                           DDRC
+#define T_RUN_PORT                          PORTC
+#define T_RUN_PIN                           PINC
+#define T_RUN_GPIO                          PC4
 
 
 /***** INCLUDES *******************************************************/
@@ -55,13 +51,6 @@
 #include "uart/uart.h"
 /* Radio */
 #include "xbee/xbee.h"
-#if ASNX_VERSION_MINOR>0
-/* RTC */
-#  include "rtc/pcf85263.h"
-#else
-/* SysTick */
-#  include "timer/systick.h"
-#endif
 /* Sensors */
 #include "sensors/tmp275.h"
 #if ENABLE_DS18B20
@@ -110,13 +99,6 @@ typedef struct {
 } MSG_t;
 
 
-/***** GLOBAL VARIABLES ***********************************************/
-#if ASNX_VERSION_MINOR==0
-/*! Variable (flag) for barrier synchronization */
-uint8_t barrier = 1;
-#endif
-
-
 /***** LOCAL FUNCTIONS ************************************************/
 /*!
  * Put a MCUSR register dump into the .noinit section.
@@ -144,23 +126,6 @@ void wait_for_wdt_reset(void) {
     /* Wait for reset */
     while(1);
 }
-
-
-#if ASNX_VERSION_MINOR==0
-/***
- * Callback function to be called by the systick timer.
- ***/
-void update(void) {
-    static uint8_t cnt = 0;
-    /* Check if update time has elapsed */
-    if(++cnt >= UPDATE_INTERVAL) {
-        /* Reset counter */
-        cnt = 0;
-        /* Set barrier sync flag */
-        barrier = 1;
-    }
-}
-#endif
 
 
 /*!
@@ -194,16 +159,23 @@ void dbg_print_msg(MSG_t* msg) {
  * Main function of the application.
  */
 int main(void) {
+    /*** Experiment control handles ***/
+    /* Define gpio handles */
+    hw_io_t t_en, t_run;
+    /* Test enable (T_EN) signal */
+    hw_get_io(&t_en, &T_EN_DDR, &T_EN_PORT, &T_EN_PIN, T_EN_GPIO);
+    hw_set_input(&t_en);
+    /* Test running (T_RUN) signal */
+    hw_get_io(&t_run, &T_RUN_DDR, &T_RUN_PORT, &T_RUN_PIN, T_RUN_GPIO);
+    hw_set_output_low(&t_run);
+    hw_set_output(&t_run);
+    
     /*** Local variables ***/
     /* Message data structure */
     MSG_t msg;
     msg.time = 0;
     /* Soil moisture level is currently not used */
     msg.h_soil = 0;
-#if ASNX_VERSION_MINOR>0
-    /* Date/time structure */
-    PCF85263_CNTTIME_t time = {0};
-#endif
     /* Sensor handles */
     TMP275_t tmp275;                /* TMP275 sensor device structure */
 #if ENABLE_DS18B20
@@ -231,15 +203,6 @@ int main(void) {
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
     
-    /* Disable unused hardware modules */
-#if ASNX_VERSION_MINOR>0
-    PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
-    /* Configure the sleep mode */
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-#else
-    PRR0 = _BV(PRTIM2) | _BV(PRSPI);
-#endif
-    
 #if ENABLE_DBG
     /* Initialize UART1 for debug purposes */
     uart1_init();
@@ -264,23 +227,6 @@ int main(void) {
     diag_disable();
     /* Initialize the fault indicators */
     indicators_init();
-
-#if ASNX_VERSION_MINOR>0
-    /* Initialize the RTC */
-    time.minutes = UPDATE_INTERVAL;
-    if(pcf85263_init_wakeup_src(&time) != PCF85263_RET_OK) {
-        printf("Couldn't initialize RTC ... aborting!\n");
-        wait_for_wdt_reset();
-    }
-    /* Configure INT2 to fire interrupt when logic level is "low" */
-    EICRA = 0x00;
-    EIMSK = _BV(INT2);
-#else
-    /* Initialize the systick timer */
-    systick_init();
-    /* Set a systick callback function to be called every second */
-    systick_set_callback_min(update);
-#endif
 
     /* Enable interrupts globally */
     sei();
@@ -342,31 +288,14 @@ int main(void) {
 
 
     while(1) {
-#if ASNX_VERSION_MINOR>0
-        /*** 3.1) reset RTC (stop-watch mode) *************************/
-        /* Stop RTC */
-        if(pcf85263_stop() != PCF85263_RET_OK) {
-            printf("Couldn't stop RTC ... aborting!\n");
-            wait_for_wdt_reset();
-        }
-        /* Reset time structure for stop-watch reset below */
-        pcf85263_clear_stw_time(&time);
-        /* Reset stop-watch time */
-        pcf85263_set_stw_time(&time);
-        /* Start RTC */
-        if(pcf85263_start() != PCF85263_RET_OK) {
-            printf("Couldn't re-start RTC ... aborting!\n");
-            wait_for_wdt_reset();
-        }
-#else
-        /*** 3.1) barrier synchronization *****************************/
-        /* Wait until the barrier sync flag is set */
-        while(barrier == 0) {
-            _delay_ms(100);
-        }
-        /* Reset barrier sync flag */
-        barrier = 0;
-#endif
+        /*** 3.1) barrier synchronization with ETB ********************/
+        /* Wait for T_EN to become "1" */
+        while(hw_read_input(&t_en) == HW_STATE_LOW);
+        /* Set RUN to "1" */
+        hw_set_output_high(&t_run);
+        /* Wait for T_EN to become "0" again */
+        while(hw_read_input(&t_en) == HW_STATE_HIGH);
+
 
         /*** 3.2) enable modules/sensors ******************************/
         /* Wake-up xbee */
@@ -536,25 +465,9 @@ int main(void) {
         diag_disable();
 
 
-#if ASNX_VERSION_MINOR>0
-        /*** 3.7) put MCU to sleep ************************************/
-        sleep_enable();
-        sleep_bod_disable();
-#endif
+        /* Set RUN to "1" */
+        hw_set_output_high(&t_run);
     }
 
     return 0;
 }
-
-
-#if ASNX_VERSION_MINOR>0
-/*!
- * INT2 external interrupt 2 interrupt.
- */
-ISR(INT2_vect) {
-    /* Actually not needed, but still ... */
-    sleep_disable();
-    /* Wait some time to fully wake up */
-    _delay_ms(5);
-}
-#endif
