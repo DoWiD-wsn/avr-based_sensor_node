@@ -196,15 +196,10 @@ int main(void) {
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
     
-#if ENABLE_DBG
     /* Initialize UART1 for debug purposes */
     uart1_init();
     /* Initialize the printf function to use the uart1_putc() function for output */
     printf_init(uart1_putc);
-#else
-    /* Disable UART1 */
-    PRR0 |= _BV(PRUSART1);
-#endif
     
     /* Initialize the user LEDs and disable both by default */
     led_init();
