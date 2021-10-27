@@ -127,7 +127,7 @@ void wait_for_wdt_reset(void) {
  * Send the results to the ETB via UART1
  */
 void uart1_send_result(MSG_t* msg) {
-    printf("\n===== SENSOR MESSAGE CONTENTS =====\n");
+    printf("===== SENSOR MESSAGE CONTENTS =====\n");
     printf("%d message updates\n",msg->time);
     printf("T_air = %f\n",fp_fixed16_to_float_10to6(msg->t_air));
     printf("T_soil = %f\n",fp_fixed16_to_float_10to6(msg->t_soil));
