@@ -127,20 +127,26 @@ void wait_for_wdt_reset(void) {
  * Send the results to the ETB via UART1
  */
 void uart1_send_result(MSG_t* msg) {
-    printf("===== SENSOR MESSAGE CONTENTS =====\n");
-    printf("%d message updates\n",msg->time);
-    printf("T_air = %f\n",fp_fixed16_to_float_10to6(msg->t_air));
-    printf("T_soil = %f\n",fp_fixed16_to_float_10to6(msg->t_soil));
-    printf("H_air = %f\n",fp_fixed16_to_float_10to6(msg->h_air));
-    printf("H_soil = %f\n",fp_fixed16_to_float_10to6(msg->h_soil));
-    printf("X_NT = %f\n",fp_fixed8_to_float_2to6(msg->x_nt));
-    printf("X_VS = %f\n",fp_fixed8_to_float_2to6(msg->x_vs));
-    printf("X_BAT = %f\n",fp_fixed8_to_float_2to6(msg->x_bat));
-    printf("X_ART = %f\n",fp_fixed8_to_float_2to6(msg->x_art));
-    printf("X_RST = %f\n",fp_fixed8_to_float_2to6(msg->x_rst));
-    printf("X_IC = %f\n",fp_fixed8_to_float_2to6(msg->x_ic));
-    printf("X_ADC = %f\n",fp_fixed8_to_float_2to6(msg->x_adc));
-    printf("X_USART = %f\n",fp_fixed8_to_float_2to6(msg->x_usart));
+    /* Start of message ":::" */
+    printf(":::");
+    /* Message number */
+    printf("%d",msg->time);
+    /* Use-case measurements */
+    printf(":%.3f",fp_fixed16_to_float_10to6(msg->t_air));
+    printf(":%.3f",fp_fixed16_to_float_10to6(msg->t_soil));
+    printf(":%.3f",fp_fixed16_to_float_10to6(msg->h_air));
+    printf(":%.3f",fp_fixed16_to_float_10to6(msg->h_soil));
+    /* Fault indicators */
+    printf(":%.3f",fp_fixed8_to_float_2to6(msg->x_nt));
+    printf(":%.3f",fp_fixed8_to_float_2to6(msg->x_vs));
+    printf(":%.3f",fp_fixed8_to_float_2to6(msg->x_bat));
+    printf(":%.3f",fp_fixed8_to_float_2to6(msg->x_art));
+    printf(":%.3f",fp_fixed8_to_float_2to6(msg->x_rst));
+    printf(":%.3f",fp_fixed8_to_float_2to6(msg->x_ic));
+    printf(":%.3f",fp_fixed8_to_float_2to6(msg->x_adc));
+    printf(":%.3f",fp_fixed8_to_float_2to6(msg->x_usart));
+    /* End of message ":::\n" */
+    printf(":::\n");
 }
 
 
