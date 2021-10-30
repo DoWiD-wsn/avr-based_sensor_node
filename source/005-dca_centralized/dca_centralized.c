@@ -7,8 +7,8 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.1.3
- * @date    2021/10/27
+ * @version 1.1.4
+ * @date    2021/10/30
  */
 
 
@@ -53,12 +53,15 @@
 /* Sensors */
 #include "sensors/tmp275.h"
 #if ENABLE_DS18B20
+uint8_t ds18b20_en = 0;
 #  include "sensors/ds18x20.h"
 #endif
 #if ENABLE_AM2302
+uint8_t am2302_en = 0;
 #  include "sensors/dht.h"
 #endif
 #if ENABLE_SHTC3
+uint8_t shtc3_en = 0;
 #  include "sensors/shtc3.h"
 #endif
 /* Misc */
@@ -106,9 +109,9 @@ uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
  */
 void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
 void get_mcusr(void) {
-  MCUSR_dump = MCUSR;
-  MCUSR = 0;
-  wdt_disable();
+    MCUSR_dump = MCUSR;
+    MCUSR = 0;
+    wdt_disable();
 }
 
 
@@ -212,7 +215,7 @@ int main(void) {
     
     /* Initialize the diagnostic circuitry */
     diag_init();
-    diag_disable();
+    diag_enable();
     /* Initialize the fault indicators */
     indicators_init();
 
@@ -230,20 +233,21 @@ int main(void) {
 
 #if ENABLE_DS18B20
     /* Initialize the DS18B20 sensor */
-    if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) != DS18X20_RET_OK) {
-        wait_for_wdt_reset();
+    if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) == DS18X20_RET_OK) {
+        ds18b20_en = 1;
     }
 #endif
 
 #if ENABLE_AM2302
     /* Initialize the AMS2302 sensor */
     dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
+    am2302_en = 1;
 #endif
 
 #if ENABLE_SHTC3
     /* Initialize the SHTC3 sensor */
-    if(shtc3_init(&shtc3, SHTC3_I2C_ADDRESS) != SHTC3_RET_OK) {
-        wait_for_wdt_reset();
+    if(shtc3_init(&shtc3, SHTC3_I2C_ADDRESS) == SHTC3_RET_OK) {
+        shtc3_en = 1;
     }
 #endif
 
@@ -270,8 +274,12 @@ int main(void) {
         /*** 3.1) barrier synchronization with ETB ********************/
         /* Wait for T_EN to become "1" */
         while(hw_read_input(&t_en) == HW_STATE_LOW);
+        /* Wait for a moment */
+        _delay_ms(10);
         /* Set RUN to "1" */
         hw_set_output_high(&t_run);
+        /* Wait for a moment */
+        _delay_ms(10);
         /* Wait for T_EN to become "0" again */
         while(hw_read_input(&t_en) == HW_STATE_HIGH);
 
@@ -281,50 +289,57 @@ int main(void) {
         timer1_set_tcnt(0);
         /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16.78s] */
         timer1_start(TIMER_PRESCALER_1024);
-        
-        /* Enable the self-diagnostics */
-        diag_enable();
-        /* Reset the TWI */
-        i2c_reset();
-        /* Enable ADC */
-        adc_enable();
 
         
         /*** 3.3) query sensors ***************************************/
 #if ENABLE_DS18B20
         /* DS18B20 - Temperature in degree Celsius (°C) */
-        if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
-            msg.t_soil = fp_float_to_fixed16_10to6(measurement);
-            x_ic_dec(X_IC_DEC_NORM);
+        if(ds18b20_en == 1) {
+            if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
+                msg.t_soil = fp_float_to_fixed16_10to6(measurement);
+                x_ic_dec(X_IC_DEC_NORM);
+            } else {
+                msg.t_soil = 0;
+                x_ic_inc(X_IC_INC_NORM);
+            }
         } else {
             msg.t_soil = 0;
-            x_ic_inc(X_IC_INC_NORM);
         }
 #endif
 
 #if ENABLE_AM2302
-        /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
-        if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
-            msg.t_air = fp_float_to_fixed16_10to6(measurement);
-            msg.h_air = fp_float_to_fixed16_10to6(measurement2);
-            x_ic_dec(X_IC_DEC_NORM);
+        if(am2302_en == 1) {
+            /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
+            if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
+                msg.t_air = fp_float_to_fixed16_10to6(measurement);
+                msg.h_air = fp_float_to_fixed16_10to6(measurement2);
+                x_ic_dec(X_IC_DEC_NORM);
+            } else {
+                msg.t_air = 0;
+                msg.h_air = 0;
+                x_ic_inc(X_IC_INC_NORM);
+            }
         } else {
             msg.t_air = 0;
             msg.h_air = 0;
-            x_ic_inc(X_IC_INC_NORM);
         }
 #endif
 
 #if ENABLE_SHTC3
-        /* SHTC3 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
-        if(shtc3_get_temperature_humidity(&shtc3, &measurement, &measurement2, 1) == SHTC3_RET_OK) {
-            msg.t_air = fp_float_to_fixed16_10to6(measurement);
-            msg.h_air = fp_float_to_fixed16_10to6(measurement2);
-            x_ic_dec(X_IC_DEC_NORM);
+        if(shtc3_en == 1) {
+            /* SHTC3 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
+            if(shtc3_get_temperature_humidity(&shtc3, &measurement, &measurement2, 1) == SHTC3_RET_OK) {
+                msg.t_air = fp_float_to_fixed16_10to6(measurement);
+                msg.h_air = fp_float_to_fixed16_10to6(measurement2);
+                x_ic_dec(X_IC_DEC_NORM);
+            } else {
+                msg.t_air = 0;
+                msg.h_air = 0;
+                x_ic_inc(X_IC_INC_NORM);
+            }
         } else {
             msg.t_air = 0;
             msg.h_air = 0;
-            x_ic_inc(X_IC_INC_NORM);
         }
 #endif
 
@@ -408,14 +423,12 @@ int main(void) {
         timer1_stop();
         /* Save timer1 counter value */
         runtime = timer1_get_tcnt();
-        /* Disable ADC */
-        adc_disable();
-        /* Disable the self-diagnostics */
-        diag_disable();
 
 
         /* Set RUN back to "0" */
         hw_set_output_low(&t_run);
+        /* Wait for a moment */
+        _delay_ms(10);
     }
 
     return 0;
