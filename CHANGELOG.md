@@ -8,6 +8,7 @@ However, the major and minor number are used to express the version of the hardw
 ### Added
 ### Changed
 ### Removed
+- Removed unintentionally left label of reset button
 
 
 ## [1.4] - 2021-10-14
