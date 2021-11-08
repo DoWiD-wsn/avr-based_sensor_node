@@ -540,6 +540,7 @@ int main(void) {
         /*** 3.7) put MCU to sleep ************************************/
         sleep_enable();
         sleep_bod_disable();
+        sleep_cpu();
 #endif
     }
 
