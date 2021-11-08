@@ -146,7 +146,10 @@ SHTC3_RET_t shtc3_reset(SHTC3_t* dev) {
     }
     
     /* Issue a I2C stop condition */
-    i2c_stop();
+    if(i2c_stop() != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
 
     /* Return OK */
     return SHTC3_RET_OK;
@@ -189,7 +192,10 @@ SHTC3_RET_t shtc3_get_id(SHTC3_t* dev, uint16_t *id) {
         return SHTC3_RET_ERROR;
     }
     /* Issue a I2C stop condition */
-    i2c_stop();
+    if(i2c_stop() != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
 
     /* Return OK */
     return SHTC3_RET_OK;
@@ -221,7 +227,10 @@ SHTC3_RET_t shtc3_sleep_enable(SHTC3_t* dev) {
     }
     
     /* Issue a I2C stop condition */
-    i2c_stop();
+    if(i2c_stop() != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
 
     /* Return OK */
     return SHTC3_RET_OK;
@@ -253,7 +262,10 @@ SHTC3_RET_t shtc3_sleep_disable(SHTC3_t* dev) {
     }
     
     /* Issue a I2C stop condition */
-    i2c_stop();
+    if(i2c_stop() != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
     
     /* Give the device some time to wake-up */
     _delay_us(SHTC3_WAKEUP_DELAY);
@@ -367,7 +379,10 @@ SHTC3_RET_t shtc3_get_temperature_humidity(SHTC3_t* dev, float* temperature, flo
     }
 #endif
     /* Issue a I2C stop condition */
-    i2c_stop();
+    if(i2c_stop() != I2C_RET_OK) {
+        /* Return ERROR */
+        return SHTC3_RET_ERROR;
+    }
 
     /* Calculate temperature in °C and humidity in %RH */
     *temperature = SHTC3_raw2temperature(temp_raw);
