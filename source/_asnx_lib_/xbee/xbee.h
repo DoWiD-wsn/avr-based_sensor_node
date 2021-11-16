@@ -45,9 +45,9 @@
 #define XBEE_JOIN_TIMEOUT_DELAY             (500)
 
 /*! Wake-up timeout [s] */
-#define XBEE_WAKE_TIMEOUT                   (25)
+#define XBEE_WAKE_TIMEOUT                   (10)
 /*! Wake-up delay between tries [ms] */
-#define XBEE_WAKE_TIMEOUT_DELAY             (10)
+#define XBEE_WAKE_TIMEOUT_DELAY             (25)
 
 /*! RX timeout [s] */
 #define XBEE_RX_TIMEOUT                     (15)

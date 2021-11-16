@@ -95,10 +95,10 @@ XBEE_RET_t xbee_sleep_enable(void) {
     /* Request xbee sleep */
     hw_set_output_high(&xbee_sleep_req);
     /* Check xbee's response */
-    uint32_t retries = 0;
+    uint16_t retries = 0;
     while(hw_read_input(&xbee_sleep_ind) == HW_STATE_HIGH) {
         /* Check if timeout [s] has been reached (counter in [ms]) */
-        if(retries >= ((uint32_t)XBEE_WAKE_TIMEOUT*1000)) {
+        if(retries >= ((uint16_t)XBEE_WAKE_TIMEOUT*1000UL)) {
             /* Couldn't send xbee to sleep */
             return XBEE_RET_ERROR;
         } else {
@@ -121,10 +121,10 @@ XBEE_RET_t xbee_sleep_disable(void) {
     /* Request xbee wake-up */
     hw_set_output_low(&xbee_sleep_req);
     /* Check xbee's response */
-    uint32_t retries = 0;
+    uint16_t retries = 0;
     while(hw_read_input(&xbee_sleep_ind) == HW_STATE_LOW) {
         /* Check if timeout [s] has been reached (counter in [ms]) */
-        if(retries >= ((uint32_t)XBEE_WAKE_TIMEOUT*1000)) {
+        if(retries >= ((uint16_t)XBEE_WAKE_TIMEOUT*1000UL)) {
             /* Couldn't wake xbee up */
             return XBEE_RET_ERROR;
         } else {

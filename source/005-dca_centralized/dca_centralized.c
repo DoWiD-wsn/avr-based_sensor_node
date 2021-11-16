@@ -208,12 +208,15 @@ int main(void) {
     TMP275_t tmp275;                /* TMP275 sensor device structure */
 #if ENABLE_DS18B20
     DS18X20_t ds18b20;              /* DS18B20 sensor device structure */
+    uint8_t ds18b20_en = 0;         /* Sensor enable flag */
 #endif
 #if ENABLE_AM2302
     DHT_t am2302;                   /* AM2302 sensor device structure */
+    uint8_t am2302_en = 0;          /* Sensor enable flag */
 #endif
 #if ENABLE_SHTC3
     SHTC3_t shtc3;                  /* SHTC3 sensor device structure */
+    uint8_t shtc3_en = 0;           /* Sensor enable flag */
 #endif
     /* Temporary sensor measurement variables */
     float measurement = 0.0;
@@ -300,7 +303,9 @@ int main(void) {
     /* Initialize the DS18B20 sensor */
     if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) != DS18X20_RET_OK) {
         printf("Couldn't initialize DS18B20!\n");
-        wait_for_wdt_reset();
+        ds18b20_en = 0;
+    } else {
+        ds18b20_en = 1;
     }
 #endif
 
@@ -308,13 +313,16 @@ int main(void) {
     /* Initialize the AMS2302 sensor */
     dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
     printf("... AMS2302 ready\n");
+    am2302_en = 1;
 #endif
 
 #if ENABLE_SHTC3
     /* Initialize the SHTC3 sensor */
     if(shtc3_init(&shtc3, SHTC3_I2C_ADDRESS) != SHTC3_RET_OK) {
         printf("Couldn't initialize SHTC3!\n");
-        wait_for_wdt_reset();
+        shtc3_en = 0;
+    } else {
+        shtc3_en = 1;
     }
 #endif
 
@@ -391,44 +399,80 @@ int main(void) {
         
         /*** 3.3) query sensors ***************************************/
 #if ENABLE_DS18B20
-        /* DS18B20 - Temperature in degree Celsius (°C) */
-        if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
-            printf("... DS18B20 temperature: %.2f\n", measurement);
-            msg.t_soil = fp_float_to_fixed16_10to6(measurement);
-            x_ic_dec(X_IC_DEC_NORM);
+        /* Check if sensor is ready */
+        if(ds18b20_en == 0) {
+            /* Try to initialize sensor (again) */
+            if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) == DS18X20_RET_OK) {
+                printf("Successfully (re-)initialized DS18B20!\n");
+                ds18b20_en = 1;
+            }
+        }
+        if(ds18b20_en == 1) {
+            /* DS18B20 - Temperature in degree Celsius (°C) */
+            if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
+                printf("... DS18B20 temperature: %.2f\n", measurement);
+                msg.t_soil = fp_float_to_fixed16_10to6(measurement);
+                x_ic_dec(X_IC_DEC_NORM);
+            } else {
+                msg.t_soil = 0;
+                x_ic_inc(X_IC_INC_NORM);
+            }
         } else {
             msg.t_soil = 0;
-            x_ic_inc(X_IC_INC_NORM);
         }
 #endif
 
 #if ENABLE_AM2302
-        /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
-        if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
-            printf("... AM2302 temperature: %.2f\n", measurement);
-            printf("... AM2302 humidity: %.2f\n", measurement2);
-            msg.t_air = fp_float_to_fixed16_10to6(measurement);
-            msg.h_air = fp_float_to_fixed16_10to6(measurement2);
-            x_ic_dec(X_IC_DEC_NORM);
+        /* Check if sensor is ready */
+        if(am2302_en == 0) {
+            dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
+            printf("Successfully (re-)initialized AM2302!\n");
+            am2302_en = 1;
+        }
+        if(am2302_en == 1) {
+            /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
+            if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
+                printf("... AM2302 temperature: %.2f\n", measurement);
+                printf("... AM2302 humidity: %.2f\n", measurement2);
+                msg.t_air = fp_float_to_fixed16_10to6(measurement);
+                msg.h_air = fp_float_to_fixed16_10to6(measurement2);
+                x_ic_dec(X_IC_DEC_NORM);
+            } else {
+                msg.t_air = 0;
+                msg.h_air = 0;
+                x_ic_inc(X_IC_INC_NORM);
+            }
         } else {
             msg.t_air = 0;
             msg.h_air = 0;
-            x_ic_inc(X_IC_INC_NORM);
         }
 #endif
 
 #if ENABLE_SHTC3
-        /* SHTC3 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
-        if(shtc3_get_temperature_humidity(&shtc3, &measurement, &measurement2, 1) == SHTC3_RET_OK) {
-            printf("... SHTC3 temperature: %.2f\n", measurement);
-            printf("... SHTC3 humidity: %.2f\n", measurement2);
-            msg.t_air = fp_float_to_fixed16_10to6(measurement);
-            msg.h_air = fp_float_to_fixed16_10to6(measurement2);
-            x_ic_dec(X_IC_DEC_NORM);
+        /* Check if sensor is ready */
+        if(shtc3_en == 0) {
+            /* Try to initialize sensor (again) */
+            if(shtc3_init(&shtc3, SHTC3_I2C_ADDRESS) == SHTC3_RET_OK) {
+                printf("Successfully (re-)initialized SHTC3!\n");
+                shtc3_en = 1;
+            }
+        }
+        if(shtc3_en == 1) {
+            /* SHTC3 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
+            if(shtc3_get_temperature_humidity(&shtc3, &measurement, &measurement2, 1) == SHTC3_RET_OK) {
+                printf("... SHTC3 temperature: %.2f\n", measurement);
+                printf("... SHTC3 humidity: %.2f\n", measurement2);
+                msg.t_air = fp_float_to_fixed16_10to6(measurement);
+                msg.h_air = fp_float_to_fixed16_10to6(measurement2);
+                x_ic_dec(X_IC_DEC_NORM);
+            } else {
+                msg.t_air = 0;
+                msg.h_air = 0;
+                x_ic_inc(X_IC_INC_NORM);
+            }
         } else {
             msg.t_air = 0;
             msg.h_air = 0;
-            x_ic_inc(X_IC_INC_NORM);
         }
 #endif
 
