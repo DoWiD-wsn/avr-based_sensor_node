@@ -60,6 +60,11 @@ The C code library, its functionality, and usage as well as example scripts are 
 * [avr-libc 2.0.0](https://www.nongnu.org/avr-libc/) - C code library
 
 
+## Publications
+
+[1] Dominik Widhalm, Karl M. Goeschka, and Wolfgang Kastner, "*An open-source wireless sensor node platform with active node-level reliability for monitoring applications*", Sensors 21, no. 22: 7613, 2021, DOI: [10.3390/s21227613](https://doi.org/10.3390/s21227613)
+
+
 ## Contributors
 
 * **Dominik Widhalm** - [***DC-RES***](https://informatics.tuwien.ac.at/doctoral/resilient-embedded-systems/) - [*UAS Technikum Wien*](https://embsys.technikum-wien.at/staff/widhalm/)
