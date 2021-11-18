@@ -69,6 +69,11 @@ For coding bugs or minor improvements simply use pull requests.
 However, for major changes or general discussions please contact [Dominik Widhalm](mailto:widhalm@technikum-wien.at?subject=ASN(x)%20on%20GitHub).
 
 
+## Publications
+
+- Dominik Widhalm, Karl M. Goeschka, and Wolfgang Kastner, "*An open-source wireless sensor node platform with active node-level reliability for monitoring applications*", Sensors 21, no. 22: 7613, 2021, DOI: [10.3390/s21227613](https://doi.org/10.3390/s21227613)
+
+
 ## Changelog
 
 A list of prior versions and changes between the updates can be found inn the [CHANGELOG.md](CHANGELOG.md) file.
@@ -77,4 +82,4 @@ Note that the major and minor number refer to the hardware version of the ASN(x)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
