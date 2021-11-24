@@ -1,0 +1,12 @@
+avr-size -C --mcu=atmega1284p ./build/dca_centralized.elf
+AVR Memory Usage
+----------------
+Device: atmega1284p
+
+Program:   47624 bytes (36.3% Full)
+(.text + .data + .bootloader)
+
+Data:        639 bytes (3.9% Full)
+(.data + .bss + .noinit)
+
+
