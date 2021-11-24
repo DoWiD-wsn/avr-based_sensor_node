@@ -58,6 +58,7 @@ ASNXOBJS  		:= $(addprefix $(BUILDDIR)/,$(subst ../,,$(ASNXCOBJS)))
 CFLAGS       	 = $(TARGET_ARCH)
 CFLAGS       	+= -DF_CPU=$(F_CPU)
 CFLAGS       	+= -O$(OPTIMIZATION)
+CFLAGS       	+= -flto				# LinkTimeOptimization
 LDFLAGS      	 = -lm
 # Compiler warning flags
 CFLAGS      	+= -std=gnu99

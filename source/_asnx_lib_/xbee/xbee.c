@@ -540,7 +540,7 @@ XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value, uint8_t fid){
  */
 XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value, uint8_t fid) {
     int8_t ret;
-    uint8_t fid_ret;
+    uint8_t fid_ret = XBEE_RET_OK;
     /* Send the local AT command */
     ret = _at_local_query(command, fid);
     if(ret != XBEE_RET_OK) {

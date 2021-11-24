@@ -224,8 +224,8 @@ int main(void) {
     float measurement2 = 0.0;
 #endif
     /* Diagnostic values */
-    float v_bat, v_mcu, v_trx;
-    float t_mcu, t_trx, t_brd;
+    float v_bat=0.0, v_mcu=0.0, v_trx=0.0;
+    float t_mcu=0.0, t_trx=0.0, t_brd=0.0;
     /* Runtime measurement */
     uint16_t runtime = 0, runtime_ms = 0;
 
