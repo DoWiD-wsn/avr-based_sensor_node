@@ -65,8 +65,6 @@
 #else
 #  define printf(...) do { } while (0)
 #endif
-/* DCA */
-#include "dca/indicators.h"
 
 
 /***** STRUCTURES *****************************************************/
@@ -81,15 +79,6 @@ typedef struct {
     uint16_t t_soil;        /**< soil temperature (fixed point) */
     uint16_t h_air;         /**< air humidity (fixed point) */
     uint16_t h_soil;        /**< soil humidity (fixed point) */
-    /* fault indicator */
-    uint8_t x_nt;           /**< X_NT */
-    uint8_t x_vs;           /**< X_VS */
-    uint8_t x_bat;          /**< X_BAT */
-    uint8_t x_art;          /**< X_ART */
-    uint8_t x_rst;          /**< X_RST */
-    uint8_t x_ic;           /**< X_IC */
-    uint8_t x_adc;          /**< X_ADC */
-    uint8_t x_usart;        /**< X_USART */
 } MSG_t;
 
 
@@ -101,23 +90,6 @@ uint8_t barrier = 1;
 
 
 /***** LOCAL FUNCTIONS ************************************************/
-/*!
- * Put a MCUSR register dump into the .noinit section.
- * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
- */
-uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
-/*!
- * Turn off the WDT as early in the startup process as possible.
- * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
- */
-void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
-void get_mcusr(void) {
-  MCUSR_dump = MCUSR;
-  MCUSR = 0;
-  wdt_disable();
-}
-
-
 /*!
  * Activate WDT with shortest delay and wait for reset (sort of software-reset).
  */
@@ -158,15 +130,6 @@ void dbg_print_msg(MSG_t* msg) {
     printf("T_soil:  %.2f C\n",fp_fixed16_to_float_10to6(msg->t_soil));
     printf("H_air:   %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_air));
     printf("H_soil:  %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_soil));
-    printf("=== SENSOR VALUES ===\n");
-    printf("X_NT:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_nt));
-    printf("X_VS:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_vs));
-    printf("X_BAT:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_bat));
-    printf("X_ART:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_art));
-    printf("X_RST:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_rst));
-    printf("X_IC:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_ic));
-    printf("X_ADC:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_adc));
-    printf("X_USART: %.2f\n",fp_fixed8_to_float_2to6(msg->x_usart));
     printf("===================================\n\n");
 }
 #endif
@@ -206,11 +169,6 @@ int main(void) {
 #if (ENABLE_AM2302 || ENABLE_SHTC3)
     float measurement2 = 0.0;
 #endif
-    /* Diagnostic values */
-    float v_bat, v_mcu, v_trx;
-    float t_mcu, t_trx, t_brd;
-    /* Runtime measurement */
-    uint16_t runtime = 0, runtime_ms = 0;
 
 
     /*** 1.) initialize modules ***************************************/
@@ -244,12 +202,6 @@ int main(void) {
     i2c_init();
     /* Initialize Xbee 3 (uses UART0) */
     xbee_init(9600UL);
-    
-    /* Initialize the diagnostic circuitry */
-    diag_init();
-    diag_disable();
-    /* Initialize the fault indicators */
-    indicators_init();
 
 #if ASNX_VERSION_MINOR>0
     /* Initialize the RTC */
@@ -367,13 +319,6 @@ int main(void) {
             wait_for_wdt_reset();
         }
         
-        /* Reset timer1 counter value to 0 */
-        timer1_set_tcnt(0);
-        /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16.78s] */
-        timer1_start(TIMER_PRESCALER_1024);
-        
-        /* Enable the self-diagnostics */
-        diag_enable();
         /* Reset the TWI */
         i2c_reset();
         /* Enable ADC */
@@ -395,10 +340,8 @@ int main(void) {
             if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
                 printf("... DS18B20 temperature: %.2f\n", measurement);
                 msg.t_soil = fp_float_to_fixed16_10to6(measurement);
-                x_ic_dec(X_IC_DEC_NORM);
             } else {
                 msg.t_soil = 0;
-                x_ic_inc(X_IC_INC_NORM);
             }
         } else {
             msg.t_soil = 0;
@@ -419,11 +362,9 @@ int main(void) {
                 printf("... AM2302 humidity: %.2f\n", measurement2);
                 msg.t_air = fp_float_to_fixed16_10to6(measurement);
                 msg.h_air = fp_float_to_fixed16_10to6(measurement2);
-                x_ic_dec(X_IC_DEC_NORM);
             } else {
                 msg.t_air = 0;
                 msg.h_air = 0;
-                x_ic_inc(X_IC_INC_NORM);
             }
         } else {
             msg.t_air = 0;
@@ -447,11 +388,9 @@ int main(void) {
                 printf("... SHTC3 humidity: %.2f\n", measurement2);
                 msg.t_air = fp_float_to_fixed16_10to6(measurement);
                 msg.h_air = fp_float_to_fixed16_10to6(measurement2);
-                x_ic_dec(X_IC_DEC_NORM);
             } else {
                 msg.t_air = 0;
                 msg.h_air = 0;
-                x_ic_inc(X_IC_INC_NORM);
             }
         } else {
             msg.t_air = 0;
@@ -461,71 +400,7 @@ int main(void) {
 
 
         /*** 3.4) perform self-diagnostics ****************************/
-        /* MCU surface temperature (103JT thermistor via ADC CH2) */
-        t_mcu = diag_read_tsurface();
-        /* Board temperature (TMP275 via TWI) */
-        if(tmp275_set_config(&tmp275, 0xA1) == TMP275_RET_OK) {
-            /* Wait for the conversion to finish (55ms) */
-            _delay_ms(60);
-            /* Get temperature in degree Celsius (°C) */
-            if(tmp275_get_temperature(&tmp275, &t_brd) == TMP275_RET_OK) {
-                x_ic_dec(X_IC_DEC_NORM);
-            } else {
-                x_ic_inc(X_IC_INC_NORM);
-            }
-        }  else {
-            x_ic_inc(X_IC_INC_NORM);
-        }
-        /* Xbee3 temperature */
-        xbee_rx_flush();
-        if(xbee_cmd_get_temperature(&t_trx) == XBEE_RET_OK) {
-            x_ic_dec(X_IC_DEC_NORM);
-        } else {
-            x_ic_inc(X_IC_INC_NORM);
-        }
-        /* MCU supply voltage in volts (V) */
-        v_mcu = diag_read_vcc();
-        /* Battery voltage (via ADC) */
-        v_bat = diag_read_vbat();
-        /* Xbee3 supply voltage */
-        xbee_rx_flush();
-        if(xbee_cmd_get_vss(&v_trx) == XBEE_RET_OK) {
-            x_ic_dec(X_IC_DEC_NORM);
-        } else {
-            x_ic_inc(X_IC_INC_NORM);
-        }
-        
-        /* Node temperature monitor (X_NT) */
-        msg.x_nt = fp_float_to_fixed8_2to6(x_nt_get_normalized(t_mcu, t_brd, t_trx));
-        /* Supply voltage monitor (X_VS) */
-        msg.x_vs = fp_float_to_fixed8_2to6(x_vs_get_normalized(v_mcu, v_trx));
-        /* Battery voltage monitor (X_BAT) */
-        msg.x_bat = fp_float_to_fixed8_2to6(x_bat_get_normalized(v_bat));
-        /* Active runtime monitor (X_ART) */
-        if(runtime > 0) {
-            /* Subsequent cycle -> measurement available */
-            // runtime_us = (uint32_t)(runtime) * 256UL;
-            runtime_ms = (uint16_t)(((double)runtime * 256.0) / 1000.0);
-            msg.x_art = fp_float_to_fixed8_2to6(x_art_get_normalized(runtime_ms));
-        } else {
-            msg.x_art = fp_float_to_fixed8_2to6(0.0);
-        }
-        /* Reset monitor (X_RST) */
-        msg.x_rst = fp_float_to_fixed8_2to6(x_rst_get_normalized(MCUSR_dump & 0x0F));
-        MCUSR_dump = 0;
-        /* Software incident counter (X_IC) */
-        msg.x_ic = fp_float_to_fixed8_2to6(x_ic_get_normalized());
-        /* ADC self-check (X_ADC) */
-        msg.x_adc = fp_float_to_fixed8_2to6(x_adc_get_normalized(diag_adc_check()));
-        /* USART self-check (X_USART) */
-        msg.x_usart = fp_float_to_fixed8_2to6(x_usart_get_normalized(NULL, NULL, 0));
-
-        /* Check incident counter value */
-        if(x_ic_get() >= X_IC_THRESHOLD) {
-            printf("There were too many software incidents ... aborting!\n");
-            /* Wait for watchdog reset */
-            wait_for_wdt_reset();
-        }
+        /* not used here */
 
 
         /*** 3.5) send values via Zigbee ******************************/
@@ -537,20 +412,14 @@ int main(void) {
         int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
         if(ret == XBEE_RET_OK) {
             printf("%d. sensor value update sent!\n\n",msg.time);
-            x_ic_dec(X_IC_DEC_NORM);
         } else {
             printf("ERROR sending message (%d)!\n",ret);
-            x_ic_inc(X_IC_INC_SERIOUS);
         }
         /* Increment message number ("time") */
         msg.time++;
 
 
         /*** 3.6) disable modules/sensors *****************************/
-        /* Stop timer1 to save runtime measurement */
-        timer1_stop();
-        /* Save timer1 counter value */
-        runtime = timer1_get_tcnt();
         /* Send xbee to sleep */
         if(xbee_sleep_enable() != XBEE_RET_OK) {
             printf("Couldn't send xbee radio to sleep ... aborting!\n");
@@ -559,8 +428,6 @@ int main(void) {
         }
         /* Disable ADC */
         adc_disable();
-        /* Disable the self-diagnostics */
-        diag_disable();
 
 
 #if ASNX_VERSION_MINOR>0
