@@ -24,14 +24,14 @@
 #include <util/delay.h>
 /*** ASNX LIB ***/
 #include "hw/hw.h"
-#if DHT_CHECK_LAST_MEAS
-#  include "timer/systick.h"
-#endif
 
 
 /***** DEFINES ********************************************************/
 /*! Enable last-measurement time check (requires systick lib) */
 #define DHT_CHECK_LAST_MEAS     (0)
+#if DHT_CHECK_LAST_MEAS
+#  include "timer/systick.h"
+#endif
 
 /*! Minimal duration between two consecutive readings [s] */
 #define DHT_TIMING_MIN_INTERVAL 2000UL
