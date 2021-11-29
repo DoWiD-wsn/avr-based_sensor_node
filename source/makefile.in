@@ -115,7 +115,7 @@ $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
 
 size: $(BUILDDIR)/$(TARGET).elf
-	$(SIZE) $(BUILDDIR)/$(TARGET).elf
+	$(SIZE) -C --mcu=$(MCU) $(BUILDDIR)/$(TARGET).elf
 
 flash: $(BUILDDIR)/$(TARGET).hex
 	$(DUDE_ISP) $(DUDE_FLASH)$(BUILDDIR)/$(TARGET).hex
