@@ -1,42 +1,14 @@
 /*!
- * @brief   Implementation of a centralized DCA for fault detection
- *
- * Implementation of the dendritic cell algorithm (DCA) in a centralized
- * manner to detect faults. The DCA itself runs on the sink node, but
- * the detection is augmented by the node-level fault indicators that
- * are reported by every sensor node in the network.
- *
- * The procedure is as follows:
- * 1.)  initialize modules
- * 2.)  connect to the Zigbee network
- * 3.1) reset RTC (stop-watch mode)  <--+
- * 3.2) enable modules/sensors          |
- * 3.3) query sensors                   |
- * 3.4) perform self-diagnostics        |
- * 3.5) send values via Zigbee          |
- * 3.6) disable modules/sensors         |
- * 3.7) put MCU to sleep                |
- *  +-----------------------------------+
- *
- * @file    /005-dca_centralized/dca_centralized.c
+ * @file    /005-dca_centralized/dca_centralized-without-diag.c
  * @author  Dominik Widhalm
- * @version 1.1.2
- * @date    2021/10/25
+ * @version 1.0.2
+ * @date    2021/11/29
  */
 
 
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
 #define UPDATE_INTERVAL             10              /**< Update interval [min] */
-#define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
-/* Enable (1) or disable (0) sensor measurements */
-#define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
-#define ENABLE_AM2302               1               /**< enable AM2302 sensor */
-#define ENABLE_SHTC3                0               /**< enable SHTC3 sensor */
-/* Check configuration */
-#if (ENABLE_AM2302 && ENABLE_SHTC3)
-#  error "Use either AM2302 or SHTC3 for air measurements, not both!"
-#endif
 
 
 /***** INCLUDES *******************************************************/
@@ -55,24 +27,11 @@
 #include "uart/uart.h"
 /* Radio */
 #include "xbee/xbee.h"
-#if ASNX_VERSION_MINOR>0
 /* RTC */
-#  include "rtc/pcf85263.h"
-#else
-/* SysTick */
-#  include "timer/systick.h"
-#endif
+#include "rtc/pcf85263.h"
 /* Sensors */
 #include "sensors/tmp275.h"
-#if ENABLE_DS18B20
-#  include "sensors/ds18x20.h"
-#endif
-#if ENABLE_AM2302
-#  include "sensors/dht.h"
-#endif
-#if ENABLE_SHTC3
-#  include "sensors/shtc3.h"
-#endif
+#include "sensors/dht.h"
 /* Misc */
 #include "util/diagnostics.h"
 #include "util/fixed_point.h"
@@ -95,17 +54,8 @@ typedef struct {
     uint16_t time;          /**< timestamp (2 byte) */
     /* use case data */
     uint16_t t_air;         /**< air temperature (fixed point) */
-    uint16_t t_soil;        /**< soil temperature (fixed point) */
     uint16_t h_air;         /**< air humidity (fixed point) */
-    uint16_t h_soil;        /**< soil humidity (fixed point) */
 } MSG_t;
-
-
-/***** GLOBAL VARIABLES ***********************************************/
-#if ASNX_VERSION_MINOR==0
-/*! Variable (flag) for barrier synchronization */
-uint8_t barrier = 1;
-#endif
 
 
 /***** LOCAL FUNCTIONS ************************************************/
@@ -137,23 +87,6 @@ void wait_for_wdt_reset(void) {
 }
 
 
-#if ASNX_VERSION_MINOR==0
-/***
- * Callback function to be called by the systick timer.
- ***/
-void update(void) {
-    static uint8_t cnt = 0;
-    /* Check if update time has elapsed */
-    if(++cnt >= UPDATE_INTERVAL) {
-        /* Reset counter */
-        cnt = 0;
-        /* Set barrier sync flag */
-        barrier = 1;
-    }
-}
-#endif
-
-
 /*!
  * Debug: print the contents of a given sensor message structure
  */
@@ -164,17 +97,6 @@ void dbg_print_msg(MSG_t* msg) {
     printf("=== SENSOR VALUES ===\n");
     printf("T_air:   %.2f C\n",fp_fixed16_to_float_10to6(msg->t_air));
     printf("T_soil:  %.2f C\n",fp_fixed16_to_float_10to6(msg->t_soil));
-    printf("H_air:   %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_air));
-    printf("H_soil:  %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_soil));
-    printf("=== SENSOR VALUES ===\n");
-    printf("X_NT:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_nt));
-    printf("X_VS:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_vs));
-    printf("X_BAT:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_bat));
-    printf("X_ART:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_art));
-    printf("X_RST:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_rst));
-    printf("X_IC:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_ic));
-    printf("X_ADC:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_adc));
-    printf("X_USART: %.2f\n",fp_fixed8_to_float_2to6(msg->x_usart));
     printf("===================================\n\n");
 }
 #endif
@@ -189,34 +111,14 @@ int main(void) {
     /* Message data structure */
     MSG_t msg;
     msg.time = 0;
-    /* Set values to initial value */
-    msg.t_air = 0;
-    msg.h_air = 0;
-    msg.t_soil = 0;
-    msg.h_soil = 0;
-#if ASNX_VERSION_MINOR>0
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
-#endif
     /* Sensor handles */
     TMP275_t tmp275;                /* TMP275 sensor device structure */
-#if ENABLE_DS18B20
-    DS18X20_t ds18b20;              /* DS18B20 sensor device structure */
-    uint8_t ds18b20_en = 0;         /* Sensor enable flag */
-#endif
-#if ENABLE_AM2302
     DHT_t am2302;                   /* AM2302 sensor device structure */
-    uint8_t am2302_en = 0;          /* Sensor enable flag */
-#endif
-#if ENABLE_SHTC3
-    SHTC3_t shtc3;                  /* SHTC3 sensor device structure */
-    uint8_t shtc3_en = 0;           /* Sensor enable flag */
-#endif
     /* Temporary sensor measurement variables */
     float measurement = 0.0;
-#if (ENABLE_AM2302 || ENABLE_SHTC3)
     float measurement2 = 0.0;
-#endif
 
 
     /*** 1.) initialize modules ***************************************/
@@ -224,13 +126,9 @@ int main(void) {
     printf("=== STARTING UP ... ===\n");
     
     /* Disable unused hardware modules */
-#if ASNX_VERSION_MINOR>0
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
     /* Configure the sleep mode */
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-#else
-    PRR0 = _BV(PRTIM2) | _BV(PRSPI);
-#endif
     
 #if ENABLE_DBG
     /* Initialize UART1 for debug purposes */
@@ -252,9 +150,9 @@ int main(void) {
     xbee_init(9600UL);
     
     /* Initialize the diagnostic circuitry */
+    diag_init();
     diag_disable();
 
-#if ASNX_VERSION_MINOR>0
     /* Initialize the RTC */
     time.minutes = UPDATE_INTERVAL;
     if(pcf85263_init_wakeup_src(&time) != PCF85263_RET_OK) {
@@ -264,12 +162,6 @@ int main(void) {
     /* Configure INT2 to fire interrupt when logic level is "low" */
     EICRA = 0x00;
     EIMSK = _BV(INT2);
-#else
-    /* Initialize the systick timer */
-    systick_init();
-    /* Set a systick callback function to be called every second */
-    systick_set_callback_min(update);
-#endif
 
     /* Enable interrupts globally */
     sei();
@@ -285,32 +177,9 @@ int main(void) {
         wait_for_wdt_reset();
     }
 
-#if ENABLE_DS18B20
-    /* Initialize the DS18B20 sensor */
-    if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) != DS18X20_RET_OK) {
-        printf("Couldn't initialize DS18B20!\n");
-        ds18b20_en = 0;
-    } else {
-        ds18b20_en = 1;
-    }
-#endif
-
-#if ENABLE_AM2302
     /* Initialize the AMS2302 sensor */
     dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
     printf("... AMS2302 ready\n");
-    am2302_en = 1;
-#endif
-
-#if ENABLE_SHTC3
-    /* Initialize the SHTC3 sensor */
-    if(shtc3_init(&shtc3, SHTC3_I2C_ADDRESS) != SHTC3_RET_OK) {
-        printf("Couldn't initialize SHTC3!\n");
-        shtc3_en = 0;
-    } else {
-        shtc3_en = 1;
-    }
-#endif
 
     
     /*** 2.) connect to the Zigbee network ****************************/
@@ -336,7 +205,6 @@ int main(void) {
 
 
     while(1) {
-#if ASNX_VERSION_MINOR>0
         /*** 3.1) reset RTC (stop-watch mode) *************************/
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
@@ -352,15 +220,6 @@ int main(void) {
             printf("Couldn't re-start RTC ... aborting!\n");
             wait_for_wdt_reset();
         }
-#else
-        /*** 3.1) barrier synchronization *****************************/
-        /* Wait until the barrier sync flag is set */
-        while(barrier == 0) {
-            _delay_ms(100);
-        }
-        /* Reset barrier sync flag */
-        barrier = 0;
-#endif
 
         /*** 3.2) enable modules/sensors ******************************/
         /* Wake-up xbee */
@@ -377,86 +236,21 @@ int main(void) {
 
         
         /*** 3.3) query sensors ***************************************/
-#if ENABLE_DS18B20
-        /* Check if sensor is ready */
-        if(ds18b20_en == 0) {
-            /* Try to initialize sensor (again) */
-            if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) == DS18X20_RET_OK) {
-                printf("Successfully (re-)initialized DS18B20!\n");
-                ds18b20_en = 1;
-            }
-        }
-        if(ds18b20_en == 1) {
-            /* DS18B20 - Temperature in degree Celsius (°C) */
-            if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
-                printf("... DS18B20 temperature: %.2f\n", measurement);
-                msg.t_soil = fp_float_to_fixed16_10to6(measurement);
-                x_ic_dec(X_IC_DEC_NORM);
-            } else {
-                msg.t_soil = 0;
-                x_ic_inc(X_IC_INC_NORM);
-            }
-        } else {
-            msg.t_soil = 0;
-        }
-#endif
-
-#if ENABLE_AM2302
-        /* Check if sensor is ready */
-        if(am2302_en == 0) {
-            dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
-            printf("Successfully (re-)initialized AM2302!\n");
-            am2302_en = 1;
-        }
-        if(am2302_en == 1) {
-            /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
-            if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
-                printf("... AM2302 temperature: %.2f\n", measurement);
-                printf("... AM2302 humidity: %.2f\n", measurement2);
-                msg.t_air = fp_float_to_fixed16_10to6(measurement);
-                msg.h_air = fp_float_to_fixed16_10to6(measurement2);
-                x_ic_dec(X_IC_DEC_NORM);
-            } else {
-                msg.t_air = 0;
-                msg.h_air = 0;
-                x_ic_inc(X_IC_INC_NORM);
-            }
+        /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
+        if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
+            printf("... AM2302 temperature: %.2f\n", measurement);
+            printf("... AM2302 humidity: %.2f\n", measurement2);
+            msg.t_air = fp_float_to_fixed16_10to6(measurement);
+            msg.h_air = fp_float_to_fixed16_10to6(measurement2);
+            x_ic_dec(X_IC_DEC_NORM);
         } else {
             msg.t_air = 0;
             msg.h_air = 0;
+            x_ic_inc(X_IC_INC_NORM);
         }
-#endif
-
-#if ENABLE_SHTC3
-        /* Check if sensor is ready */
-        if(shtc3_en == 0) {
-            /* Try to initialize sensor (again) */
-            if(shtc3_init(&shtc3, SHTC3_I2C_ADDRESS) == SHTC3_RET_OK) {
-                printf("Successfully (re-)initialized SHTC3!\n");
-                shtc3_en = 1;
-            }
-        }
-        if(shtc3_en == 1) {
-            /* SHTC3 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
-            if(shtc3_get_temperature_humidity(&shtc3, &measurement, &measurement2, 1) == SHTC3_RET_OK) {
-                printf("... SHTC3 temperature: %.2f\n", measurement);
-                printf("... SHTC3 humidity: %.2f\n", measurement2);
-                msg.t_air = fp_float_to_fixed16_10to6(measurement);
-                msg.h_air = fp_float_to_fixed16_10to6(measurement2);
-                x_ic_dec(X_IC_DEC_NORM);
-            } else {
-                msg.t_air = 0;
-                msg.h_air = 0;
-                x_ic_inc(X_IC_INC_NORM);
-            }
-        } else {
-            msg.t_air = 0;
-            msg.h_air = 0;
-        }
-#endif
-
 
         /*** 3.4) perform self-diagnostics ****************************/
+        /* removed */
 
 
         /*** 3.5) send values via Zigbee ******************************/
@@ -487,20 +281,16 @@ int main(void) {
         /* Disable ADC */
         adc_disable();
 
-
-#if ASNX_VERSION_MINOR>0
         /*** 3.7) put MCU to sleep ************************************/
         sleep_enable();
         sleep_bod_disable();
         sleep_cpu();
-#endif
     }
 
     return 0;
 }
 
 
-#if ASNX_VERSION_MINOR>0
 /*!
  * INT2 external interrupt 2 interrupt.
  */
@@ -510,4 +300,3 @@ ISR(INT2_vect) {
     /* Wait some time to fully wake up */
     _delay_ms(5);
 }
-#endif
