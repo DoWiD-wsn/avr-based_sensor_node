@@ -390,8 +390,8 @@ PCF85263_RET_t pcf85263_set_flags(uint8_t value);
 PCF85263_RET_t pcf85263_read_ram(uint8_t* byte);
 PCF85263_RET_t pcf85263_write_ram(uint8_t byte);
 /* Watchdog */
-PCF85263_RET_t pcf85263_get_watchdog(uint8_t* value);
-PCF85263_RET_t pcf85263_set_watchdog(uint8_t value);
+PCF85263_RET_t pcf85263_get_watchdog_cfg(uint8_t* value);
+PCF85263_RET_t pcf85263_set_watchdog_cfg(uint8_t value);
 
 /*** Date/time ***/
 /* Shared */
