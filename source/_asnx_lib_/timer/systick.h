@@ -53,10 +53,10 @@ uint8_t systick_get_min(void);
 uint8_t systick_get_hour(void);
 uint16_t systick_get_day(void);
 /* Callbacks */
-void systick_set_callback_msec(void (*func)());
-void systick_set_callback_sec(void (*func)());
-void systick_set_callback_min(void (*func)());
-void systick_set_callback_hour(void (*func)());
+void systick_set_callback_msec(void (*func)(void));
+void systick_set_callback_sec(void (*func)(void));
+void systick_set_callback_min(void (*func)(void));
+void systick_set_callback_hour(void (*func)(void));
 void systick_clear_callback_msec(void);
 void systick_clear_callback_sec(void);
 void systick_clear_callback_min(void);

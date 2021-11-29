@@ -62,12 +62,12 @@ void uart0_interrupt_enable(void);
 void uart1_interrupt_enable(void);
 void uart0_interrupt_disable(void);
 void uart1_interrupt_disable(void);
-void uart0_set_callback_rx(void (*callback)());
-void uart1_set_callback_rx(void (*callback)());
-void uart0_set_callback_tx(void (*callback)());
-void uart1_set_callback_tx(void (*callback)());
-void uart0_set_callback_empty(void (*callback)());
-void uart1_set_callback_empty(void (*callback)());
+void uart0_set_callback_rx(void (*callback)(void));
+void uart1_set_callback_rx(void (*callback)(void));
+void uart0_set_callback_tx(void (*callback)(void));
+void uart1_set_callback_tx(void (*callback)(void));
+void uart0_set_callback_empty(void (*callback)(void));
+void uart1_set_callback_empty(void (*callback)(void));
 /*** BLOCKING ***/
 void uart0_putc(char c);
 void uart1_putc(char c);

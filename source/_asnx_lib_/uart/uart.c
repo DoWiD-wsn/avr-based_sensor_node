@@ -204,7 +204,7 @@ void uart1_interrupt_disable(void) {
  *
  * @param[in]   callback    Callback function pointer
  */
-void uart0_set_callback_rx(void (*callback)()) {
+void uart0_set_callback_rx(void (*callback)(void)) {
     /* Set the callback function */
     uart0_isr.f_rx = callback;
 }
@@ -215,7 +215,7 @@ void uart0_set_callback_rx(void (*callback)()) {
  *
  * @param[in]   callback    Callback function pointer
  */
-void uart1_set_callback_rx(void (*callback)()) {
+void uart1_set_callback_rx(void (*callback)(void)) {
     /* Set the callback function */
     uart1_isr.f_rx = callback;
 }
@@ -226,7 +226,7 @@ void uart1_set_callback_rx(void (*callback)()) {
  *
  * @param[in]   callback    Callback function pointer
  */
-void uart0_set_callback_tx(void (*callback)()) {
+void uart0_set_callback_tx(void (*callback)(void)) {
     /* Set the callback function */
     uart0_isr.f_tx = callback;
 }
@@ -237,7 +237,7 @@ void uart0_set_callback_tx(void (*callback)()) {
  *
  * @param[in]   callback    Callback function pointer
  */
-void uart1_set_callback_tx(void (*callback)()) {
+void uart1_set_callback_tx(void (*callback)(void)) {
     /* Set the callback function */
     uart1_isr.f_tx = callback;
 }
@@ -248,7 +248,7 @@ void uart1_set_callback_tx(void (*callback)()) {
  *
  * @param[in]   callback    Callback function pointer
  */
-void uart0_set_callback_empty(void (*callback)()) {
+void uart0_set_callback_empty(void (*callback)(void)) {
     /* Set the callback function */
     uart0_isr.f_empty = callback;
 }
@@ -259,7 +259,7 @@ void uart0_set_callback_empty(void (*callback)()) {
  *
  * @param[in]   callback    Callback function pointer
  */
-void uart1_set_callback_empty(void (*callback)()) {
+void uart1_set_callback_empty(void (*callback)(void)) {
     /* Set the callback function */
     uart1_isr.f_empty = callback;
 }
