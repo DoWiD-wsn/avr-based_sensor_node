@@ -17,16 +17,16 @@
 /***** GLOBAL VARIABLES ***********************************************/
 /* Callback function pointer for ISR */
 #if TIMER0_ENABLED
-void (*_timer0_callback)() = NULL;        /**< timer0 function callback */
+void (*_timer0_callback)(void) = NULL;  /**< timer0 function callback */
 #endif
 #if TIMER1_ENABLED
-void (*_timer1_callback)() = NULL;        /**< timer1 function callback */
+void (*_timer1_callback)(void) = NULL;  /**< timer1 function callback */
 #endif
 #if TIMER2_ENABLED
-void (*_timer2_callback)() = NULL;        /**< timer2 function callback */
+void (*_timer2_callback)(void) = NULL;  /**< timer2 function callback */
 #endif
 #if TIMER3_ENABLED
-void (*_timer3_callback)() = NULL;        /**< timer3 function callback */
+void (*_timer3_callback)(void) = NULL;  /**< timer3 function callback */
 #endif
 
 
@@ -187,7 +187,7 @@ uint8_t timer0_get_tcnt(void) {
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer0_start_isr(uint8_t ticks, TIMER_PRESCALER_t prescaler, void (*func)()) {
+void timer0_start_isr(uint8_t ticks, TIMER_PRESCALER_t prescaler, void (*func)(void)) {
     /* Check if a positive ticks value was given */
     if (ticks == 0) {
         return;
@@ -216,7 +216,7 @@ void timer0_start_isr(uint8_t ticks, TIMER_PRESCALER_t prescaler, void (*func)()
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer0_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)()) {
+void timer0_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)(void)) {
     /* Get the ticks from time */
     uint8_t ticks = timer0_get_ticks_from_us(us, prescaler);
     /* Call the tick-based timer function */
@@ -231,7 +231,7 @@ void timer0_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)(
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer0_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)()) {
+void timer0_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)(void)) {
     /* Get the ticks from time */
     uint8_t ticks = timer0_get_ticks_from_ms(ms, prescaler);
     /* Call the tick-based timer function */
@@ -410,7 +410,7 @@ uint16_t timer1_get_tcnt(void) {
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer1_start_isr(uint16_t ticks, TIMER_PRESCALER_t prescaler, void (*func)()) {
+void timer1_start_isr(uint16_t ticks, TIMER_PRESCALER_t prescaler, void (*func)(void)) {
     /* Check if a positive ticks value was given */
     if (ticks == 0) {
         return;
@@ -440,7 +440,7 @@ void timer1_start_isr(uint16_t ticks, TIMER_PRESCALER_t prescaler, void (*func)(
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer1_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)()) {
+void timer1_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)(void)) {
     /* Get the ticks from time */
     uint16_t ticks = timer1_get_ticks_from_us(us, prescaler);
     /* Call the tick-based timer function */
@@ -455,7 +455,7 @@ void timer1_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)(
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer1_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)()) {
+void timer1_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)(void)) {
     /* Get the ticks from time */
     uint16_t ticks = timer1_get_ticks_from_ms(ms, prescaler);
     /* Call the tick-based timer function */
@@ -649,7 +649,7 @@ uint8_t timer2_get_tcnt(void) {
  * @param[in]   prescaler   TIMER2 prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer2_start_isr(uint8_t ticks, TIMER2_PRESCALER_t prescaler, void (*func)()) {
+void timer2_start_isr(uint8_t ticks, TIMER2_PRESCALER_t prescaler, void (*func)(void)) {
     /* Check if a positive ticks value was given */
     if (ticks == 0) {
         return;
@@ -680,7 +680,7 @@ void timer2_start_isr(uint8_t ticks, TIMER2_PRESCALER_t prescaler, void (*func)(
  * @param[in]   prescaler   TIMER2 prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer2_start_isr_us(uint16_t us, TIMER2_PRESCALER_t prescaler, void (*func)()) {
+void timer2_start_isr_us(uint16_t us, TIMER2_PRESCALER_t prescaler, void (*func)(void)) {
     /* Get the ticks from time */
     uint8_t ticks = timer2_get_ticks_from_us(us, prescaler);
     /* Call the tick-based timer function */
@@ -695,7 +695,7 @@ void timer2_start_isr_us(uint16_t us, TIMER2_PRESCALER_t prescaler, void (*func)
  * @param[in]   prescaler   TIMER2 prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer2_start_isr_ms(uint16_t ms, TIMER2_PRESCALER_t prescaler, void (*func)()) {
+void timer2_start_isr_ms(uint16_t ms, TIMER2_PRESCALER_t prescaler, void (*func)(void)) {
     /* Get the ticks from time */
     uint8_t ticks = timer2_get_ticks_from_ms(ms, prescaler);
     /* Call the tick-based timer function */
@@ -872,7 +872,7 @@ uint16_t timer3_get_tcnt(void) {
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer3_start_isr(uint16_t ticks, TIMER_PRESCALER_t prescaler, void (*func)()) {
+void timer3_start_isr(uint16_t ticks, TIMER_PRESCALER_t prescaler, void (*func)(void)) {
     /* Check if a positive ticks value was given */
     if (ticks == 0) {
         return;
@@ -901,7 +901,7 @@ void timer3_start_isr(uint16_t ticks, TIMER_PRESCALER_t prescaler, void (*func)(
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer3_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)()) {
+void timer3_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)(void)) {
     /* Get the ticks from time */
     uint8_t ticks = timer3_get_ticks_from_us(us, prescaler);
     /* Call the tick-based timer function */
@@ -916,7 +916,7 @@ void timer3_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)(
  * @param[in]   prescaler   TIMER prescaler configuration
  * @param[in]   func        Callback function pointer
  */
-void timer3_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)()) {
+void timer3_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)(void)) {
     /* Get the ticks from time */
     uint8_t ticks = timer3_get_ticks_from_ms(ms, prescaler);
     /* Call the tick-based timer function */

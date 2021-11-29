@@ -20,10 +20,10 @@
 /*! Global struct for the elapsed time of the systick timer */
 systick_t systime = {0,0,0,0,0};
 /* Callback function pointer */
-void (*_systick_cb_msec)() = NULL;  /**< msec function callback */
-void (*_systick_cb_sec)() = NULL;   /**< sec function callback */
-void (*_systick_cb_min)() = NULL;   /**< min function callback */
-void (*_systick_cb_hour)() = NULL;  /**< hour function callback */
+void (*_systick_cb_msec)(void) = NULL;  /**< msec function callback */
+void (*_systick_cb_sec)(void) = NULL;   /**< sec function callback */
+void (*_systick_cb_min)(void) = NULL;   /**< min function callback */
+void (*_systick_cb_hour)(void) = NULL;  /**< hour function callback */
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
@@ -194,7 +194,7 @@ void systick_tick(void) {
  *
  * @param[in]   func    Callback function pointer
  */
-void systick_set_callback_msec(void (*func)()) {
+void systick_set_callback_msec(void (*func)(void)) {
     /* Assign the user defined callback function */
     _systick_cb_msec = func;
 }
@@ -205,7 +205,7 @@ void systick_set_callback_msec(void (*func)()) {
  *
  * @param[in]   func    Callback function pointer
  */
-void systick_set_callback_sec(void (*func)()) {
+void systick_set_callback_sec(void (*func)(void)) {
     /* Assign the user defined callback function */
     _systick_cb_sec = func;
 }
@@ -216,7 +216,7 @@ void systick_set_callback_sec(void (*func)()) {
  *
  * @param[in]   func    Callback function pointer
  */
-void systick_set_callback_min(void (*func)()) {
+void systick_set_callback_min(void (*func)(void)) {
     /* Assign the user defined callback function */
     _systick_cb_min = func;
 }
@@ -227,7 +227,7 @@ void systick_set_callback_min(void (*func)()) {
  *
  * @param[in]   func    Callback function pointer
  */
-void systick_set_callback_hour(void (*func)()) {
+void systick_set_callback_hour(void (*func)(void)) {
     /* Assign the user defined callback function */
     _systick_cb_hour = func;
 }
