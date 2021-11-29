@@ -1,7 +1,24 @@
 /*!
- * @brief   Source to compare centralized DCA with code without diagnostics
+ * @brief   Implementation of a centralized DCA for fault detection
  *
- * @file    /006-dca_centralized-without_diag/dca_centralized-without_diag.c
+ * Implementation of the dendritic cell algorithm (DCA) in a centralized
+ * manner to detect faults. The DCA itself runs on the sink node, but
+ * the detection is augmented by the node-level fault indicators that
+ * are reported by every sensor node in the network.
+ *
+ * The procedure is as follows:
+ * 1.)  initialize modules
+ * 2.)  connect to the Zigbee network
+ * 3.1) reset RTC (stop-watch mode)  <--+
+ * 3.2) enable modules/sensors          |
+ * 3.3) query sensors                   |
+ * 3.4) perform self-diagnostics        |
+ * 3.5) send values via Zigbee          |
+ * 3.6) disable modules/sensors         |
+ * 3.7) put MCU to sleep                |
+ *  +-----------------------------------+
+ *
+ * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
  * @version 1.1.2
  * @date    2021/10/25
@@ -10,10 +27,10 @@
 
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
-#define UPDATE_INTERVAL             1               /**< Update interval [min] */
+#define UPDATE_INTERVAL             10              /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
-#define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
+#define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
 #define ENABLE_AM2302               0               /**< enable AM2302 sensor */
 #define ENABLE_SHTC3                1               /**< enable SHTC3 sensor */
 /* Check configuration */
@@ -65,6 +82,8 @@
 #else
 #  define printf(...) do { } while (0)
 #endif
+/* DCA */
+#include "dca/indicators.h"
 
 
 /***** STRUCTURES *****************************************************/
@@ -90,6 +109,23 @@ uint8_t barrier = 1;
 
 
 /***** LOCAL FUNCTIONS ************************************************/
+/*!
+ * Put a MCUSR register dump into the .noinit section.
+ * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
+ */
+uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
+/*!
+ * Turn off the WDT as early in the startup process as possible.
+ * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
+ */
+void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
+void get_mcusr(void) {
+  MCUSR_dump = MCUSR;
+  MCUSR = 0;
+  wdt_disable();
+}
+
+
 /*!
  * Activate WDT with shortest delay and wait for reset (sort of software-reset).
  */
@@ -130,6 +166,15 @@ void dbg_print_msg(MSG_t* msg) {
     printf("T_soil:  %.2f C\n",fp_fixed16_to_float_10to6(msg->t_soil));
     printf("H_air:   %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_air));
     printf("H_soil:  %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_soil));
+    printf("=== SENSOR VALUES ===\n");
+    printf("X_NT:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_nt));
+    printf("X_VS:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_vs));
+    printf("X_BAT:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_bat));
+    printf("X_ART:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_art));
+    printf("X_RST:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_rst));
+    printf("X_IC:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_ic));
+    printf("X_ADC:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_adc));
+    printf("X_USART: %.2f\n",fp_fixed8_to_float_2to6(msg->x_usart));
     printf("===================================\n\n");
 }
 #endif
@@ -202,6 +247,9 @@ int main(void) {
     i2c_init();
     /* Initialize Xbee 3 (uses UART0) */
     xbee_init(9600UL);
+    
+    /* Initialize the diagnostic circuitry */
+    diag_disable();
 
 #if ASNX_VERSION_MINOR>0
     /* Initialize the RTC */
@@ -340,8 +388,10 @@ int main(void) {
             if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
                 printf("... DS18B20 temperature: %.2f\n", measurement);
                 msg.t_soil = fp_float_to_fixed16_10to6(measurement);
+                x_ic_dec(X_IC_DEC_NORM);
             } else {
                 msg.t_soil = 0;
+                x_ic_inc(X_IC_INC_NORM);
             }
         } else {
             msg.t_soil = 0;
@@ -362,9 +412,11 @@ int main(void) {
                 printf("... AM2302 humidity: %.2f\n", measurement2);
                 msg.t_air = fp_float_to_fixed16_10to6(measurement);
                 msg.h_air = fp_float_to_fixed16_10to6(measurement2);
+                x_ic_dec(X_IC_DEC_NORM);
             } else {
                 msg.t_air = 0;
                 msg.h_air = 0;
+                x_ic_inc(X_IC_INC_NORM);
             }
         } else {
             msg.t_air = 0;
@@ -388,9 +440,11 @@ int main(void) {
                 printf("... SHTC3 humidity: %.2f\n", measurement2);
                 msg.t_air = fp_float_to_fixed16_10to6(measurement);
                 msg.h_air = fp_float_to_fixed16_10to6(measurement2);
+                x_ic_dec(X_IC_DEC_NORM);
             } else {
                 msg.t_air = 0;
                 msg.h_air = 0;
+                x_ic_inc(X_IC_INC_NORM);
             }
         } else {
             msg.t_air = 0;
@@ -400,7 +454,6 @@ int main(void) {
 
 
         /*** 3.4) perform self-diagnostics ****************************/
-        /* not used here */
 
 
         /*** 3.5) send values via Zigbee ******************************/
@@ -412,8 +465,10 @@ int main(void) {
         int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
         if(ret == XBEE_RET_OK) {
             printf("%d. sensor value update sent!\n\n",msg.time);
+            x_ic_dec(X_IC_DEC_NORM);
         } else {
             printf("ERROR sending message (%d)!\n",ret);
+            x_ic_inc(X_IC_INC_SERIOUS);
         }
         /* Increment message number ("time") */
         msg.time++;

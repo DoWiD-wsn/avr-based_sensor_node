@@ -50,8 +50,6 @@
 #define X_RST_MAX                           25.0
 /*! decay rate (damping per update) */
 #define X_RST_DECAY                         0.92
-/*! EEPROM address */
-#define X_RST_EEPROM                        0x00
 /*! EEPROM update threshold */
 #define X_RST_UPDATE                        0.05
 

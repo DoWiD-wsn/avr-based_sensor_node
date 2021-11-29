@@ -3,10 +3,10 @@ AVR Memory Usage
 ----------------
 Device: atmega1284p
 
-Program:    8920 bytes (6.8% Full)
+Program:    7018 bytes (5.4% Full)
 (.text + .data + .bootloader)
 
-Data:        448 bytes (2.7% Full)
+Data:        457 bytes (2.8% Full)
 (.data + .bss + .noinit)
 
 

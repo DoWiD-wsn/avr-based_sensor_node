@@ -27,10 +27,10 @@
 
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
-#define UPDATE_INTERVAL             1               /**< Update interval [min] */
+#define UPDATE_INTERVAL             10              /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
-#define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
+#define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
 #define ENABLE_AM2302               0               /**< enable AM2302 sensor */
 #define ENABLE_SHTC3                1               /**< enable SHTC3 sensor */
 /* Check configuration */

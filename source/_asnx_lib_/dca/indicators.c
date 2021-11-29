@@ -24,8 +24,8 @@ uint32_t x_art_values[X_ART_N] = {0};
 uint8_t x_art_index = 99;
 /*! Reset monitor previous value */
 float x_rst_prev = 0.0;
-/*! Reset monitor EEPROM memory location */
-float* EEMEM x_rst_eeprom = X_RST_EEPROM;
+/*! Reset monitor EEPROM address */
+float EEMEM x_rst_eeprom;
 /*! software incident counter value */
 uint16_t x_ic = 0;
 
@@ -44,9 +44,9 @@ void indicators_init(void) {
     x_rst_reset();
     x_ic_reset();
     /* Check if X_RST value in EEPROM was written before */
-    if(eeprom_read_byte((const uint8_t *)x_rst_eeprom) != 0xFF) {
+    if(eeprom_read_byte((const uint8_t *)&x_rst_eeprom) != 0xFF) {
         /* Read the previous reset-source indicator from EEPROM */
-        x_rst_prev = eeprom_read_float(x_rst_eeprom);
+        x_rst_prev = eeprom_read_float(&x_rst_eeprom);
         x_rst_set(x_rst_prev);
     }
 }
@@ -257,7 +257,7 @@ float x_rst_get_normalized(uint8_t mcusr) {
     float a = (x_rst > x_rst_prev) ? x_rst : x_rst_prev;
     float b = (x_rst > x_rst_prev) ? x_rst_prev : x_rst;
     if((a-b) > X_RST_UPDATE) {
-        eeprom_write_float(x_rst_eeprom,x_rst);
+        eeprom_write_float(&x_rst_eeprom,x_rst);
     }
     /* Check the final value (max: 1.0) */
     x_rst = fmin(x_rst, 1.0);
