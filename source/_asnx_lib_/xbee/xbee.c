@@ -1383,7 +1383,7 @@ inline XBEE_RET_t xbee_transmit_unicast(uint64_t mac, uint8_t* payload, uint16_t
 XBEE_RET_t xbee_is_connected(void) {
     uint64_t response;
     /* Check Xbee connection status (need 1 return byte) */
-    if(xbee_at_local_cmd_read("AI", &response, 0x01) == 1) {
+    if(xbee_at_local_cmd_read((char *)"AI", &response, 0x01) == 1) {
         if(response == XBEE_AI_RET_SUCCESS) {
             /* Successfully connected */
             return XBEE_RET_OK;
@@ -1425,7 +1425,7 @@ XBEE_RET_t xbee_wait_for_connected(uint8_t timeout) {
 XBEE_RET_t xbee_cmd_get_temperature(float* temp) {
     int8_t ret;
     uint64_t retval;
-    ret = xbee_at_local_cmd_read("TP", &retval, 0x01);
+    ret = xbee_at_local_cmd_read((char *)"TP", &retval, 0x01);
     if(ret != 2) {
         /* Return error */
         return ret;
@@ -1446,7 +1446,7 @@ XBEE_RET_t xbee_cmd_get_temperature(float* temp) {
 XBEE_RET_t xbee_cmd_get_vss(float* vss) {
     int8_t ret;
     uint64_t retval;
-    ret = xbee_at_local_cmd_read("%V", &retval, 0x01);
+    ret = xbee_at_local_cmd_read((char *)"%V", &retval, 0x01);
     if(ret != 2) {
         /* Return error */
         return ret;
