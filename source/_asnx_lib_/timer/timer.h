@@ -66,8 +66,8 @@ typedef enum {
 
 /***** FUNCTION PROTOTYPES ********************************************/
 #if TIMER0_ENABLED
-uint8_t _timer0_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler);
-uint8_t _timer0_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler);
+uint8_t timer0_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler);
+uint8_t timer0_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler);
 void timer0_stop(void);
 void timer0_reset(void);
 void timer0_start(TIMER_PRESCALER_t prescaler);
@@ -78,8 +78,8 @@ void timer0_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)(
 void timer0_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)(void));
 #endif
 #if TIMER1_ENABLED
-uint16_t _timer1_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler);
-uint16_t _timer1_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler);
+uint16_t timer1_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler);
+uint16_t timer1_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler);
 void timer1_stop(void);
 void timer1_reset(void);
 void timer1_start(TIMER_PRESCALER_t prescaler);
@@ -90,8 +90,8 @@ void timer1_start_isr_us(uint16_t us, TIMER_PRESCALER_t prescaler, void (*func)(
 void timer1_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)(void));
 #endif
 #if TIMER2_ENABLED
-uint8_t _timer2_get_ticks_from_us(uint16_t us, TIMER2_PRESCALER_t prescaler);
-uint8_t _timer2_get_ticks_from_ms(uint16_t ms, TIMER2_PRESCALER_t prescaler);
+uint8_t timer2_get_ticks_from_us(uint16_t us, TIMER2_PRESCALER_t prescaler);
+uint8_t timer2_get_ticks_from_ms(uint16_t ms, TIMER2_PRESCALER_t prescaler);
 void timer2_stop(void);
 void timer2_reset(void);
 void timer2_start(TIMER2_PRESCALER_t prescaler);
@@ -102,8 +102,8 @@ void timer2_start_isr_us(uint16_t us, TIMER2_PRESCALER_t prescaler, void (*func)
 void timer2_start_isr_ms(uint16_t ms, TIMER2_PRESCALER_t prescaler, void (*func)(void));
 #endif
 #if TIMER3_ENABLED
-uint16_t _timer3_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler);
-uint16_t _timer3_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler);
+uint16_t timer3_get_ticks_from_us(uint16_t us, TIMER_PRESCALER_t prescaler);
+uint16_t timer3_get_ticks_from_ms(uint16_t ms, TIMER_PRESCALER_t prescaler);
 void timer3_stop(void);
 void timer3_reset(void);
 void timer3_start(TIMER_PRESCALER_t prescaler);
