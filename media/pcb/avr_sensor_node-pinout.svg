@@ -99,10 +99,10 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:zoom="1.7311021"
-     inkscape:cx="116.40586"
-     inkscape:cy="117.3962"
-     inkscape:window-x="0"
+     inkscape:zoom="2.4481481"
+     inkscape:cx="225.54689"
+     inkscape:cy="230.92581"
+     inkscape:window-x="1920"
      inkscape:window-y="27"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg2514" />
@@ -1955,7 +1955,7 @@
        id="tspan5173"
        x="-12975.542"
        y="41834.605"
-       style="font-size:924.66229248px;text-align:start;text-anchor:start;stroke-width:173.37417603">S_RQ</tspan></text>
+       style="font-size:924.66229248px;text-align:start;text-anchor:start;stroke-width:173.37417603">SRQ</tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1849.32458496px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:173.37417603"
@@ -1967,7 +1967,7 @@
        id="tspan5181"
        x="-12975.542"
        y="49697.863"
-       style="font-size:924.66229248px;text-align:start;text-anchor:start;stroke-width:173.37417603">TXD0</tspan></text>
+       style="font-size:924.66229248px;text-align:start;text-anchor:start;stroke-width:173.37417603">DIN</tspan></text>
   <text
      transform="rotate(-90)"
      id="text5187"
@@ -1979,7 +1979,7 @@
        y="51008.402"
        x="-12975.542"
        id="tspan5185"
-       sodipodi:role="line">RXD0</tspan></text>
+       sodipodi:role="line">DOUT</tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1849.32458496px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:173.37417603"
@@ -2051,7 +2051,7 @@
        id="tspan5213"
        x="-12975.542"
        y="48383.16"
-       style="font-size:924.66229248px;text-align:start;text-anchor:start;stroke-width:173.37417603">N/A</tspan></text>
+       style="font-size:924.66229248px;text-align:start;text-anchor:start;stroke-width:173.37417603">MISO</tspan></text>
   <text
      transform="rotate(-90)"
      id="text5219"
@@ -2063,7 +2063,7 @@
        y="43145.148"
        x="-29340.049"
        id="tspan5217"
-       sodipodi:role="line">S_IND</tspan></text>
+       sodipodi:role="line">SLP</tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1849.32458496px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;text-align:end;letter-spacing:0px;word-spacing:0px;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:173.37417603"
@@ -2099,7 +2099,7 @@
        id="tspan5229"
        x="-29340.049"
        y="40519.906"
-       style="font-size:924.66229248px;text-align:end;text-anchor:end;stroke-width:173.37417603">N/A</tspan></text>
+       style="font-size:924.66229248px;text-align:end;text-anchor:end;stroke-width:173.37417603">MOSI</tspan></text>
   <text
      transform="rotate(-90)"
      id="text5235"
@@ -2135,7 +2135,7 @@
        y="48383.16"
        x="-29340.049"
        id="tspan5241"
-       sodipodi:role="line">N/A</tspan></text>
+       sodipodi:role="line">CS</tspan></text>
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1849.32458496px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:FreeSans;text-align:end;letter-spacing:0px;word-spacing:0px;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:173.37417603"
@@ -2147,7 +2147,7 @@
        id="tspan5245"
        x="-29340.049"
        y="49693.699"
-       style="font-size:924.66229248px;text-align:end;text-anchor:end;stroke-width:173.37417603">N/A</tspan></text>
+       style="font-size:924.66229248px;text-align:end;text-anchor:end;stroke-width:173.37417603">SCK</tspan></text>
   <text
      transform="rotate(-90)"
      id="text5251"
