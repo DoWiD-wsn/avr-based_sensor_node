@@ -115,19 +115,30 @@ typedef struct {
 /*! Variable (flag) for barrier synchronization */
 uint8_t barrier = 1;
 #endif
-
-
-/***** LOCAL FUNCTIONS ************************************************/
 /*!
  * Put a MCUSR register dump into the .noinit section.
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
 uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
+
+
+/***** LOCAL FUNCTION PROTOTYPES **************************************/
+void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
+void sleep_until_wdt_reset_short(void);
+void sleep_until_wdt_reset_long(void);
+#if ASNX_VERSION_MINOR==0
+void update(void);
+#endif
+#if ENABLE_DBG
+void dbg_print_msg(MSG_t* msg);
+#endif
+
+
+/***** LOCAL FUNCTIONS ************************************************/
 /*!
  * Turn off the WDT as early in the startup process as possible.
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
-void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
 void get_mcusr(void) {
   MCUSR_dump = MCUSR;
   MCUSR = 0;
@@ -329,9 +340,12 @@ int main(void) {
 
 #if ENABLE_AM2302
     /* Initialize the AMS2302 sensor */
-    dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
-    printf("... AMS2302 ready\n");
-    am2302_en = 1;
+    if(dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302) != DHT_RET_OK) {
+        printf("Couldn't initialize AMS2302!\n");
+        am2302_en = 0;
+    } else {
+        am2302_en = 1;
+    }
 #endif
 
 #if ENABLE_SHTC3

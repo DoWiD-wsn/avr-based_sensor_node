@@ -64,15 +64,15 @@ CFLAGS      	+= -std=gnu99
 CFLAGS        	+= -pedantic
 CFLAGS        	+= -Wall
 CFLAGS        	+= -Wextra
-#CFLAGS        	+= -Wfloat-equal
-#CFLAGS        	+= -Wundef
-#CFLAGS        	+= -Wshadow
-#CFLAGS        	+= -Wpointer-arith
-#CFLAGS        	+= -Wcast-align
-#CFLAGS        	+= -Wstrict-prototypes
-#CFLAGS        	+= -Wmissing-prototypes
-#CFLAGS        	+= -Wwrite-strings
-#CFLAGS        	+= -Wunreachable-code
+CFLAGS        	+= -Wfloat-equal
+CFLAGS        	+= -Wundef
+CFLAGS        	+= -Wshadow
+CFLAGS        	+= -Wpointer-arith
+CFLAGS        	+= -Wcast-align
+CFLAGS        	+= -Wstrict-prototypes
+CFLAGS        	+= -Wmissing-prototypes
+CFLAGS        	+= -Wwrite-strings
+CFLAGS        	+= -Wunreachable-code
 
 -include $(OBJS:.o=.d)
 
