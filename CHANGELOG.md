@@ -6,6 +6,7 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
+- Added silk layer labels to pins of the expansion headers
 ### Changed
 - Changed diagnostic voltage divider resistors to 100k (lesser power consumption; still accurate)
 ### Removed
