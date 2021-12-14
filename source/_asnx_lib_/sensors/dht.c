@@ -31,8 +31,9 @@ static DHT_RET_t _read(DHT_t* dev);
  * @param[in]   pin     Pointer to the GPIO's PINx register
  * @param[in]   portpin Index of the GPIO pin
  * @param[in]   type    DHT sensor type
+ * @return      OK* in case of success; ERROR* otherwise
  */
-void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type) {
+DHT_RET_t dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type) {
     /* Fill the HW GPIO structure */
     dev->gpio.ddr = ddr;
     dev->gpio.port = port;
@@ -45,6 +46,14 @@ void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatil
     /* Setup the hardware (pin) */
     HW_GPIO_OUTPUT(gpio);
     HW_GPIO_HIGH(gpio);
+    /* Check if sensor is accessible */
+    if(_read(dev) == DHT_RET_OK) {
+        /* Init was successful */
+        return DHT_RET_OK;
+    } else {
+        /* Init failed */
+        return DHT_RET_ERROR_NODEV;
+    }
 }
 
 
@@ -120,42 +129,42 @@ static DHT_RET_t _read(DHT_t* dev) {
     }
     _delay_us(80);
     
-	uint16_t cnt = 0;
+    uint16_t cnt = 0;
     /* Read the data send by the sensor (should be 5 byte) ... */
-	for(j=0; j<5; j++) {
-		uint8_t result=0;
+    for(j=0; j<5; j++) {
+        uint8_t result=0;
         /* ... bit by bit */
-		for(i=0; i<8; i++) {
+        for(i=0; i<8; i++) {
             /* Reset timeout counter */
-			cnt = 0;
+            cnt = 0;
             /* Wait for the data line to become high */
-			while(!HW_GPIO_READ(gpio)) {
-				cnt++;
+            while(!HW_GPIO_READ(gpio)) {
+                cnt++;
                 /* Check if timeout has been reached */
-				if(cnt > DHT_TIMING_TIMEOUT) {
-					return DHT_RET_ERROR_TIMEOUT;
-				}
-			}
-			_delay_us(30);
+                if(cnt > DHT_TIMING_TIMEOUT) {
+                    return DHT_RET_ERROR_TIMEOUT;
+                }
+            }
+            _delay_us(30);
             /* Check if data line is still high after 30 us */
-			if(HW_GPIO_READ(gpio)) {
+            if(HW_GPIO_READ(gpio)) {
                 /* Read bit as 1 (MSB first) */
-				result |= (1<<(7-i));
+                result |= (1<<(7-i));
             }
             /* Reset timeout counter */
-			cnt = 0;
+            cnt = 0;
             /* Wait for the data line to become low */
-			while(HW_GPIO_READ(gpio)) {
-				cnt++;
+            while(HW_GPIO_READ(gpio)) {
+                cnt++;
                 /* Check if timeout has been reached */
-				if(cnt > DHT_TIMING_TIMEOUT) {
-					return DHT_RET_ERROR_TIMEOUT;
-				}
-			}
-		}
+                if(cnt > DHT_TIMING_TIMEOUT) {
+                    return DHT_RET_ERROR_TIMEOUT;
+                }
+            }
+        }
         /* Store received byte in device data structure */
-		dev->data[j] = result;
-	}
+        dev->data[j] = result;
+    }
 
     /*** Timing-critical section finished ***/
     /* Restore interrupts */
