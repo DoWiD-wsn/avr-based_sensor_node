@@ -32,7 +32,7 @@
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
 #define ENABLE_AM2302               0               /**< enable AM2302 sensor */
-#define ENABLE_SHTC3                1               /**< enable SHTC3 sensor */
+#define ENABLE_SHTC3                0               /**< enable SHTC3 sensor */
 /* Check configuration */
 #if (ENABLE_AM2302 && ENABLE_SHTC3)
 #  error "Use either AM2302 or SHTC3 for air measurements, not both!"
@@ -213,7 +213,10 @@ int main(void) {
     /* Message data structure */
     MSG_t msg;
     msg.time = 0;
-    /* Soil moisture level is currently not used */
+    /* Initialize sensor data (needed in case not used) */
+    msg.t_air = 0;
+    msg.h_air = 0;
+    msg.t_soil = 0;
     msg.h_soil = 0;
 #if ASNX_VERSION_MINOR>0
     /* Date/time structure */
