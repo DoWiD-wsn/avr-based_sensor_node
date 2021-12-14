@@ -12,8 +12,8 @@
  *
  * @file    /004-sensor_node_demo/sensor_node_demo.c
  * @author  Dominik Widhalm
- * @version 1.4.0
- * @date    2021/10/18
+ * @version 1.4.1
+ * @date    2021/12/14
  */
 
 
@@ -30,10 +30,10 @@
 #define ENABLE_XBEE_V               (1)     /**< Enable the XBEE radio supply voltage (V) measurement (via UART) */
 #define ENABLE_103JT_T              (1)     /**< Enable the 103JT thermistor temperature (T) measurement (via ADC) */
 #define ENABLE_TMP275_T             (1)     /**< Enable the TMP275 sensor temperature (T) measurement (via TWI) */
-#define ENABLE_DS18B20_T            (0)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_STEMMA_H             (0)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
-#define ENABLE_AM2302_T             (0)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_AM2302_H             (0)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
+#define ENABLE_DS18B20_T            (1)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_STEMMA_H             (1)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
+#define ENABLE_AM2302_T             (1)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_AM2302_H             (1)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
 #define ENABLE_RUNTIME              (1)     /**< Enable the transmission of the last runtime value */
 #define ENABLE_INCIDENT             (1)     /**< Enable the transmission of the cumulative incident counter */
 #define ENABLE_REBOOT               (1)     /**< Enable the transmission of the last reset source (MCUSR) */
@@ -116,19 +116,26 @@ uint8_t barrier = 1;
 #endif
 /*! Previous reset-source indicator */
 float rsource_prev = 0.0;
-
-
-/***** LOCAL FUNCTIONS ************************************************/
 /*!
  * Put a MCUSR register dump into the .noinit section.
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
 uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
+
+
+/***** LOCAL FUNCTION PROTOTYPES **************************************/
+void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
+void wait_for_wdt_reset(void);
+#if ASNX_VERSION_MINOR<1
+void update(void);
+#endif
+
+
+/***** LOCAL FUNCTIONS ************************************************/
 /*!
  * Turn off the WDT as early in the startup process as possible.
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
-void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
 void get_mcusr(void) {
   MCUSR_dump = MCUSR;
   MCUSR = 0;
@@ -386,9 +393,13 @@ int main(void) {
 
 #if (ENABLE_AM2302_T || ENABLE_AM2302_H)
     /* Initialize the AMS2302 sensor */
-    dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
-    en_am2302 = 1;
-    printf("... AMS2302 ready\n");
+    if(dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302) != DHT_RET_OK) {
+        en_am2302 = 0;
+        printf("Couldn't initialize AMS2302!\n");
+    } else {
+        en_am2302 = 1;
+        printf("... AMS2302 ready\n");
+    }
 #endif
 
     /* Reset the XBee RX buffer */

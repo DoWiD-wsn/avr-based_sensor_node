@@ -7,9 +7,9 @@
  * (controlled via the systick handler) via UART.
  *
  * @file    /002-sensor_demo/sensor_demo.c
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1 $
- * @date    $Date: 2021/05/10 $
+ * @author  Dominik Widhalm
+ * @version 1.1.1
+ * @date    2021/12/14
  *****/
 
 /*** DEMO CONFIGURATION ***/
@@ -64,6 +64,11 @@ LM75_t lm75;
 #  include "sensors/stemma_soil.h"
 STEMMA_t stemma;
 #endif
+
+
+/***** LOCAL FUNCTION PROTOTYPES **************************************/
+void read_and_print(void);
+void update(void);
 
 
 /***** FUNCTION CALLBACK **********************************************/
@@ -231,7 +236,10 @@ int main(void) {
 
 #if ENABLE_AM2302
     /* Initialize the AMS2302 sensor */
-    dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
+    if(dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302) != DHT_RET_OK) {
+        printf("Couldn't initialize AMS2302 ... aborting!\n");
+        while(1);
+    }
 #endif
 
 #if ENABLE_BME280

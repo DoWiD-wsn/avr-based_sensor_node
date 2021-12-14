@@ -42,6 +42,7 @@
 /***** ENUMERATION ****************************************************/
 /*! Enumeration for the DHT function return values */
 typedef enum {
+    DHT_RET_ERROR_NODEV         = -5,
     DHT_RET_ERROR_TYPE          = -4,
     DHT_RET_ERROR_CRC           = -3,
     DHT_RET_ERROR_TIMEOUT       = -2,
@@ -75,7 +76,7 @@ typedef struct {
 
 
 /***** FUNCTION PROTOTYPES ********************************************/
-void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type);
+DHT_RET_t dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type);
 DHT_RET_t dht_get_temperature(DHT_t* dev, float* temperature);
 DHT_RET_t dht_get_humidity(DHT_t* dev, float* humidity);
 DHT_RET_t dht_get_temperature_humidity(DHT_t* dev, float* temperature, float* humidity);
