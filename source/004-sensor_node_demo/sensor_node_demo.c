@@ -125,7 +125,8 @@ uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
 void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
-void wait_for_wdt_reset(void);
+void sleep_until_wdt_reset_short(void);
+void sleep_until_wdt_reset_long(void);
 #if ASNX_VERSION_MINOR<1
 void update(void);
 #endif
@@ -144,13 +145,28 @@ void get_mcusr(void) {
 
 
 /*!
- * Activate WDT with minimal delay and wait for reset.
+ * Activate WDT with shortest delay, put MCU to sleep and wait for reset.
  */
-void wait_for_wdt_reset(void) {
+void sleep_until_wdt_reset_short(void) {
     /* Enable Watchdog (time: 15ms) */
     wdt_enable(WDTO_15MS);
-    /* Wait for reset */
-    while(1);
+    /* Put MCU to sleep */
+    sleep_enable();
+    sleep_bod_disable();
+    sleep_cpu();
+}
+
+
+/*!
+ * Activate WDT with longest delay, put MCU to sleep and wait for reset.
+ */
+void sleep_until_wdt_reset_long(void) {
+    /* Enable Watchdog (time: 8 s) */
+    wdt_enable(WDTO_8S);
+    /* Put MCU to sleep */
+    sleep_enable();
+    sleep_bod_disable();
+    sleep_cpu();
 }
 
 
@@ -299,48 +315,48 @@ int main(void) {
     /* Initialize the RTC */
     if(pcf85263_init() != PCF85263_RET_OK) {
         printf("Couldn't initialize RTC ... aborting!\n");
-        wait_for_wdt_reset();
+        sleep_until_wdt_reset_short();
     }
     /* Disable the battery switch */
     if(pcf85263_set_batteryswitch(PCF85263_CTL_BATTERY_BSOFF) != PCF85263_RET_OK) {
         printf("RTC: Battery switch configuration FAILED ... aborting!\n");
-        wait_for_wdt_reset();
+        sleep_until_wdt_reset_short();
     }
     /* Disable CLK pin; INTA output */
     if(pcf85263_set_pin_io(PCF85263_CTL_CLKPM | PCF85263_CTL_INTAPM_INTA) != PCF85263_RET_OK) {
         printf("RTC: Battery switch configuration FAILED ... aborting!\n");
-        wait_for_wdt_reset();
+        sleep_until_wdt_reset_short();
     }
     /* Enable stop-watch mode (read first to get 100TH and STOPM bits) */
     if(pcf85263_get_function(&reg) != PCF85263_RET_OK) {
         printf("RTC: Function configuration read FAILED ... aborting!\n");
-        wait_for_wdt_reset();
+        sleep_until_wdt_reset_short();
     }
     reg |= PCF85263_CTL_FUNC_RTCM;
     if(pcf85263_set_function(reg) != PCF85263_RET_OK) {
         printf("RTC: Function configuration write FAILED ... aborting!\n");
-        wait_for_wdt_reset();
+        sleep_until_wdt_reset_short();
     }
     /* Set desired wake-up time */
     time.minutes = UPDATE_INTERVAL;
     if(pcf85263_set_stw_alarm1(&time) != PCF85263_RET_OK) {
         printf("RTC: Alarm time configuration FAILED ... aborting!\n");
-        wait_for_wdt_reset();
+        sleep_until_wdt_reset_short();
     }
     /* Enable the alarm */
     if(pcf85263_set_stw_alarm_enables(PCF85263_RTC_ALARM_MIN_A1E) != PCF85263_RET_OK) {
         printf("RTC: Alarm enable configuration FAILED ... aborting!\n");
-        wait_for_wdt_reset();
+        sleep_until_wdt_reset_short();
     }
     /* Enable the alarm interrupt */
     if(pcf85263_set_inta_en(PCF85263_CTL_INTA_A1IEA) != PCF85263_RET_OK) {
         printf("RTC: Alarm enable configuration FAILED ... aborting!\n");
-        wait_for_wdt_reset();
+        sleep_until_wdt_reset_short();
     }
     /* Start RTC */
     if(pcf85263_start() != PCF85263_RET_OK) {
         printf("Couldn't start RTC ... aborting!\n");
-        wait_for_wdt_reset();
+        sleep_until_wdt_reset_short();
     } else {
         printf("... RTC started\n");
     }
@@ -412,7 +428,7 @@ int main(void) {
         if(retries >= ((uint32_t)XBEE_JOIN_TIMEOUT*1000)) {
             printf("Couldn't connect to the network ... aborting!\n");
             /* Wait for watchdog reset */
-            wait_for_wdt_reset();
+            sleep_until_wdt_reset_long();
         } else {
             /* Wait for some time */
             retries += XBEE_JOIN_TIMEOUT_DELAY;
@@ -464,7 +480,7 @@ int main(void) {
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
             printf("Couldn't stop RTC ... aborting!\n");
-            wait_for_wdt_reset();
+            sleep_until_wdt_reset_short();
         }
 #endif
 
@@ -475,7 +491,7 @@ int main(void) {
         if(xbee_sleep_disable() != XBEE_RET_OK) {
             printf("Couldn't wake-up xbee radio ... aborting!\n");
             /* Wait for watchdog reset */
-            wait_for_wdt_reset();
+            sleep_until_wdt_reset_short();
         }
 
         /* Reset the TWI */
@@ -493,7 +509,7 @@ int main(void) {
         /* Start RTC */
         if(pcf85263_start() != PCF85263_RET_OK) {
             printf("Couldn't start RTC ... aborting!\n");
-            wait_for_wdt_reset();
+            sleep_until_wdt_reset_short();
         }
 #endif
 
@@ -558,7 +574,7 @@ int main(void) {
                 inc_xbee++;
             } else {
                 /* Wait for watchdog reset */
-                wait_for_wdt_reset();
+                sleep_until_wdt_reset_short();
             }
         }
 #endif
@@ -585,7 +601,7 @@ int main(void) {
                 inc_xbee++;
             } else {
                 /* Wait for watchdog reset */
-                wait_for_wdt_reset();
+                sleep_until_wdt_reset_short();
             }
         }
 #endif
@@ -823,7 +839,7 @@ int main(void) {
         /* Check total incident counter */
         if(inc_sum >= INCIDENT_TOTAL_MAX) {
             /* Wait for watchdog reset */
-            wait_for_wdt_reset();
+            sleep_until_wdt_reset_short();
         }
 #endif
 
@@ -837,7 +853,9 @@ int main(void) {
         /* Reset reboot source */
         MCUSR_dump = 0;
         /* Update reset-source indicator in EEPROM if value > 0 */
-        if(measurement != rsource_prev) {
+        float a = (measurement > rsource_prev) ? measurement : rsource_prev;
+        float b = (measurement > rsource_prev) ? rsource_prev : measurement;
+        if((a-b) > 0.01) {
             eeprom_write_float((float *)DIAG_DECAY_ADDRESS,measurement);
         }
         rsource_prev = measurement;
@@ -853,7 +871,7 @@ int main(void) {
             if(retries >= ((uint32_t)XBEE_JOIN_TIMEOUT*1000)) {
                 printf("Couldn't re-connect to the network ... aborting!\n");
                 /* Wait for watchdog reset */
-                wait_for_wdt_reset();
+                sleep_until_wdt_reset_long();
             } else {
                 /* Wait for some time */
                 retries += XBEE_JOIN_TIMEOUT_DELAY;
@@ -870,7 +888,7 @@ int main(void) {
                 inc_xbee += 2;
             } else {
                 /* Wait for watchdog reset */
-                wait_for_wdt_reset();
+                sleep_until_wdt_reset_long();
             }
         }
         /* Check if non-blocking UART/XBee mode is used */
@@ -882,7 +900,7 @@ int main(void) {
                 if(retries >= ((uint32_t)XBEE_TX_TIMEOUT*1000)) {
                     printf("UART0 TX buffer didn't become empty (%d bytes left) ... aborting!\n",xbee_tx_cnt());
                     /* Wait for watchdog reset */
-                    wait_for_wdt_reset();
+                    sleep_until_wdt_reset_long();
                 } else {
                     /* Wait for some time */
                     retries += XBEE_TX_TIMEOUT_DELAY;
@@ -898,7 +916,7 @@ int main(void) {
         if(xbee_sleep_enable() != XBEE_RET_OK) {
             printf("Couldn't send xbee radio to sleep ... aborting!\n");
             /* Wait for watchdog reset */
-            wait_for_wdt_reset();
+            sleep_until_wdt_reset_long();
         }
 
 #if (ENABLE_ADC_SELF || ENABLE_MCU_V || ENABLE_BAT_V || ENABLE_103JT_T)
