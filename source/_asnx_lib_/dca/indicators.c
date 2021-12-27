@@ -91,10 +91,10 @@ float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
     /* Calculate the mean value of the three temperature differences */
     float mu_nt = (D_mcu + D_brd + D_trx) / 3.0;
     /* Calculate the variance of the three temperature differences */
-    float var_nt = ((double)(D_mcu-mu_nt)*(double)(D_mcu-mu_nt) + \
-                    (double)(D_brd-mu_nt)*(double)(D_brd-mu_nt) + \
-                    (double)(D_trx-mu_nt)*(double)(D_trx-mu_nt) \
-                    ) / 3.0;
+    float var_nt = ((D_mcu-mu_nt)*(D_mcu-mu_nt) + \
+                    (D_brd-mu_nt)*(D_brd-mu_nt) + \
+                    (D_trx-mu_nt)*(D_trx-mu_nt) \
+                   ) / 3.0;
     /* Calculate the standard deviation */
 #if STDDEV_USE_SQRT_HACK
     float sigma_nt = sqrt_hack(var_nt);
