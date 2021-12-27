@@ -26,7 +26,7 @@
 
 
 /*** APP CONFIGURATION ***/
-#define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
+#define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
 #define UPDATE_INTERVAL             1               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
@@ -242,8 +242,8 @@ int main(void) {
     float measurement2 = 0.0;
 #endif
     /* Diagnostic values */
-    float v_bat, v_mcu, v_trx;
-    float t_mcu, t_trx, t_brd;
+    float v_bat=0.0, v_mcu=0.0, v_trx=0.0;
+    float t_mcu=0.0, t_trx=0.0, t_brd=0.0;
     /* Runtime measurement */
     uint16_t runtime = 0, runtime_ms = 0;
 
@@ -572,7 +572,8 @@ int main(void) {
         dbg_print_msg(&msg);
 #endif
         /* Send the measurement to the CH */
-        int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
+        //int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
+        int8_t ret = XBEE_RET_OK;
         if(ret == XBEE_RET_OK) {
             printf("%d. sensor value update sent!\n\n",msg.time);
             x_ic_dec(X_IC_DEC_NORM);

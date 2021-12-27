@@ -58,21 +58,22 @@ ASNXOBJS  		:= $(addprefix $(BUILDDIR)/,$(subst ../,,$(ASNXCOBJS)))
 CFLAGS       	 = $(TARGET_ARCH)
 CFLAGS       	+= -DF_CPU=$(F_CPU)
 CFLAGS       	+= -O$(OPTIMIZATION)
+CFLAGS       	+= -flto				# LinkTimeOptimization
 LDFLAGS      	 = -lm
 # Compiler warning flags
 CFLAGS      	+= -std=gnu99
 CFLAGS        	+= -pedantic
 CFLAGS        	+= -Wall
 CFLAGS        	+= -Wextra
-CFLAGS        	+= -Wfloat-equal
-CFLAGS        	+= -Wundef
-CFLAGS        	+= -Wshadow
-CFLAGS        	+= -Wpointer-arith
-CFLAGS        	+= -Wcast-align
-CFLAGS        	+= -Wstrict-prototypes
-CFLAGS        	+= -Wmissing-prototypes
-CFLAGS        	+= -Wwrite-strings
-CFLAGS        	+= -Wunreachable-code
+#CFLAGS        	+= -Wfloat-equal
+#CFLAGS        	+= -Wundef
+#CFLAGS        	+= -Wshadow
+#CFLAGS        	+= -Wpointer-arith
+#CFLAGS        	+= -Wcast-align
+#CFLAGS        	+= -Wstrict-prototypes
+#CFLAGS        	+= -Wmissing-prototypes
+#CFLAGS        	+= -Wwrite-strings
+#CFLAGS        	+= -Wunreachable-code
 
 -include $(OBJS:.o=.d)
 
@@ -115,7 +116,7 @@ $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
 
 size: $(BUILDDIR)/$(TARGET).elf
-	$(SIZE) $(BUILDDIR)/$(TARGET).elf
+	$(SIZE) -C --mcu=$(MCU) $(BUILDDIR)/$(TARGET).elf
 
 flash: $(BUILDDIR)/$(TARGET).hex
 	$(DUDE_ISP) $(DUDE_FLASH)$(BUILDDIR)/$(TARGET).hex
