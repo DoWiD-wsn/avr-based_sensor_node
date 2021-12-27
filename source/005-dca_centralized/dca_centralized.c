@@ -26,8 +26,8 @@
 
 
 /*** APP CONFIGURATION ***/
-#define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
-#define UPDATE_INTERVAL             1               /**< Update interval [min] */
+#define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
+#define UPDATE_INTERVAL             2               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
@@ -572,8 +572,7 @@ int main(void) {
         dbg_print_msg(&msg);
 #endif
         /* Send the measurement to the CH */
-        //int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
-        int8_t ret = XBEE_RET_OK;
+        int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
         if(ret == XBEE_RET_OK) {
             printf("%d. sensor value update sent!\n\n",msg.time);
             x_ic_dec(X_IC_DEC_NORM);
