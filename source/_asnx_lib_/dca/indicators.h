@@ -16,12 +16,13 @@
 /*** STD ***/
 #include <stdint.h>
 #include <stddef.h>
+#include <math.h>
 /*** AVR ***/
 #include <avr/eeprom.h>
 #include <avr/io.h>
 /*** ASNX LIB ***/
 #include "util/diagnostics.h"
-#include "util/fastmath.h"
+#include "util/welford.h"
 
 
 /***** DEFINES ********************************************************/

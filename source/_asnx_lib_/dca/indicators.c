@@ -95,14 +95,8 @@ float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
                     (D_brd-mu_nt)*(D_brd-mu_nt) + \
                     (D_trx-mu_nt)*(D_trx-mu_nt) \
                    ) / 3.0;
-    /* Calculate the standard deviation */
-#if STDDEV_USE_SQRT_HACK
-    float sigma_nt = sqrt_hack(var_nt);
-#else
-    float sigma_nt = sqrt_approx(var_nt, SQRT_APPROX_ITERATIONS);
-#endif
-    /* Return X_NT as the normalized standard deviation */
-    return sigma_nt / X_NT_MAX;
+    /* Calculate and return X_NT as the normalized standard deviation */
+    return sqrt(var_nt) / X_NT_MAX;
 }
 
 
@@ -208,7 +202,7 @@ float x_art_get_normalized(uint32_t t_art) {
     /* Get magnitude of std-dev */
     float x_art_mag = 0.0;
     if(x_art_stddev>1.0) {
-        x_art_mag = log10_approx(x_art_stddev);
+        x_art_mag = log10(x_art_stddev);
     }
     /* Return normalized X_ART depending on magnitude of difference */
     return x_art_mag / X_ART_MAX;

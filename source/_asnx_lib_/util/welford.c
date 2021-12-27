@@ -1,102 +1,24 @@
 /*!
- * @brief   ASN(x) fast math library -- source file
+ * @brief   ASN(x) Welford's Algorithm library -- source file
  *
- * Library with fast alternatives and/or approximations for
- * computational-intense mathematical functions.
+ * Library implementing Welford's Algorithm to calculate the
+ * standard deviation of continuous data in an online manner.
  *
- * @file    /_asnx_lib_/util/fastmath.c
+ * @file    /_asnx_lib_/util/welford.c
  * @author  Dominik Widhalm
- * @version 1.0.0
+ * @version 1.0.1
  * @date    2021/12/27
- */
-
-/***** INCLUDES *******************************************************/
-#include "fastmath.h"
-
-
-/***** FUNCTIONS ******************************************************/
-/*!
- * Fast approximation of log10 using Taylor-series (for positive numbers).
  * 
- * Let:
- *   x = m × 10^p.
- * where 1 ≤ m ≤ 10. Then
- *   log10(x) = log10(m) + p
- * and so without loss of generality we can assume 1 ≤ m ≤ 10.
- * For m in this range we approximate log10(m) with:
- *   log10(m) ≈ (m - 1)/(m + 1)
- * ATTENTION: originally defined for the interval [1/sqrt(10), sqrt(10)]
- * This approximation has an average error of 5%.
- * 
- * @see         https://www.johndcook.com/blog/2021/03/22/mentally-calculating-logs/
- * @see         https://www.johndcook.com/blog/2021/03/24/log10-trick/
- * @see         http://www.phy6.org/stargaze/Slog4.htm
- * 
- * @param[in]   value       Input value (number)
- * @return      Approximated log10 of the given number
- */
-float log10_approx(float value) {
-    int exp = 0;
-    /* Check if zero or less is given */
-    if(value <= 0.0) {
-        return 0;
-    }
-    /* Get decimal power */
-    while(value >= 10) {
-        value /= 10;
-        exp += 1;
-    }
-    /* Approximate log(m) */
-    value = (value-1) / (value+1);
-    /* Return resulting value */
-    return ((float)exp + value);
-}
-
-
-/*!
- * Fast hack to get sqrt for IEEE-754-based floats (average error 3%).
- * 
- * @see         https://stackoverflow.com/questions/43120045/how-does-this-float-square-root-approximation-work
- * 
- * @param[in]   value       Input value (number)
- * @return      Square root of the given number
- */
-float sqrt_hack(float value) {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-    const uint32_t result = 0x1fbb4000 + (*(uint32_t*)&value >> 1);
-    return *(float*)&result;
-#pragma GCC diagnostic pop
-}
-
-
-/*!
- * Fast approximation of sqrt using Newton's Method.
- * 
- * @see         https://www.goeduhub.com/3398/python-program-to-find-the-square-root-number-newtons-method
- * 
- * @param[in]   value       Input value (number)
- * @param[in]   iterations  Number of iterations
- * @return      Approximated square root of the given number
- */
-float sqrt_approx(float value, uint8_t iterations) {
-    float temp = value;
-    /* Approximate value iteratively */
-    for(uint8_t i=0; i<iterations; i++) {
-        temp = 0.5 * (temp + value / temp);
-    }
-    /* Return result */
-    return temp;
-}
-
-
-/**********************************************************************
- * Welford's Algorithm to calculate the standard deviation in an online manner.
  * @see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
  * @see https://www.kite.com/python/answers/how-to-find-a-running-standard-deviation-in-python
  * @see https://gist.github.com/qubyte/4064710
- **********************************************************************/
+ */
 
+/***** INCLUDES *******************************************************/
+#include "welford.h"
+
+
+/***** FUNCTIONS ******************************************************/
 /*!
  * Initialize data structure for Welford's Algorithm.
  * 
@@ -104,7 +26,7 @@ float sqrt_approx(float value, uint8_t iterations) {
  */
 void welford_init(welford_t* data) {
     data->mean = 0.0;
-    data->work  = 0.0;
+    data->work = 0.0;
     data->cnt  = 0;
 }
 
@@ -135,11 +57,8 @@ float welford_get_stddev(welford_t* data) {
     if(data->cnt == 0) {
         return 0.0;
     }
-#if STDDEV_USE_SQRT_HACK
-    return sqrt_hack(data->work / data->cnt);
-#else
-    return sqrt_approx((data->work / data->cnt), SQRT_APPROX_ITERATIONS);
-#endif
+    /* Return the standard deviation */
+    return sqrt(data->work / data->cnt);
 }
 
 

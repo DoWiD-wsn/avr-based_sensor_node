@@ -1,30 +1,26 @@
 /*!
- * @brief   ASN(x) fast math library -- header file
+ * @brief   ASN(x) Welford's Algorithm library -- header file
  *
- * Library with fast alternatives and/or approximations for
- * computational-intense mathematical functions.
+ * Library implementing Welford's Algorithm to calculate the
+ * standard deviation of continuous data in an online manner.
  *
- * @file    /_asnx_lib_/util/fastmath.h
+ * @file    /_asnx_lib_/util/welford.h
  * @author  Dominik Widhalm
- * @version 1.0.0
+ * @version 1.0.1
  * @date    2021/12/27
+ * 
+ * @see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
+ * @see https://www.kite.com/python/answers/how-to-find-a-running-standard-deviation-in-python
+ * @see https://gist.github.com/qubyte/4064710
  */
 
-#ifndef _ASNX_FASTMATH_H_
-#define _ASNX_FASTMATH_H_
+#ifndef _ASNX_WELFORD_H_
+#define _ASNX_WELFORD_H_
 
 /***** INCLUDES *******************************************************/
 /*** STD ***/
 #include <stdint.h>
-
-
-/***** MACROS *********************************************************/
-/* SQRT */
-/*! Default number of iterations for Newton's Method */
-#define SQRT_APPROX_ITERATIONS      5
-/* STD-DEV */
-/*! Use the SQRT hack (1) or Newton's Method (0) */
-#define STDDEV_USE_SQRT_HACK        0
+#include <math.h>
 
 
 /***** STRUCTURES *****************************************************/
@@ -39,12 +35,6 @@ typedef struct {
 
 
 /***** FUNCTION PROTOTYPES ********************************************/
-/* LOG10 */
-float log10_approx(float value);
-/* SQRT */
-float sqrt_hack(float value);
-float sqrt_approx(float value, uint8_t iterations);
-/* STD-DEV */
 void welford_init(welford_t* data);
 float welford_get_variance(welford_t* data);
 float welford_get_stddev(welford_t* data);
@@ -52,4 +42,4 @@ void welford_add(welford_t* data, float value);
 void welford_remove(welford_t* data, float value);
 void welford_replace(welford_t* data, float value_o, float value_n);
 
-#endif // _ASNX_FASTMATH_H_
+#endif // _ASNX_WELFORD_H_
