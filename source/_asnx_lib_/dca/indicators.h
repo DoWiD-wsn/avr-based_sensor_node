@@ -16,12 +16,12 @@
 /*** STD ***/
 #include <stdint.h>
 #include <stddef.h>
-#include <math.h>
 /*** AVR ***/
 #include <avr/eeprom.h>
 #include <avr/io.h>
 /*** ASNX LIB ***/
 #include "util/diagnostics.h"
+#include "util/fastmath.h"
 
 
 /***** DEFINES ********************************************************/
@@ -36,13 +36,13 @@
 /* Battery voltage monitor (X_BAT) */
 /*! maximum value for normalization (volts) */
 #define X_BAT_MAX                           1.0
-/*! number of consecutive measurements (N) */
+/*! number of consecutive measurements (N) - time window size */
 #define X_BAT_N                             5
 
 /* Active runtime monitor (X_ART) */
 /*! maximum value for change in magnitude */
 #define X_ART_MAX                           4.0
-/*! number of consecutive measurements (N) */
+/*! number of consecutive measurements (N) - time window size */
 #define X_ART_N                             5
 
 /* Reset monitor (X_RST) */
