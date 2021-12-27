@@ -46,14 +46,8 @@ DHT_RET_t dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, vo
     /* Setup the hardware (pin) */
     HW_GPIO_OUTPUT(gpio);
     HW_GPIO_HIGH(gpio);
-    /* Check if sensor is accessible */
-    if(_read(dev) == DHT_RET_OK) {
-        /* Init was successful */
-        return DHT_RET_OK;
-    } else {
-        /* Init failed */
-        return DHT_RET_ERROR_NODEV;
-    }
+    /* Init was successful */
+    return DHT_RET_OK;
 }
 
 
