@@ -1,14 +1,14 @@
 /*!
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.1.3
- * @date    2021/11/29
+ * @version 1.1.4
+ * @date    2021/12/29
  */
 
 
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
-#define UPDATE_INTERVAL             10              /**< Update interval [min] */
+#define UPDATE_INTERVAL             1               /**< Update interval [min] */
 
 
 /***** INCLUDES *******************************************************/
@@ -43,6 +43,13 @@
 #endif
 /* DCA */
 #include "dca/indicators.h"
+
+
+/***** DEFINES ********************************************************/
+#define S1          (PORTC = (PORTC & 0xCF) | 0x00)
+#define S2          (PORTC = (PORTC & 0xCF) | 0x10)
+#define S3          (PORTC = (PORTC & 0xCF) | 0x20)
+#define S4          (PORTC = (PORTC & 0xCF) | 0x30)
 
 
 /***** STRUCTURES *****************************************************/
@@ -145,8 +152,8 @@ int main(void) {
 
 
     /*** 1.) initialize modules ***************************************/
-    /* Print welcome message */
-    printf("=== STARTING UP ... ===\n");
+    /***/DDRC |= 0x30;
+    /***/S1;
     
     /* Disable unused hardware modules */
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
@@ -162,6 +169,8 @@ int main(void) {
     /* Disable UART1 */
     PRR0 |= _BV(PRUSART1);
 #endif
+    /* Print welcome message */
+    printf("=== STARTING UP ... ===\n");
     
     /* Initialize the user LEDs and disable both by default */
     led_init();
@@ -230,6 +239,8 @@ int main(void) {
 
 
     while(1) {
+        /***/S1;
+        
         /*** 3.1) reset RTC (stop-watch mode) *************************/
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
@@ -268,6 +279,8 @@ int main(void) {
 
         
         /*** 3.3) query sensors ***************************************/
+        /***/S2;
+        
         /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
         if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
             printf("... AM2302 temperature: %.2f\n", measurement);
@@ -282,6 +295,8 @@ int main(void) {
         }
 
         /*** 3.4) perform self-diagnostics ****************************/
+        /***/S3;
+        
         /* MCU surface temperature (103JT thermistor via ADC CH2) */
         t_mcu = diag_read_tsurface();
         /* Board temperature (TMP275 via TWI) */
@@ -350,6 +365,8 @@ int main(void) {
 
 
         /*** 3.5) send values via Zigbee ******************************/
+        /***/S4;
+        
 #if ENABLE_DBG
         /* Print the contents of the message to be sent */
         dbg_print_msg(&msg);
@@ -384,6 +401,8 @@ int main(void) {
         diag_disable();
 
         /*** 3.7) put MCU to sleep ************************************/
+        /***/S1;
+        
         sleep_enable();
         sleep_bod_disable();
         sleep_cpu();
