@@ -20,18 +20,18 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.1.5
- * @date    2021/12/27
+ * @version 1.1.6
+ * @date    2021/12/29
  */
 
 
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
-#define UPDATE_INTERVAL             2               /**< Update interval [min] */
+#define UPDATE_INTERVAL             10              /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
-#define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
-#define ENABLE_AM2302               0               /**< enable AM2302 sensor */
+#define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
+#define ENABLE_AM2302               1               /**< enable AM2302 sensor */
 #define ENABLE_SHTC3                0               /**< enable SHTC3 sensor */
 /* Check configuration */
 #if (ENABLE_AM2302 && ENABLE_SHTC3)
@@ -76,7 +76,6 @@
 /* Misc */
 #include "util/diagnostics.h"
 #include "util/fixed_point.h"
-#include "util/fastmath.h"
 #include "util/sensor_msg.h"
 #if ENABLE_DBG
 #  include "util/printf.h"
@@ -249,9 +248,6 @@ int main(void) {
 
 
     /*** 1.) initialize modules ***************************************/
-    /* Print welcome message */
-    printf("=== STARTING UP ... ===\n");
-    
     /* Disable unused hardware modules */
 #if ASNX_VERSION_MINOR>0
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
@@ -270,6 +266,9 @@ int main(void) {
     /* Disable UART1 */
     PRR0 |= _BV(PRUSART1);
 #endif
+    /* Print welcome message */
+    printf("=== STARTING UP ... ===\n");
+    
     
     /* Initialize the user LEDs and disable both by default */
     led_init();
@@ -499,12 +498,19 @@ int main(void) {
 
 
         /*** 3.4) perform self-diagnostics ****************************/
+        /* Trigger TMP275 conversion (wait 55ms before reading) */
+        uint8_t tmp275_ret = tmp275_set_config(&tmp275, 0xA1);
         /* MCU surface temperature (103JT thermistor via ADC CH2) */
         t_mcu = diag_read_tsurface();
+        /* Xbee3 temperature */
+        xbee_rx_flush();
+        if(xbee_cmd_get_temperature(&t_trx) == XBEE_RET_OK) {
+            x_ic_dec(X_IC_DEC_NORM);
+        } else {
+            x_ic_inc(X_IC_INC_NORM);
+        }
         /* Board temperature (TMP275 via TWI) */
-        if(tmp275_set_config(&tmp275, 0xA1) == TMP275_RET_OK) {
-            /* Wait for the conversion to finish (55ms) */
-            _delay_ms(60);
+        if(tmp275_ret == TMP275_RET_OK) {
             /* Get temperature in degree Celsius (°C) */
             if(tmp275_get_temperature(&tmp275, &t_brd) == TMP275_RET_OK) {
                 x_ic_dec(X_IC_DEC_NORM);
@@ -514,17 +520,11 @@ int main(void) {
         }  else {
             x_ic_inc(X_IC_INC_NORM);
         }
-        /* Xbee3 temperature */
-        xbee_rx_flush();
-        if(xbee_cmd_get_temperature(&t_trx) == XBEE_RET_OK) {
-            x_ic_dec(X_IC_DEC_NORM);
-        } else {
-            x_ic_inc(X_IC_INC_NORM);
-        }
+        
         /* MCU supply voltage in volts (V) */
         v_mcu = diag_read_vcc();
         /* Battery voltage (via ADC) */
-        v_bat = diag_read_vbat();
+        v_bat = diag_read_vbat(v_mcu);
         /* Xbee3 supply voltage */
         xbee_rx_flush();
         if(xbee_cmd_get_vss(&v_trx) == XBEE_RET_OK) {
