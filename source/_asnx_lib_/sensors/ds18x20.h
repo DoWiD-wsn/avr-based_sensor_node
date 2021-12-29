@@ -5,10 +5,8 @@
  *
  * @file    /_asnx_lib_/sensors/ds18x20.h
  * @author  Dominik Widhalm
- * @version 1.2.0
- * @date    2021/06/07
- *
- * @see     https://create.arduino.cc/projecthub/TheGadgetBoy/ds18b20-digital-temperature-sensor-and-arduino-9cc806
+ * @version 1.2.1
+ * @date    2021/12/29
  */
 
 #ifndef _ASNX_DS18X20_H_
@@ -25,7 +23,7 @@
 
 /***** DEFINES ********************************************************/
 /*! Conversion delay [ms] */
-#define DS18X20_CONV_DELAY              (1000)
+#define DS18X20_CONV_DELAY              (750)
 /* ROM commands */
 #define DS18X20_COM_ROM_SEARCH          (0xF0)
 #define DS18X20_COM_ROM_READ            (0x33)

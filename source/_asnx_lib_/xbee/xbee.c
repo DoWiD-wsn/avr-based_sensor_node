@@ -5,13 +5,12 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.c
  * @author  Dominik Widhalm
- * @version 1.2.0
- * @date    2021/06/07
+ * @version 1.2.1
+ * @date    2021/12/29
  *
  * @todo    *) Implement better way for (asynchronous) response handling/matching
  * @todo    *) Fix blocking (non-ISR) functions (not really possible now)
- * @todo    *) Check how long it takes for the Xbee to (re)join a network after waking up
- * @todo    *) Check if the local "AI" command actually returns the right value or if there are issues (cross-check with BLE app)
+ * @todo    *) Check if the local "AI" command always returns the right value or if there are issues (cross-check with BLE app)
  */
 
 
@@ -95,10 +94,10 @@ XBEE_RET_t xbee_sleep_enable(void) {
     /* Request xbee sleep */
     hw_set_output_high(&xbee_sleep_req);
     /* Check xbee's response */
-    uint32_t retries = 0;
+    uint16_t retries = 0;
     while(hw_read_input(&xbee_sleep_ind) == HW_STATE_HIGH) {
         /* Check if timeout [s] has been reached (counter in [ms]) */
-        if(retries >= ((uint32_t)XBEE_WAKE_TIMEOUT*1000)) {
+        if(retries >= ((uint16_t)XBEE_WAKE_TIMEOUT*1000UL)) {
             /* Couldn't send xbee to sleep */
             return XBEE_RET_ERROR;
         } else {
@@ -121,10 +120,10 @@ XBEE_RET_t xbee_sleep_disable(void) {
     /* Request xbee wake-up */
     hw_set_output_low(&xbee_sleep_req);
     /* Check xbee's response */
-    uint32_t retries = 0;
+    uint16_t retries = 0;
     while(hw_read_input(&xbee_sleep_ind) == HW_STATE_LOW) {
         /* Check if timeout [s] has been reached (counter in [ms]) */
-        if(retries >= ((uint32_t)XBEE_WAKE_TIMEOUT*1000)) {
+        if(retries >= ((uint16_t)XBEE_WAKE_TIMEOUT*1000UL)) {
             /* Couldn't wake xbee up */
             return XBEE_RET_ERROR;
         } else {
@@ -540,7 +539,7 @@ XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value, uint8_t fid){
  */
 XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value, uint8_t fid) {
     int8_t ret;
-    uint8_t fid_ret;
+    uint8_t fid_ret = XBEE_RET_OK;
     /* Send the local AT command */
     ret = _at_local_query(command, fid);
     if(ret != XBEE_RET_OK) {

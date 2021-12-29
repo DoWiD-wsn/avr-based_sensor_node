@@ -32,9 +32,9 @@ void led_init(void) {
     /* Set the GPIO to output */
     hw_set_output(&led1);
     hw_set_output(&led2);
-    /* Set the GPIO state to low */
-    hw_set_output_low(&led1);
-    hw_set_output_low(&led2);
+    /* Set the GPIO state to high (disabled) */
+    hw_set_output_high(&led1);
+    hw_set_output_high(&led2);
 }
 
 
