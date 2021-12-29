@@ -6,8 +6,8 @@
  *
  * @file    /_asnx_lib_/sensors/dht.c
  * @author  Dominik Widhalm
- * @version 1.2.1
- * @date    2021/08/11
+ * @version 1.2.2
+ * @date    2021/12/29
  *
  * @see     http://davidegironi.blogspot.com/2013/02/reading-temperature-and-humidity-on-avr.html
  */
@@ -96,7 +96,7 @@ static DHT_RET_t _read(DHT_t* dev) {
         case DHT_DEV_DHT21:
         case DHT_DEV_DHT22:
             /* Datasheet says "at least 1ms", 1.1ms just to be safe */
-            _delay_us(1100);        // TODO: davide uses 500 us
+            _delay_us(1100);
             break;
         case DHT_DEV_DHT11:
         case DHT_DEV_DHT12:

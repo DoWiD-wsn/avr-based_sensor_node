@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/util/diagnostics.c
  * @author  Dominik Widhalm
- * @version 1.4.0
- * @date    2021/10/18
+ * @version 1.4.1
+ * @date    2021/12/29
  */
 
 /***** INCLUDES *******************************************************/
@@ -76,10 +76,11 @@ float diag_read_vcc(void) {
 /*!
  * Read the battery voltage via ADC.
  *
+ * @param[in]   vcc     VCC voltage level (V)
  * @return      Battery voltage in volts (V)
  */
-float diag_read_vbat(void) {
-    return 2.0 * (adc_read_input(DIAG_VBAT_CH) * (diag_read_vcc() / 1023.0));
+float diag_read_vbat(float vcc) {
+    return 2.0 * (adc_read_input(DIAG_VBAT_CH) * (vcc / 1023.0));
 }
 
 

@@ -95,8 +95,8 @@ float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
                     (D_brd-mu_nt)*(D_brd-mu_nt) + \
                     (D_trx-mu_nt)*(D_trx-mu_nt) \
                    ) / 3.0;
-    /* Calculate and return X_NT as the normalized standard deviation */
-    return sqrt(var_nt) / X_NT_MAX;
+    /* Calculate and return X_NT as the normalized standard deviation (max: 1.0) */
+    return fmin(1.0, sqrt(var_nt) / X_NT_MAX);
 }
 
 
@@ -109,11 +109,11 @@ float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
  * @return      normalized supply voltage monitor fault indicator (X_VS) value
  */
 float x_vs_get_normalized(float v_mcu, float v_trx) {
-    /* Calculate and return the normalized difference between both voltages */
+    /* Calculate and return the normalized difference between both voltages (max: 1.0) */
     if(v_mcu > v_trx) {
-        return (v_mcu-v_trx) / X_VS_MAX;
+        return fmin(1.0, (v_mcu-v_trx) / X_VS_MAX);
     } else {
-        return (v_trx-v_mcu) / X_VS_MAX;
+        return fmin(1.0, (v_trx-v_mcu) / X_VS_MAX);
     }
 }
 
@@ -142,9 +142,8 @@ void x_bat_reset(void) {
 float x_bat_get_normalized(float v_bat) {
     /* Check if window size is reached */
     if(x_bat_data.cnt >= X_BAT_N) {
-        float old = 0.0;
         /* Get oldest value from array (current index) */
-        old = x_bat_values[x_bat_index];
+        float old = x_bat_values[x_bat_index];
         /* Replace oldest value with new one */
         welford_replace(&x_bat_data, old, v_bat);
     } else {
@@ -153,10 +152,10 @@ float x_bat_get_normalized(float v_bat) {
     }
     /* Store value in array */
     x_bat_values[x_bat_index] = v_bat;
-    /* Update array index */
+    /* Get next array index */
     x_bat_index = (x_bat_index+1) % X_BAT_N;
-    /* Return normalized standard deviation as X_BAT */
-    return welford_get_stddev(&x_bat_data) / X_BAT_MAX;
+    /* Return normalized standard deviation as X_BAT (max: 1.0) */
+    return fmin(1.0, welford_get_stddev(&x_bat_data) / X_BAT_MAX);
 }
 
 
@@ -184,9 +183,8 @@ void x_art_reset(void) {
 float x_art_get_normalized(uint32_t t_art) {
     /* Check if window size is reached */
     if(x_art_data.cnt >= X_ART_N) {
-        float old = 0.0;
         /* Get oldest value from array (current index) */
-        old = x_art_values[x_art_index];
+        float old = x_art_values[x_art_index];
         /* Replace oldest value with new one */
         welford_replace(&x_art_data, old, t_art);
     } else {
@@ -195,17 +193,16 @@ float x_art_get_normalized(uint32_t t_art) {
     }
     /* Store value in array */
     x_art_values[x_art_index] = t_art;
-    /* Update array index */
+    /* Get next array index */
     x_art_index = (x_art_index+1) % X_ART_N;
     /* Get standard deviation */
     float x_art_stddev = welford_get_stddev(&x_art_data);
-    /* Get magnitude of std-dev */
-    float x_art_mag = 0.0;
+    /* Return normalized X_ART depending on magnitude of difference (max: 1.0) */
     if(x_art_stddev>1.0) {
-        x_art_mag = log10(x_art_stddev);
+        return fmin(1.0, log10(x_art_stddev) / X_ART_MAX);
+    } else {
+        return 0.0;
     }
-    /* Return normalized X_ART depending on magnitude of difference */
-    return x_art_mag / X_ART_MAX;
 }
 
 
@@ -245,8 +242,8 @@ float x_rst_get_normalized(uint8_t mcusr) {
     }
     /* Updated stored previous value */
     x_rst_prev = x_rst;
-    /* Return updated value */
-    return x_rst;
+    /* Return updated value (max: 1.0) */
+    return fmin(1.0, x_rst);
 }
 
 
@@ -297,8 +294,8 @@ uint16_t x_ic_get(void) {
  * @return      normalized software incident counter fault indicator (X_IC) value
  */
 float x_ic_get_normalized(void) {
-    /* Return normalized value */
-    return ((float)x_ic / X_IC_MAX);
+    /* Return normalized value (max: 1.0) */
+    return fmin(1.0, ((float)x_ic / X_IC_MAX));
 }
 
 
@@ -310,11 +307,11 @@ float x_ic_get_normalized(void) {
  * @return      normalized ADC self-check fault indicator (X_ADC) value
  */
 float x_adc_get_normalized(uint16_t adc_value) {
-    /* Calculate and return the normalized difference between acquired and expected value */
+    /* Calculate and return the normalized difference between acquired and expected value (max: 1.0) */
     if(adc_value > X_ADC_EXPECTED) {
-        return ((adc_value-X_ADC_EXPECTED) / X_ADC_MAX);
+        return fmin(1.0, (adc_value-X_ADC_EXPECTED) / X_ADC_MAX);
     } else {
-        return ((X_ADC_EXPECTED-adc_value) / X_ADC_MAX);
+        return fmin(1.0, (X_ADC_EXPECTED-adc_value) / X_ADC_MAX);
     }
 }
 
@@ -338,6 +335,6 @@ float x_usart_get_normalized(uint8_t* tx, uint8_t* rx, uint8_t len) {
             diff++;
         }
     }
-    /* Normalize and return value */
-    return (float)diff / X_USART_MAX;
+    /* Normalize and return value (max: 1.0) */
+    return fmin(1.0, (float)diff / X_USART_MAX);
 }
