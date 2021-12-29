@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/util/diagnostics.h
  * @author  Dominik Widhalm
- * @version 1.3.0
- * @date    2021/08/09
+ * @version 1.4.0
+ * @date    2021/12/29
  */
 
 #ifndef _ASNX_DIAG_H_
@@ -19,9 +19,15 @@
 /*** ASNX LIB ***/
 #include "adc/adc.h"
 #include "hw/hw.h"
+#include "sensors/jt103.h"
 
 
 /***** DEFINES ********************************************************/
+/* ASN(x) hardware revision (minor) */
+#ifndef ASNX_VERSION_MINOR
+#  define ASNX_VERSION_MINOR                4
+#endif
+
 /* Voltage-divider diagnostics */
 /*! R_divider enable DDR register */
 #define DIAG_RDEN_DDR                       DDRC
@@ -31,6 +37,21 @@
 #define DIAG_RDEN_PIN                       PINC
 /*! R_divider enable portpin index */
 #define DIAG_RDEN_GPIO                      PC2
+
+/* ADC channel assignment */
+/*! ADC self-check channel */
+#define DIAG_ADC_CH                         ADC_CH0
+#if ASNX_VERSION_MINOR>0
+/*! Battery voltage ADC channel */
+#  define DIAG_VBAT_CH                      ADC_CH1
+/*! MCU surface temperature ADC channel */
+#  define DIAG_TMCU_CH                      ADC_CH2
+#else
+/*! Battery voltage ADC channel */
+#  define DIAG_VBAT_CH                      ADC_CH2
+/*! MCU surface temperature ADC channel */
+#  define DIAG_TMCU_CH                      ADC_CH1
+#endif
 
 /* Reset-source decay parameters */
 /*! decay rate (damping per update) */
@@ -59,7 +80,8 @@ void diag_disable(void);
 /* voltage divider reading */
 uint16_t diag_adc_check(void);
 float diag_read_vcc(void);
-float diag_read_vbat(void);
+float diag_read_vbat(float vcc);
+float diag_read_tsurface(void);
 /* reset-source handling */
 void diag_rsource_reset(void);
 void diag_rsource_set(float value);
