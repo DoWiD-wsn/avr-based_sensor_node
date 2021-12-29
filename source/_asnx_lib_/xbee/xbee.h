@@ -42,7 +42,7 @@
 /*! Join network timeout [s] */
 #define XBEE_JOIN_TIMEOUT                   (60)
 /*! Join network delay between tries [ms] */
-#define XBEE_JOIN_TIMEOUT_DELAY             (50)
+#define XBEE_JOIN_TIMEOUT_DELAY             (100)
 
 /*! Wake-up timeout [s] */
 #define XBEE_WAKE_TIMEOUT                   (5)
