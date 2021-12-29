@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/i2c/i2c.h
  * @author  Dominik Widhalm
- * @version 1.2.0
- * @date    2021/06/07
+ * @version 1.2.1
+ * @date    2021/12/29
  */
 
 #ifndef _ASNX_I2C_H_
@@ -30,8 +30,6 @@
 #define I2C_SCL_CLK         (100000UL)
 /*! I2C timeout */
 #define I2C_WAIT_TIMEOUT    (250)
-/*! Delay between write and read [ms] */
-#define I2C_WR_DELAY        (100)
 
 
 /***** ENUMERATION ****************************************************/

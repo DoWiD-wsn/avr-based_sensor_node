@@ -8,7 +8,7 @@
 
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
-#define UPDATE_INTERVAL             1               /**< Update interval [min] */
+#define UPDATE_INTERVAL             10              /**< Update interval [min] */
 
 
 /***** INCLUDES *******************************************************/
@@ -43,13 +43,6 @@
 #endif
 /* DCA */
 #include "dca/indicators.h"
-
-
-/***** DEFINES ********************************************************/
-#define S1          (PORTC = (PORTC & 0xCF) | 0x00)
-#define S2          (PORTC = (PORTC & 0xCF) | 0x10)
-#define S3          (PORTC = (PORTC & 0xCF) | 0x20)
-#define S4          (PORTC = (PORTC & 0xCF) | 0x30)
 
 
 /***** STRUCTURES *****************************************************/
@@ -112,7 +105,7 @@ void dbg_print_msg(MSG_t* msg) {
     printf("%d message updates\n",msg->time);
     printf("=== SENSOR VALUES ===\n");
     printf("T_air:   %.2f C\n",fp_fixed16_to_float_10to6(msg->t_air));
-    printf("T_soil:  %.2f C\n",fp_fixed16_to_float_10to6(msg->t_soil));
+    printf("H_air:   %.2f C\n",fp_fixed16_to_float_10to6(msg->h_air));
     printf("=== DIAGNOSTICS ===\n");
     printf("X_NT:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_nt));
     printf("X_VS:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_vs));
@@ -152,9 +145,6 @@ int main(void) {
 
 
     /*** 1.) initialize modules ***************************************/
-    /***/DDRC |= 0x30;
-    /***/S1;
-    
     /* Disable unused hardware modules */
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
     /* Configure the sleep mode */
@@ -239,8 +229,6 @@ int main(void) {
 
 
     while(1) {
-        /***/S1;
-        
         /*** 3.1) reset RTC (stop-watch mode) *************************/
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
@@ -279,8 +267,6 @@ int main(void) {
 
         
         /*** 3.3) query sensors ***************************************/
-        /***/S2;
-        
         /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
         if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
             printf("... AM2302 temperature: %.2f\n", measurement);
@@ -295,14 +281,19 @@ int main(void) {
         }
 
         /*** 3.4) perform self-diagnostics ****************************/
-        /***/S3;
-        
+        /* Trigger TMP275 conversion (wait 55ms before reading) */
+        uint8_t tmp275_ret = tmp275_set_config(&tmp275, 0xA1);
         /* MCU surface temperature (103JT thermistor via ADC CH2) */
         t_mcu = diag_read_tsurface();
+        /* Xbee3 temperature */
+        xbee_rx_flush();
+        if(xbee_cmd_get_temperature(&t_trx) == XBEE_RET_OK) {
+            x_ic_dec(X_IC_DEC_NORM);
+        } else {
+            x_ic_inc(X_IC_INC_NORM);
+        }
         /* Board temperature (TMP275 via TWI) */
-        if(tmp275_set_config(&tmp275, 0xA1) == TMP275_RET_OK) {
-            /* Wait for the conversion to finish (55ms) */
-            _delay_ms(60);
+        if(tmp275_ret == TMP275_RET_OK) {
             /* Get temperature in degree Celsius (°C) */
             if(tmp275_get_temperature(&tmp275, &t_brd) == TMP275_RET_OK) {
                 x_ic_dec(X_IC_DEC_NORM);
@@ -312,17 +303,11 @@ int main(void) {
         }  else {
             x_ic_inc(X_IC_INC_NORM);
         }
-        /* Xbee3 temperature */
-        xbee_rx_flush();
-        if(xbee_cmd_get_temperature(&t_trx) == XBEE_RET_OK) {
-            x_ic_dec(X_IC_DEC_NORM);
-        } else {
-            x_ic_inc(X_IC_INC_NORM);
-        }
+        
         /* MCU supply voltage in volts (V) */
         v_mcu = diag_read_vcc();
         /* Battery voltage (via ADC) */
-        v_bat = diag_read_vbat();
+        v_bat = diag_read_vbat(v_mcu);
         /* Xbee3 supply voltage */
         xbee_rx_flush();
         if(xbee_cmd_get_vss(&v_trx) == XBEE_RET_OK) {
@@ -365,8 +350,6 @@ int main(void) {
 
 
         /*** 3.5) send values via Zigbee ******************************/
-        /***/S4;
-        
 #if ENABLE_DBG
         /* Print the contents of the message to be sent */
         dbg_print_msg(&msg);
@@ -401,8 +384,6 @@ int main(void) {
         diag_disable();
 
         /*** 3.7) put MCU to sleep ************************************/
-        /***/S1;
-        
         sleep_enable();
         sleep_bod_disable();
         sleep_cpu();

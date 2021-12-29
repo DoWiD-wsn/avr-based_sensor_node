@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/adc/adc.c
  * @author  Dominik Widhalm
- * @version 1.2.0
- * @date    2021/06/07
+ * @version 1.2.1
+ * @date    2021/12/29
  */
 
 /***** INCLUDES *******************************************************/
@@ -155,7 +155,7 @@ float adc_read_vcc(void) {
     /* Set the register accordingly */
     ADMUX  = 0x5E;
     /* Give the reference some time to settle */
-    _delay_ms(ADC_DELAY_CHANGE_REFERENCE);
+    _delay_us(ADC_DELAY_CHANGE_REFERENCE);
     /* Perform a dummy conversion */
     adc_dummy_conversion();
     /* Store the converted ADC value */
@@ -163,7 +163,7 @@ float adc_read_vcc(void) {
     /* Restore the ADMUX configuration */
     ADMUX = reg;
     /* Give the reference some time to settle */
-    _delay_ms(ADC_DELAY_CHANGE_REFERENCE);
+    _delay_us(ADC_DELAY_CHANGE_REFERENCE);
     /* Return the result */
     return result;
 }

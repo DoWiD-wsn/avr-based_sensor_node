@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/i2c/i2c.c
  * @author  Dominik Widhalm
- * @version 1.2.0
- * @date    2021/06/07
+ * @version 1.2.1
+ * @date    2021/12/29
  */
 
 
@@ -479,9 +479,6 @@ I2C_RET_t i2c_read_block(uint8_t addr, uint8_t reg, uint8_t* value, uint8_t len)
         return I2C_RET_ERROR;
     }
     
-    /* Give the device some time */
-    _delay_ms(I2C_WR_DELAY);
-    
     /* Restart in reading mode */
     if(i2c_start_wait(addr, I2C_READ) != I2C_RET_OK) {
         /* Start failed */
@@ -545,9 +542,6 @@ I2C_RET_t i2c_read_U8(uint8_t addr, uint8_t reg, uint8_t* value) {
         /* Write byte failed */
         return I2C_RET_ERROR;
     }
-    
-    /* Give the device some time */
-    _delay_ms(I2C_WR_DELAY);
     
     /* Restart in reading mode */
     if(i2c_start_wait(addr, I2C_READ) != I2C_RET_OK) {
@@ -906,9 +900,6 @@ I2C_RET_t i2c_read16_block(uint8_t addr, uint16_t reg, uint8_t* value, uint8_t l
         return I2C_RET_ERROR;
     }
     
-    /* Give the device some time */
-    _delay_ms(I2C_WR_DELAY);
-    
     /* Restart in reading mode */
     if(i2c_start_wait(addr, I2C_READ) != I2C_RET_OK) {
         /* Start failed */
@@ -977,9 +968,6 @@ I2C_RET_t i2c_read16_U8(uint8_t addr, uint16_t reg, uint8_t* value) {
         /* Write byte failed */
         return I2C_RET_ERROR;
     }
-    
-    /* Give the device some time */
-    _delay_ms(I2C_WR_DELAY);
     
     /* Restart in reading mode */
     if(i2c_start_wait(addr, I2C_READ) != I2C_RET_OK) {

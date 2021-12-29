@@ -78,8 +78,8 @@ float diag_read_vcc(void) {
  *
  * @return      Battery voltage in volts (V)
  */
-float diag_read_vbat(void) {
-    return 2.0 * (adc_read_input(DIAG_VBAT_CH) * (diag_read_vcc() / 1023.0));
+float diag_read_vbat(float vcc) {
+    return 2.0 * (adc_read_input(DIAG_VBAT_CH) * (vcc / 1023.0));
 }
 
 

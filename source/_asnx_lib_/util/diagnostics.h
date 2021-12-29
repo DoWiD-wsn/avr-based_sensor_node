@@ -62,7 +62,7 @@ void diag_disable(void);
 /* voltage divider reading */
 uint16_t diag_adc_check(void);
 float diag_read_vcc(void);
-float diag_read_vbat(void);
+float diag_read_vbat(float vcc);
 float diag_read_tsurface(void);
 
 #endif // _ASNX_DIAG_H_

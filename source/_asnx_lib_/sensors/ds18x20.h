@@ -25,7 +25,7 @@
 
 /***** DEFINES ********************************************************/
 /*! Conversion delay [ms] */
-#define DS18X20_CONV_DELAY              (1000)
+#define DS18X20_CONV_DELAY              (750)
 /* ROM commands */
 #define DS18X20_COM_ROM_SEARCH          (0xF0)
 #define DS18X20_COM_ROM_READ            (0x33)
