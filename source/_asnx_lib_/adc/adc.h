@@ -5,7 +5,7 @@
  *
  * @file    /_asnx_lib_/adc/adc.h
  * @author  Dominik Widhalm
- * @version 1.2.2
+ * @version 1.2.3
  * @date    2022/01/10
  */
 

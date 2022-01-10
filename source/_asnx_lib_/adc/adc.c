@@ -5,7 +5,7 @@
  *
  * @file    /_asnx_lib_/adc/adc.c
  * @author  Dominik Widhalm
- * @version 1.2.2
+ * @version 1.2.3
  * @date    2022/01/10
  */
 
@@ -99,8 +99,6 @@ void adc_set_reference(ADC_AREF_t reference) {
     ADMUX = ((ADMUX & 0x2F) | ((reference & 0x03) << 6));
     /* Give the reference some time to settle */
     _delay_us(ADC_DELAY_CHANGE_REFERENCE);
-    /* Perform a dummy conversion */
-    adc_dummy_conversion();
 }
 
 
