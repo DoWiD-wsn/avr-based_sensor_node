@@ -22,7 +22,6 @@
 #include <avr/io.h>
 /*** ASNX LIB ***/
 #include "util/diagnostics.h"
-#include "util/welford.h"
 
 
 /***** DEFINES ********************************************************/
@@ -50,7 +49,7 @@
 /*! maximum value for normalization */
 #define X_RST_MAX                           25.0
 /*! decay rate (damping per update) */
-#define X_RST_DECAY                         0.92
+#define X_RST_DECAY                         0.98
 /*! EEPROM address */
 #define X_RST_EEPROM                        0x00
 /*! EEPROM update threshold */
