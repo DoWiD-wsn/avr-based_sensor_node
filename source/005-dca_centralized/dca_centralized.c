@@ -20,8 +20,8 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.1.6
- * @date    2021/12/29
+ * @version 1.1.7
+ * @date    2022/01/10
  */
 
 
@@ -278,12 +278,16 @@ int main(void) {
     i2c_init();
     /* Initialize Xbee 3 (uses UART0) */
     xbee_init(9600UL);
+    /* Status message */
+    printf("Communication interfaces initialized ...\n");
     
     /* Initialize the diagnostic circuitry */
     diag_init();
     diag_disable();
     /* Initialize the fault indicators */
     indicators_init();
+    /* Status message */
+    printf("Fault indicators initialized ...\n");
 
 #if ASNX_VERSION_MINOR>0
     /* Initialize the RTC */
@@ -315,6 +319,8 @@ int main(void) {
         printf("Couldn't configure TMP275!\n");
         sleep_until_reset(WDTO_15MS);
     }
+    /* Status message */
+    printf("TMP275 initialized ...\n");
 
 #if ENABLE_DS18B20
     /* Initialize the DS18B20 sensor */
@@ -322,6 +328,7 @@ int main(void) {
         printf("Couldn't initialize DS18B20!\n");
         ds18b20_en = 0;
     } else {
+        printf("DS18B20 initialized ...\n");
         ds18b20_en = 1;
     }
 #endif
@@ -332,6 +339,7 @@ int main(void) {
         printf("Couldn't initialize AMS2302!\n");
         am2302_en = 0;
     } else {
+        printf("AMS2302 initialized ...\n");
         am2302_en = 1;
     }
 #endif
@@ -342,6 +350,7 @@ int main(void) {
         printf("Couldn't initialize SHTC3!\n");
         shtc3_en = 0;
     } else {
+        printf("SHTC3 initialized ...\n");
         shtc3_en = 1;
     }
 #endif
