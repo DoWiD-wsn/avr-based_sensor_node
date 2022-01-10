@@ -416,8 +416,8 @@ int main(void) {
         
         /* Reset timer1 counter value to 0 */
         timer1_set_tcnt(0);
-        /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16.78s] */
-        timer1_start(TIMER_PRESCALER_1024);
+        /* Start timer1 with prescaler 256 -> measurement interval [64us; 4.19s] */
+        timer1_start(TIMER_PRESCALER_256);
 
         
         /*** 3.3) query sensors ***************************************/
@@ -545,8 +545,8 @@ int main(void) {
         /* Active runtime monitor (X_ART) */
         if(runtime > 0) {
             /* Subsequent cycle -> measurement available */
-            // runtime_us = (uint32_t)(runtime) * 256UL;
-            runtime_ms = (uint16_t)(((double)runtime * 256.0) / 1000.0);
+            // runtime_us = (uint32_t)(runtime) * 64UL;
+            runtime_ms = (uint16_t)(((double)runtime * 64.0) / 1000.0);
             msg.x_art = fp_float_to_fixed8_2to6(x_art_get_normalized(runtime_ms));
         } else {
             msg.x_art = fp_float_to_fixed8_2to6(0.0);
