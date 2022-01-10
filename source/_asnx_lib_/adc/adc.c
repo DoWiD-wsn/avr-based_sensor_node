@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/adc/adc.c
  * @author  Dominik Widhalm
- * @version 1.2.1
- * @date    2021/12/29
+ * @version 1.2.3
+ * @date    2022/01/10
  */
 
 /***** INCLUDES *******************************************************/
@@ -68,6 +68,17 @@ void adc_disable(void) {
 
 
 /*!
+ * Disable digital input channels/pins.
+ *
+ * @param[in]   channels    The channels/pins to be disabled
+ */
+void adc_disable_input(uint8_t channels) {
+    /* Disable desired input channels/pins */
+    DIDR0 = channels;
+}
+
+
+/*!
  * Select the ADC input.
  *
  * @param[in]   input       The input to be used
@@ -97,6 +108,8 @@ void adc_set_prescaler(ADC_PRESCALER_t prescaler) {
 void adc_set_reference(ADC_AREF_t reference) {
     /* Select desired reference */
     ADMUX = ((ADMUX & 0x2F) | ((reference & 0x03) << 6));
+    /* Give the reference some time to settle */
+    _delay_us(ADC_DELAY_CHANGE_REFERENCE);
 }
 
 
