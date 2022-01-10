@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/adc/adc.h
  * @author  Dominik Widhalm
- * @version 1.2.1
- * @date    2021/12/29
+ * @version 1.2.2
+ * @date    2022/01/10
  */
 
 #ifndef _ASNX_ADC_H_
@@ -22,7 +22,7 @@
 
 /***** MACROS *****************************************************************/
 /*! Delay after changing the reference source [us] */
-#define ADC_DELAY_CHANGE_REFERENCE      (100)
+#define ADC_DELAY_CHANGE_REFERENCE      (250)
 
 
 /***** ENUMERATION ************************************************************/

@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/adc/adc.c
  * @author  Dominik Widhalm
- * @version 1.2.1
- * @date    2021/12/29
+ * @version 1.2.2
+ * @date    2022/01/10
  */
 
 /***** INCLUDES *******************************************************/
@@ -97,6 +97,10 @@ void adc_set_prescaler(ADC_PRESCALER_t prescaler) {
 void adc_set_reference(ADC_AREF_t reference) {
     /* Select desired reference */
     ADMUX = ((ADMUX & 0x2F) | ((reference & 0x03) << 6));
+    /* Give the reference some time to settle */
+    _delay_us(ADC_DELAY_CHANGE_REFERENCE);
+    /* Perform a dummy conversion */
+    adc_dummy_conversion();
 }
 
 

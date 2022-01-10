@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/dca/indicators.h
  * @author  Dominik Widhalm
- * @version 1.4.1
- * @date    2021/10/25
+ * @version 1.4.2
+ * @date    2022/01/10
  */
 
 #ifndef _ASNX_INDICATORS_H_

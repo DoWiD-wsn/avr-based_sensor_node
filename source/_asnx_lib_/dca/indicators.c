@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/dca/indicators.c
  * @author  Dominik Widhalm
- * @version 1.4.1
- * @date    2021/10/25
+ * @version 1.4.2
+ * @date    2022/01/10
  */
 
 /***** INCLUDES *******************************************************/
@@ -146,14 +146,21 @@ float x_bat_get_normalized(float v_bat) {
         float old = x_bat_values[x_bat_index];
         /* Replace oldest value with new one */
         welford_replace(&x_bat_data, old, v_bat);
+        /* Store value in array */
+        x_bat_values[x_bat_index] = v_bat;
+        /* Get next array index */
+        x_bat_index = (x_bat_index+1) % X_BAT_N;
     } else {
-        /* Add new value */
+        /* Fill array */
+        for (uint8_t i=0; i<X_BAT_N; i++) {
+            x_bat_values[i] = v_bat;
+        }
         welford_add(&x_bat_data, v_bat);
+        /* Manually set element count to N */
+        x_bat_data.cnt = X_BAT_N;
+        /* Set array index to 2. position */
+        x_bat_index = 1;
     }
-    /* Store value in array */
-    x_bat_values[x_bat_index] = v_bat;
-    /* Get next array index */
-    x_bat_index = (x_bat_index+1) % X_BAT_N;
     /* Return normalized standard deviation as X_BAT (max: 1.0) */
     return fmin(1.0, welford_get_stddev(&x_bat_data) / X_BAT_MAX);
 }
@@ -187,14 +194,21 @@ float x_art_get_normalized(uint32_t t_art) {
         float old = x_art_values[x_art_index];
         /* Replace oldest value with new one */
         welford_replace(&x_art_data, old, t_art);
+        /* Store value in array */
+        x_art_values[x_art_index] = t_art;
+        /* Get next array index */
+        x_art_index = (x_art_index+1) % X_ART_N;
     } else {
-        /* Add new value */
+        /* Fill array */
+        for (uint8_t i=0; i<X_ART_N; i++) {
+            x_art_values[i] = t_art;
+        }
         welford_add(&x_art_data, t_art);
+        /* Manually set element count to N */
+        x_art_data.cnt = X_ART_N;
+        /* Set array index to 2. position */
+        x_art_index = 1;
     }
-    /* Store value in array */
-    x_art_values[x_art_index] = t_art;
-    /* Get next array index */
-    x_art_index = (x_art_index+1) % X_ART_N;
     /* Get standard deviation */
     float x_art_stddev = welford_get_stddev(&x_art_data);
     /* Return normalized X_ART depending on magnitude of difference (max: 1.0) */
