@@ -9,6 +9,7 @@ However, the major and minor number are used to express the version of the hardw
 - Added silk layer labels to pins of the expansion headers
 ### Changed
 - Changed diagnostic voltage divider resistors to 100k (lesser power consumption; still accurate)
+- Changed Varef capacitor to 47nF (Atmel recommendation)
 ### Removed
 - Removed unintentionally left label of reset button
 

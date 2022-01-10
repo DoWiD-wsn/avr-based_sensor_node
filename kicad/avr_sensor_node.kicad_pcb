@@ -2984,7 +2984,7 @@
     (fp_text reference C14 (at 0.635 -1.524) (layer F.SilkS)
       (effects (font (size 1 1) (thickness 0.15)))
     )
-    (fp_text value 220p (at 0 1.43) (layer F.Fab)
+    (fp_text value 47n (at 0 1.43) (layer F.Fab)
       (effects (font (size 1 1) (thickness 0.15)))
     )
     (fp_line (start 1.48 0.73) (end -1.48 0.73) (layer F.CrtYd) (width 0.05))

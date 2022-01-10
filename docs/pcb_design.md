@@ -81,7 +81,7 @@ An interactive BOM can be found in the `/kicad/bom/` directory (see [here](../ki
 | Reference | Value | Symbol Library | Symbol | Footprint Library | Footprint | Dist. |
 |-----------|-------|----------------|--------|-------------------|-----------|---------|
 | C11-C12   | 18pF  | Device         | C      | Capacitor_SMD     | C_0603_1608Metric | [Farnell](https://at.farnell.com/kemet/c0603c180k5ractu/kondensator-18pf-50v-10-x7r-0603/dp/2821151) |
-| C14       | 220pF | Device         | C      | Capacitor_SMD     | C_0603_1608Metric | [Farnell](https://at.farnell.com/wurth-elektronik/885012206055/kondensator-220pf-25v-10-x7r-0603/dp/2812352) |
+| C14       | 47nF  | Device         | C      | Capacitor_SMD     | C_0603_1608Metric | [Farnell](https://at.farnell.com/yageo/cc0805krx7r9bb473/kondensator-0-047-f-50v-10-x7r/dp/718683) |
 | C1,C3-C4,C7,C8,C10,C13,C15-C16  | 100nF | Device | C      | Capacitor_SMD     | C_0603_1608Metric | [Farnell](https://at.farnell.com/kemet/c0603c104m5ractu/kondensator-0-1-f-50v-20-x7r-0603/dp/2581046) |
 | C2,C5,C6  | 10uF  | Device         | C      | Capacitor_SMD     | C_0805_2012Metric | [Farnell](https://at.farnell.com/murata/grm21br71a106ka73l/kondensator-10-f-10v-10-x7r-0805/dp/2611944) |
 | C8        | 100uF | Device         | C      | Capacitor_SMD     | CP_Elec_6.3x7.7   | [Farnell](https://at.farnell.com/kemet/edk107m016a9gaa/kondensator-100-f-16v-radial-smd/dp/2068653) |
