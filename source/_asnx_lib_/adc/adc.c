@@ -68,6 +68,17 @@ void adc_disable(void) {
 
 
 /*!
+ * Disable digital input channels/pins.
+ *
+ * @param[in]   channels    The channels/pins to be disabled
+ */
+void adc_disable_input(uint8_t channels) {
+    /* Disable desired input channels/pins */
+    DIDR0 = channels;
+}
+
+
+/*!
  * Select the ADC input.
  *
  * @param[in]   input       The input to be used

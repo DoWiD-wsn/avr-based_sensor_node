@@ -274,6 +274,7 @@ int main(void) {
     led_init();
     /* Initialize the ADC */
     adc_init(ADC_ADPS_32,ADC_REFS_VCC);
+    adc_disable_input(0xF8);
     /* Initialize I2C master interface */
     i2c_init();
     /* Initialize Xbee 3 (uses UART0) */
