@@ -22,7 +22,7 @@
 
 /***** MACROS *****************************************************************/
 /*! Delay after changing the reference source [us] (min. 125us) */
-#define ADC_DELAY_CHANGE_REFERENCE      (250)
+#define ADC_DELAY_CHANGE_REFERENCE      (150)
 
 
 /***** ENUMERATION ************************************************************/

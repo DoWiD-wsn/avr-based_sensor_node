@@ -33,8 +33,6 @@ void adc_init(ADC_PRESCALER_t prescaler, ADC_AREF_t reference) {
     adc_set_reference(reference);
     /* Enable the ADC */
     adc_enable();
-    /* Perform a dummy conversion */
-    adc_dummy_conversion();
 }
 
 
@@ -55,6 +53,8 @@ void adc_deinit(void) {
 void adc_enable(void) {
     /* Enable the ADC */
     ADCSRA |= _BV(ADEN);
+    /* Perform a dummy conversion */
+    adc_dummy_conversion();
 }
 
 
@@ -169,8 +169,6 @@ float adc_read_vcc(void) {
     ADMUX  = 0x5E;
     /* Give the reference some time to settle */
     _delay_us(ADC_DELAY_CHANGE_REFERENCE);
-    /* Perform a dummy conversion */
-    adc_dummy_conversion();
     /* Store the converted ADC value */
     float result = (1.1 * (1023.0/(float)adc_read()));
     /* Restore the ADMUX configuration */
