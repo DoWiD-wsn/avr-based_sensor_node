@@ -418,13 +418,6 @@ int main(void) {
         timer1_set_tcnt(0);
         /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16.78s] */
         timer1_start(TIMER_PRESCALER_1024);
-        
-        /* Enable the self-diagnostics */
-        diag_enable();
-        /* Reset the TWI */
-        i2c_reset();
-        /* Enable ADC */
-        adc_enable();
 
         
         /*** 3.3) query sensors ***************************************/
@@ -617,6 +610,14 @@ int main(void) {
         sleep_bod_disable();
         sleep_cpu();
 #endif
+        
+        /*** Re-enable hardware ***/
+        /* Enable the self-diagnostics */
+        diag_enable();
+        /* Reset the TWI */
+        i2c_reset();
+        /* Enable ADC */
+        adc_enable();
     }
 
     return 0;
