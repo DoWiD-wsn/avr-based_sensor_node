@@ -273,7 +273,7 @@ int main(void) {
     /* Initialize the user LEDs and disable both by default */
     led_init();
     /* Initialize the ADC */
-    adc_init(ADC_ADPS_16,ADC_REFS_VCC);
+    adc_init(ADC_ADPS_32,ADC_REFS_VCC);
     /* Initialize I2C master interface */
     i2c_init();
     /* Initialize Xbee 3 (uses UART0) */
