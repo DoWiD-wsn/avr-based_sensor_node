@@ -140,8 +140,16 @@ void x_bat_reset(void) {
  * @return      normalized battery voltage monitor fault indicator (X_BAT) value
  */
 float x_bat_get_normalized(float v_bat) {
-    /* Check if window size is reached */
-    if(x_bat_data.cnt >= X_BAT_N) {
+    /* Check if its the first call */
+    if(x_bat_data.cnt == 0) {
+        /* Fill array */
+        for (uint8_t i=0; i<X_BAT_N; i++) {
+            welford_add(&x_bat_data, v_bat);
+            x_bat_values[i] = v_bat;
+        }
+        /* Set array index to 2. position */
+        x_bat_index = 1;
+    } else {
         /* Get oldest value from array (current index) */
         float old = x_bat_values[x_bat_index];
         /* Replace oldest value with new one */
@@ -150,16 +158,6 @@ float x_bat_get_normalized(float v_bat) {
         x_bat_values[x_bat_index] = v_bat;
         /* Get next array index */
         x_bat_index = (x_bat_index+1) % X_BAT_N;
-    } else {
-        /* Fill array */
-        for (uint8_t i=0; i<X_BAT_N; i++) {
-            x_bat_values[i] = v_bat;
-        }
-        welford_add(&x_bat_data, v_bat);
-        /* Manually set element count to N */
-        x_bat_data.cnt = X_BAT_N;
-        /* Set array index to 2. position */
-        x_bat_index = 1;
     }
     /* Return normalized standard deviation as X_BAT (max: 1.0) */
     return fmin(1.0, welford_get_stddev(&x_bat_data) / X_BAT_MAX);
@@ -188,8 +186,16 @@ void x_art_reset(void) {
  * @return      normalized active runtime monitor fault indicator (X_ART) value
  */
 float x_art_get_normalized(uint32_t t_art) {
-    /* Check if window size is reached */
-    if(x_art_data.cnt >= X_ART_N) {
+    /* Check if its the first call */
+    if(x_art_data.cnt == 0) {
+        /* Fill array */
+        for (uint8_t i=0; i<X_ART_N; i++) {
+            x_art_values[i] = t_art;
+            welford_add(&x_art_data, t_art);
+        }
+        /* Set array index to 2. position */
+        x_art_index = 1;
+    } else {
         /* Get oldest value from array (current index) */
         float old = x_art_values[x_art_index];
         /* Replace oldest value with new one */
@@ -198,16 +204,6 @@ float x_art_get_normalized(uint32_t t_art) {
         x_art_values[x_art_index] = t_art;
         /* Get next array index */
         x_art_index = (x_art_index+1) % X_ART_N;
-    } else {
-        /* Fill array */
-        for (uint8_t i=0; i<X_ART_N; i++) {
-            x_art_values[i] = t_art;
-        }
-        welford_add(&x_art_data, t_art);
-        /* Manually set element count to N */
-        x_art_data.cnt = X_ART_N;
-        /* Set array index to 2. position */
-        x_art_index = 1;
     }
     /* Get standard deviation */
     float x_art_stddev = welford_get_stddev(&x_art_data);
