@@ -40,24 +40,24 @@
 #define XBEE_SLEEP_IND_GPIO                 (PC7)
 
 /*! Join network timeout [s] */
-#define XBEE_JOIN_TIMEOUT                   (60)
+#define XBEE_JOIN_TIMEOUT                   (10)
 /*! Join network delay between tries [ms] */
-#define XBEE_JOIN_TIMEOUT_DELAY             (100)
+#define XBEE_JOIN_TIMEOUT_DELAY             (5)
 
 /*! Wake-up timeout [s] */
 #define XBEE_WAKE_TIMEOUT                   (5)
 /*! Wake-up delay between tries [ms] */
-#define XBEE_WAKE_TIMEOUT_DELAY             (10)
+#define XBEE_WAKE_TIMEOUT_DELAY             (5)
 
 /*! RX timeout [s] */
 #define XBEE_RX_TIMEOUT                     (1)
 /*! RX delay between tries [ms] */
-#define XBEE_RX_TIMEOUT_DELAY               (1)
+#define XBEE_RX_TIMEOUT_DELAY               (5)
 
 /*! TX timeout [s] */
 #define XBEE_TX_TIMEOUT                     (1)
 /*! TX delay between tries [ms] */
-#define XBEE_TX_TIMEOUT_DELAY               (1)
+#define XBEE_TX_TIMEOUT_DELAY               (5)
 
 /*! Maximum Number of Transmission Bytes (for transparent mode) */
 #define XBEE_CONF_NP                        (54)

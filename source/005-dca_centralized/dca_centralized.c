@@ -20,14 +20,15 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.1.7
- * @date    2022/01/10
+ * @version 1.1.8
+ * @date    2022/01/17
  */
 
 
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
-#define UPDATE_INTERVAL             10              /**< Update interval [min] */
+#define ENABLE_DBG_MSG              0               /**< Enable debug output of message content */
+#define UPDATE_INTERVAL             5               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
@@ -128,7 +129,7 @@ void sleep_until_reset(uint8_t delay);
 #if ASNX_VERSION_MINOR==0
 void update(void);
 #endif
-#if ENABLE_DBG
+#if ENABLE_DBG_MSG
 void dbg_print_msg(MSG_t* msg);
 #endif
 
@@ -139,9 +140,9 @@ void dbg_print_msg(MSG_t* msg);
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
 void get_mcusr(void) {
-  MCUSR_dump = MCUSR;
-  MCUSR = 0;
-  wdt_disable();
+    MCUSR_dump = MCUSR;
+    MCUSR = 0;
+    wdt_disable();
 }
 
 
@@ -178,7 +179,7 @@ void update(void) {
 /*!
  * Debug: print the contents of a given sensor message structure
  */
-#if ENABLE_DBG
+#if ENABLE_DBG_MSG
 void dbg_print_msg(MSG_t* msg) {
     printf("\n===== SENSOR MESSAGE CONTENTS =====\n");
     printf("%d message updates\n",msg->time);
@@ -273,7 +274,7 @@ int main(void) {
     /* Initialize the user LEDs and disable both by default */
     led_init();
     /* Initialize the ADC */
-    adc_init(ADC_ADPS_32,ADC_REFS_VCC);
+    adc_init(ADC_ADPS_32,ADC_REFS_VCC);                                 // ADC_ADPS_16
     adc_disable_input(0xF8);
     /* Initialize I2C master interface */
     i2c_init();
@@ -376,11 +377,19 @@ int main(void) {
         }
     }
     /* Print status message */
-    printf("... ZIGBEE connected\n");
+    printf("ZIGBEE connected ...\n");
 
 
     while(1) {
-#if ASNX_VERSION_MINOR>0
+        /*** (Re-)Enable hardware for current iteration ***/
+        /* Enable ADC */
+        adc_enable();
+        /* Reset the TWI */
+        i2c_reset();
+        /* Enable the self-diagnostics */
+        diag_enable();
+        
+        #if ASNX_VERSION_MINOR>0
         /*** 3.1) reset RTC (stop-watch mode) *************************/
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
@@ -437,6 +446,7 @@ int main(void) {
                 msg.t_soil = fp_float_to_fixed16_10to6(measurement);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
+                printf("... DS18B20 reading failed\n");
                 msg.t_soil = 0;
                 x_ic_inc(X_IC_INC_NORM);
             }
@@ -461,6 +471,7 @@ int main(void) {
                 msg.h_air = fp_float_to_fixed16_10to6(measurement2);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
+                printf("... AM2302 reading failed\n");
                 msg.t_air = 0;
                 msg.h_air = 0;
                 x_ic_inc(X_IC_INC_NORM);
@@ -489,6 +500,7 @@ int main(void) {
                 msg.h_air = fp_float_to_fixed16_10to6(measurement2);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
+                printf("... SHTC3 reading failed\n");
                 msg.t_air = 0;
                 msg.h_air = 0;
                 x_ic_inc(X_IC_INC_NORM);
@@ -508,33 +520,40 @@ int main(void) {
         /* Xbee3 temperature */
         xbee_rx_flush();
         if(xbee_cmd_get_temperature(&t_trx) == XBEE_RET_OK) {
+            printf("... Xbee temperature: %.2f\n", t_trx);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
+            printf("... XBee temperature reading failed\n");
             x_ic_inc(X_IC_INC_NORM);
         }
         /* Board temperature (TMP275 via TWI) */
         if(tmp275_ret == TMP275_RET_OK) {
             /* Get temperature in degree Celsius (°C) */
             if(tmp275_get_temperature(&tmp275, &t_brd) == TMP275_RET_OK) {
+                printf("... Board temperature: %.2f\n", t_brd);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
+                printf("... Board temperature reading failed\n");
                 x_ic_inc(X_IC_INC_NORM);
             }
         }  else {
+            printf("... TMP275 start measurement failed\n");
             x_ic_inc(X_IC_INC_NORM);
         }
         
         /* MCU supply voltage in volts (V) */
         v_mcu = diag_read_vcc();
-        /* Battery voltage (via ADC) */
-        v_bat = diag_read_vbat(v_mcu);
         /* Xbee3 supply voltage */
         xbee_rx_flush();
         if(xbee_cmd_get_vss(&v_trx) == XBEE_RET_OK) {
+            printf("... Xbee voltage: %.2f\n", v_trx);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
+            printf("... XBee voltage reading failed\n");
             x_ic_inc(X_IC_INC_NORM);
         }
+        /* Battery voltage (via ADC) */
+        v_bat = diag_read_vbat(v_mcu);
         
         /* Node temperature monitor (X_NT) */
         msg.x_nt = fp_float_to_fixed8_2to6(x_nt_get_normalized(t_mcu, t_brd, t_trx));
@@ -545,7 +564,7 @@ int main(void) {
         /* Active runtime monitor (X_ART) */
         if(runtime > 0) {
             /* Subsequent cycle -> measurement available */
-            // runtime_us = (uint32_t)(runtime) * 64UL;
+            // runtime_us = (uint32_t)(runtime) * 64;
             runtime_ms = (uint16_t)(((double)runtime * 64.0) / 1000.0);
             msg.x_art = fp_float_to_fixed8_2to6(x_art_get_normalized(runtime_ms));
         } else {
@@ -570,14 +589,14 @@ int main(void) {
 
 
         /*** 3.5) send values via Zigbee ******************************/
-#if ENABLE_DBG
+#if ENABLE_DBG_MSG
         /* Print the contents of the message to be sent */
         dbg_print_msg(&msg);
 #endif
         /* Send the measurement to the CH */
         int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
         if(ret == XBEE_RET_OK) {
-            printf("%d. sensor value update sent!\n\n",msg.time);
+            printf("%d. sensor value update sent!\n",msg.time);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
             printf("ERROR sending message (%d)!\n",ret);
@@ -610,14 +629,6 @@ int main(void) {
         sleep_bod_disable();
         sleep_cpu();
 #endif
-        
-        /*** Re-enable hardware ***/
-        /* Enable the self-diagnostics */
-        diag_enable();
-        /* Reset the TWI */
-        i2c_reset();
-        /* Enable ADC */
-        adc_enable();
     }
 
     return 0;

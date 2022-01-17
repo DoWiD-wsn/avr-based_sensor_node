@@ -27,12 +27,16 @@ void adc_dummy_conversion(void);
 void adc_init(ADC_PRESCALER_t prescaler, ADC_AREF_t reference) {
     /* Initially, select input CH0 */
     adc_set_input(ADC_CH0);
+    /* Enable all channels */
+    adc_disable_input(0x00);
     /* Set the prescaler */
     adc_set_prescaler(prescaler);
     /* Set the reference voltage */
     adc_set_reference(reference);
     /* Enable the ADC */
     adc_enable();
+    /* Perform a dummy conversion */
+    adc_dummy_conversion();
 }
 
 
@@ -53,8 +57,6 @@ void adc_deinit(void) {
 void adc_enable(void) {
     /* Enable the ADC */
     ADCSRA |= _BV(ADEN);
-    /* Perform a dummy conversion */
-    adc_dummy_conversion();
 }
 
 
@@ -108,8 +110,6 @@ void adc_set_prescaler(ADC_PRESCALER_t prescaler) {
 void adc_set_reference(ADC_AREF_t reference) {
     /* Select desired reference */
     ADMUX = ((ADMUX & 0x2F) | ((reference & 0x03) << 6));
-    /* Give the reference some time to settle */
-    _delay_us(ADC_DELAY_CHANGE_REFERENCE);
 }
 
 

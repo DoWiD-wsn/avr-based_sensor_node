@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/dca/indicators.h
  * @author  Dominik Widhalm
- * @version 1.4.2
- * @date    2022/01/10
+ * @version 1.4.3
+ * @date    2022/01/17
  */
 
 #ifndef _ASNX_INDICATORS_H_
@@ -36,20 +36,20 @@
 /* Battery voltage monitor (X_BAT) */
 /*! maximum value for normalization (volts) */
 #define X_BAT_MAX                           1.0
-/*! number of consecutive measurements (N) - time window size */
+/*! number of consecutive measurements (N) */
 #define X_BAT_N                             5
 
 /* Active runtime monitor (X_ART) */
 /*! maximum value for change in magnitude */
 #define X_ART_MAX                           4.0
-/*! number of consecutive measurements (N) - time window size */
+/*! number of consecutive measurements (N) */
 #define X_ART_N                             5
 
 /* Reset monitor (X_RST) */
 /*! maximum value for normalization */
 #define X_RST_MAX                           25.0
 /*! decay rate (damping per update) */
-#define X_RST_DECAY                         0.98
+#define X_RST_DECAY                         0.95
 /*! EEPROM address */
 #define X_RST_EEPROM                        0x00
 /*! EEPROM update threshold */
