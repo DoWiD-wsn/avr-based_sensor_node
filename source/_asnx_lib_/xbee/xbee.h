@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.h
  * @author  Dominik Widhalm
- * @version 1.2.1
- * @date    2021/12/29
+ * @version 1.2.3
+ * @date    2022/01/18
  */
 
 #ifndef _ASNX_XBEE_H_
@@ -40,9 +40,9 @@
 #define XBEE_SLEEP_IND_GPIO                 (PC7)
 
 /*! Join network timeout [s] */
-#define XBEE_JOIN_TIMEOUT                   (10)
+#define XBEE_JOIN_TIMEOUT                   (30)
 /*! Join network delay between tries [ms] */
-#define XBEE_JOIN_TIMEOUT_DELAY             (5)
+#define XBEE_JOIN_TIMEOUT_DELAY             (50)
 
 /*! Wake-up timeout [s] */
 #define XBEE_WAKE_TIMEOUT                   (5)
@@ -50,12 +50,12 @@
 #define XBEE_WAKE_TIMEOUT_DELAY             (5)
 
 /*! RX timeout [s] */
-#define XBEE_RX_TIMEOUT                     (1)
+#define XBEE_RX_TIMEOUT                     (5)
 /*! RX delay between tries [ms] */
 #define XBEE_RX_TIMEOUT_DELAY               (5)
 
 /*! TX timeout [s] */
-#define XBEE_TX_TIMEOUT                     (1)
+#define XBEE_TX_TIMEOUT                     (5)
 /*! TX delay between tries [ms] */
 #define XBEE_TX_TIMEOUT_DELAY               (5)
 

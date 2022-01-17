@@ -94,7 +94,7 @@ void adc_deinit(void);
 /* Specific init */
 void adc_enable(void);
 void adc_disable(void);
-void adc_disable_input(uint8_t channels);
+void adc_disable_din(uint8_t channels);
 void adc_set_input(ADC_INPUT_t input);
 void adc_set_prescaler(ADC_PRESCALER_t prescaler);
 void adc_set_reference(ADC_AREF_t reference);

@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.c
  * @author  Dominik Widhalm
- * @version 1.2.1
- * @date    2021/12/29
+ * @version 1.2.3
+ * @date    2022/01/18
  *
  * @todo    *) Implement better way for (asynchronous) response handling/matching
  * @todo    *) Fix blocking (non-ISR) functions (not really possible now)

@@ -13,10 +13,6 @@
 #include "adc.h"
 
 
-/***** FUNCTION PROTOTYPES ********************************************/
-void adc_dummy_conversion(void);
-
-
 /***** FUNCTIONS ******************************************************/
 /*!
  * Initialize the ADC.
@@ -27,16 +23,12 @@ void adc_dummy_conversion(void);
 void adc_init(ADC_PRESCALER_t prescaler, ADC_AREF_t reference) {
     /* Initially, select input CH0 */
     adc_set_input(ADC_CH0);
-    /* Enable all channels */
-    adc_disable_input(0x00);
     /* Set the prescaler */
     adc_set_prescaler(prescaler);
     /* Set the reference voltage */
     adc_set_reference(reference);
     /* Enable the ADC */
     adc_enable();
-    /* Perform a dummy conversion */
-    adc_dummy_conversion();
 }
 
 
@@ -70,11 +62,11 @@ void adc_disable(void) {
 
 
 /*!
- * Disable digital input channels/pins.
+ * Disable digital input pins.
  *
  * @param[in]   channels    The channels/pins to be disabled
  */
-void adc_disable_input(uint8_t channels) {
+void adc_disable_din(uint8_t channels) {
     /* Disable desired input channels/pins */
     DIDR0 = channels;
 }
@@ -145,15 +137,6 @@ uint16_t adc_read_input(ADC_INPUT_t input) {
 
 
 /*!
- * Perform a dummy conversion.
- */
-void adc_dummy_conversion(void) {
-    /* Perform a conversion but neglect the result */
-    (void)adc_read();
-}
-
-
-/*!
  * Measure the MCU's supply voltage internally.
  * Set the reference voltage to Vcc and read the VBG (1.1V) input.
  * The voltage is then calculated with:
@@ -169,16 +152,12 @@ float adc_read_vcc(void) {
     ADMUX  = 0x5E;
     /* Give the reference some time to settle */
     _delay_us(ADC_DELAY_CHANGE_REFERENCE);
-    /* Perform a dummy conversion */
-    adc_dummy_conversion();
     /* Store the converted ADC value */
     float result = (1.1 * (1023.0/(float)adc_read()));
     /* Restore the ADMUX configuration */
     ADMUX = reg;
     /* Give the reference some time to settle */
     _delay_us(ADC_DELAY_CHANGE_REFERENCE);
-    /* Perform a dummy conversion */
-    adc_dummy_conversion();
     /* Return the result */
     return result;
 }

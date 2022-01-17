@@ -20,20 +20,20 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.1.8
- * @date    2022/01/17
+ * @version 1.1.9
+ * @date    2022/01/18
  */
 
 
 /*** APP CONFIGURATION ***/
-#define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
+#define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
 #define ENABLE_DBG_MSG              0               /**< Enable debug output of message content */
-#define UPDATE_INTERVAL             5               /**< Update interval [min] */
+#define UPDATE_INTERVAL             1               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
-#define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
-#define ENABLE_AM2302               1               /**< enable AM2302 sensor */
-#define ENABLE_SHTC3                0               /**< enable SHTC3 sensor */
+#define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
+#define ENABLE_AM2302               0               /**< enable AM2302 sensor */
+#define ENABLE_SHTC3                1               /**< enable SHTC3 sensor */
 /* Check configuration */
 #if (ENABLE_AM2302 && ENABLE_SHTC3)
 #  error "Use either AM2302 or SHTC3 for air measurements, not both!"
@@ -129,7 +129,7 @@ void sleep_until_reset(uint8_t delay);
 #if ASNX_VERSION_MINOR==0
 void update(void);
 #endif
-#if ENABLE_DBG_MSG
+#if ENABLE_DBG
 void dbg_print_msg(MSG_t* msg);
 #endif
 
@@ -140,9 +140,9 @@ void dbg_print_msg(MSG_t* msg);
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
 void get_mcusr(void) {
-    MCUSR_dump = MCUSR;
-    MCUSR = 0;
-    wdt_disable();
+  MCUSR_dump = MCUSR;
+  MCUSR = 0;
+  wdt_disable();
 }
 
 
@@ -209,13 +209,7 @@ void dbg_print_msg(MSG_t* msg) {
 int main(void) {
     /*** Local variables ***/
     /* Message data structure */
-    MSG_t msg;
-    msg.time = 0;
-    /* Initialize sensor data (needed in case not used) */
-    msg.t_air = 0;
-    msg.h_air = 0;
-    msg.t_soil = 0;
-    msg.h_soil = 0;
+    MSG_t msg = {0};
 #if ASNX_VERSION_MINOR>0
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
@@ -270,12 +264,11 @@ int main(void) {
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
     
-    
     /* Initialize the user LEDs and disable both by default */
     led_init();
     /* Initialize the ADC */
-    adc_init(ADC_ADPS_32,ADC_REFS_VCC);                                 // ADC_ADPS_16
-    adc_disable_input(0xF8);
+    adc_init(ADC_ADPS_16,ADC_REFS_VCC);
+    adc_disable_din(0x07);
     /* Initialize I2C master interface */
     i2c_init();
     /* Initialize Xbee 3 (uses UART0) */
@@ -377,19 +370,15 @@ int main(void) {
         }
     }
     /* Print status message */
-    printf("ZIGBEE connected ...\n");
+    printf("... ZIGBEE connected\n");
 
 
     while(1) {
-        /*** (Re-)Enable hardware for current iteration ***/
-        /* Enable ADC */
-        adc_enable();
+        /*** (Re-)enable I2C interface ***/
         /* Reset the TWI */
         i2c_reset();
-        /* Enable the self-diagnostics */
-        diag_enable();
         
-        #if ASNX_VERSION_MINOR>0
+#if ASNX_VERSION_MINOR>0
         /*** 3.1) reset RTC (stop-watch mode) *************************/
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
@@ -427,8 +416,12 @@ int main(void) {
         timer1_set_tcnt(0);
         /* Start timer1 with prescaler 256 -> measurement interval [64us; 4.19s] */
         timer1_start(TIMER_PRESCALER_256);
-
         
+        /* Enable ADC */
+        adc_enable();
+        /* Enable the self-diagnostics */
+        diag_enable();
+
         /*** 3.3) query sensors ***************************************/
 #if ENABLE_DS18B20
         /* Check if sensor is ready */
@@ -564,8 +557,8 @@ int main(void) {
         /* Active runtime monitor (X_ART) */
         if(runtime > 0) {
             /* Subsequent cycle -> measurement available */
-            // runtime_us = (uint32_t)(runtime) * 64;
-            runtime_ms = (uint16_t)(((double)runtime * 64.0) / 1000.0);
+            // runtime_us = (uint32_t)(runtime) * 64UL;
+            runtime_ms = (uint16_t)(runtime * 0.064);
             msg.x_art = fp_float_to_fixed8_2to6(x_art_get_normalized(runtime_ms));
         } else {
             msg.x_art = fp_float_to_fixed8_2to6(0.0);
@@ -596,7 +589,7 @@ int main(void) {
         /* Send the measurement to the CH */
         int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
         if(ret == XBEE_RET_OK) {
-            printf("%d. sensor value update sent!\n",msg.time);
+            printf("%d. sensor value update sent!\n\n",msg.time);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
             printf("ERROR sending message (%d)!\n",ret);
@@ -626,7 +619,6 @@ int main(void) {
 #if ASNX_VERSION_MINOR>0
         /*** 3.7) put MCU to sleep ************************************/
         sleep_enable();
-        sleep_bod_disable();
         sleep_cpu();
 #endif
     }
@@ -642,7 +634,5 @@ int main(void) {
 ISR(INT2_vect) {
     /* Actually not needed, but still ... */
     sleep_disable();
-    /* Wait some time to fully wake up */
-    _delay_ms(5);
 }
 #endif
