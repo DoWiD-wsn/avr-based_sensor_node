@@ -26,14 +26,14 @@
 
 
 /*** APP CONFIGURATION ***/
-#define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
+#define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
 #define ENABLE_DBG_MSG              0               /**< Enable debug output of message content */
 #define UPDATE_INTERVAL             1               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
-#define ENABLE_AM2302               0               /**< enable AM2302 sensor */
-#define ENABLE_SHTC3                1               /**< enable SHTC3 sensor */
+#define ENABLE_AM2302               1               /**< enable AM2302 sensor */
+#define ENABLE_SHTC3                0               /**< enable SHTC3 sensor */
 /* Check configuration */
 #if (ENABLE_AM2302 && ENABLE_SHTC3)
 #  error "Use either AM2302 or SHTC3 for air measurements, not both!"
@@ -557,8 +557,7 @@ int main(void) {
             /* Subsequent cycle -> measurement available */
             runtime_ms = (uint16_t)((float)runtime * 0.064);
             msg.x_art = fp_float_to_fixed8_2to6(x_art_get_normalized(runtime_ms));
-            
-            printf("\nRuntime: %d = %d ms\n\n",runtime,runtime_ms);
+            printf("... Runtime: %d ms (%d steps)\n\n",runtime_ms,runtime);
         } else {
             msg.x_art = fp_float_to_fixed8_2to6(0.0);
         }
