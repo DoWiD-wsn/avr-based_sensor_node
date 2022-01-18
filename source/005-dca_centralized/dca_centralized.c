@@ -412,8 +412,6 @@ int main(void) {
             sleep_until_reset(WDTO_15MS);
         }
         
-        /* Reset timer1 counter value to 0 */
-        timer1_set_tcnt(0);
         /* Start timer1 with prescaler 256 -> measurement interval [64us; 4.19s] */
         timer1_start(TIMER_PRESCALER_256);
         
@@ -557,9 +555,10 @@ int main(void) {
         /* Active runtime monitor (X_ART) */
         if(runtime > 0) {
             /* Subsequent cycle -> measurement available */
-            // runtime_us = (uint32_t)(runtime) * 64UL;
-            runtime_ms = (uint16_t)(runtime * 0.064);
+            runtime_ms = (uint16_t)((float)runtime * 0.064);
             msg.x_art = fp_float_to_fixed8_2to6(x_art_get_normalized(runtime_ms));
+            
+            printf("\nRuntime: %d = %d ms\n\n",runtime,runtime_ms);
         } else {
             msg.x_art = fp_float_to_fixed8_2to6(0.0);
         }
@@ -589,7 +588,7 @@ int main(void) {
         /* Send the measurement to the CH */
         int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
         if(ret == XBEE_RET_OK) {
-            printf("%d. sensor value update sent!\n\n",msg.time);
+            printf("%d. sensor value update sent!\n",msg.time);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
             printf("ERROR sending message (%d)!\n",ret);
@@ -604,6 +603,8 @@ int main(void) {
         timer1_stop();
         /* Save timer1 counter value */
         runtime = timer1_get_tcnt();
+        /* Reset timer1 counter value to 0 */
+        timer1_set_tcnt(0);
         /* Send xbee to sleep */
         if(xbee_sleep_enable() != XBEE_RET_OK) {
             printf("Couldn't send xbee radio to sleep ... aborting!\n");

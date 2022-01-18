@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/dca/indicators.h
  * @author  Dominik Widhalm
- * @version 1.4.3
- * @date    2022/01/17
+ * @version 1.4.4
+ * @date    2022/01/18
  */
 
 #ifndef _ASNX_INDICATORS_H_
@@ -22,6 +22,7 @@
 #include <avr/io.h>
 /*** ASNX LIB ***/
 #include "util/diagnostics.h"
+#include "util/welford.h"
 
 
 /***** DEFINES ********************************************************/
@@ -41,7 +42,7 @@
 
 /* Active runtime monitor (X_ART) */
 /*! maximum value for change in magnitude */
-#define X_ART_MAX                           4.0
+#define X_ART_MAX                           5.0
 /*! number of consecutive measurements (N) */
 #define X_ART_N                             5
 
