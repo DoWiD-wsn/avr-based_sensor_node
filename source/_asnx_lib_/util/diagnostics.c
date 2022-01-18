@@ -67,7 +67,7 @@ uint16_t diag_adc_check(void){
  *
  * @return      Supply voltage in volts (V)
  */
-float diag_read_vcc(void) {
+float diag_vcc_read(void) {
     /* Use the function provided by the ADC module */
     return adc_read_vcc();
 }
@@ -79,8 +79,23 @@ float diag_read_vcc(void) {
  * @param[in]   vcc     VCC voltage level (V)
  * @return      Battery voltage in volts (V)
  */
-float diag_read_vbat(float vcc) {
+float diag_vbat_read(float vcc) {
     return 2.0 * (adc_read_input(DIAG_VBAT_CH) * (vcc / 1023.0));
+}
+
+
+/*!
+ * Get the linear approximation of the state-of-charge (SoC) of the battery.
+ *
+ * @param[in]   vbat    Battery voltage level (V)
+ * @return      State-of-charge of the battery (%)
+ */
+uint8_t diag_vbat_soc(float vbat) {
+    /* Calculate linear approximation */
+    float approx = (vbat - DIAG_VBAT_MIN) / DIAG_VBAT_RANGE;
+    approx *= 100;
+    /* Return the linear approximation */
+    return (uint8_t)approx;
 }
 
 
@@ -89,6 +104,6 @@ float diag_read_vbat(float vcc) {
  *
  * @return      MCU surface temperature in degrees Celsius (°C)
  */
-float diag_read_tsurface(void) {
+float diag_tsurface_read(void) {
     return jt103_get_temperature(adc_read_input(DIAG_TMCU_CH));
 }

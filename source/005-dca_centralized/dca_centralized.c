@@ -31,7 +31,7 @@
 #define UPDATE_INTERVAL             1               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
-#define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
+#define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
 #define ENABLE_AM2302               1               /**< enable AM2302 sensor */
 #define ENABLE_SHTC3                0               /**< enable SHTC3 sensor */
 /* Check configuration */
@@ -507,7 +507,7 @@ int main(void) {
         /* Trigger TMP275 conversion (wait 55ms before reading) */
         uint8_t tmp275_ret = tmp275_set_config(&tmp275, 0xA1);
         /* MCU surface temperature (103JT thermistor via ADC CH2) */
-        t_mcu = diag_read_tsurface();
+        t_mcu = diag_tsurface_read();
         /* Xbee3 temperature */
         xbee_rx_flush();
         if(xbee_cmd_get_temperature(&t_trx) == XBEE_RET_OK) {
@@ -533,7 +533,7 @@ int main(void) {
         }
         
         /* MCU supply voltage in volts (V) */
-        v_mcu = diag_read_vcc();
+        v_mcu = diag_vcc_read();
         /* Xbee3 supply voltage */
         xbee_rx_flush();
         if(xbee_cmd_get_vss(&v_trx) == XBEE_RET_OK) {
@@ -544,7 +544,13 @@ int main(void) {
             x_ic_inc(X_IC_INC_NORM);
         }
         /* Battery voltage (via ADC) */
-        v_bat = diag_read_vbat(v_mcu);
+        v_bat = diag_vbat_read(v_mcu);
+#if ENABLE_DBG
+        /* Battery SoC */
+        uint8_t soc = diag_vbat_soc(v_bat);
+        printf("... Battery voltage: %.2f V\n",v_bat);
+        printf("... Battery SoC: %2d %%\n",soc);
+#endif
         
         /* Node temperature monitor (X_NT) */
         msg.x_nt = fp_float_to_fixed8_2to6(x_nt_get_normalized(t_mcu, t_brd, t_trx));

@@ -53,6 +53,14 @@
 #  define DIAG_TMCU_CH                      ADC_CH1
 #endif
 
+/* Battery SoC */
+/*! Battery maximum voltage */
+#define DIAG_VBAT_MAX                       (3.2)
+/*! Battery minimum voltage */
+#define DIAG_VBAT_MIN                       (1.8)
+/*! Battery voltage range */
+#define DIAG_VBAT_RANGE                     (DIAG_VBAT_MAX - DIAG_VBAT_MIN)
+
 
 /***** FUNCTION PROTOTYPES ********************************************/
 /* voltage-divider setup */
@@ -61,8 +69,9 @@ void diag_enable(void);
 void diag_disable(void);
 /* voltage divider reading */
 uint16_t diag_adc_check(void);
-float diag_read_vcc(void);
-float diag_read_vbat(float vcc);
-float diag_read_tsurface(void);
+float diag_vcc_read(void);
+float diag_vbat_read(float vcc);
+uint8_t diag_vbat_soc(float vbat);
+float diag_tsurface_read(void);
 
 #endif // _ASNX_DIAG_H_
