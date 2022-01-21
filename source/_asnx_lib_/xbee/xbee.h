@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.h
  * @author  Dominik Widhalm
- * @version 1.2.3
- * @date    2022/01/18
+ * @version 1.3.0
+ * @date    2022/01/21
  */
 
 #ifndef _ASNX_XBEE_H_
@@ -15,19 +15,14 @@
 /***** INCLUDES *******************************************************/
 /*** STD ***/
 #include <stdint.h>
+#include <stddef.h>
 /*** AVR ***/
-#include <avr/interrupt.h>
 #include <util/delay.h>
 /*** ASNX LIB ***/
-#include "uart/uart.h"
 #include "hw/hw.h"
 
 
 /***** DEFINES ********************************************************/
-/*! Use UART blocking (0) or non-blocking (1) write functions */
-#define XBEE_WRITE_NONBLOCKING              (0)
-/* @todo: need rework for blocking-read functions */
-
 /* Xbee sleep-request pin (default) */
 #define XBEE_SLEEP_REQ_DDR                  (DDRC)
 #define XBEE_SLEEP_REQ_PORT                 (PORTC)
@@ -40,7 +35,7 @@
 #define XBEE_SLEEP_IND_GPIO                 (PC7)
 
 /*! Join network timeout [s] */
-#define XBEE_JOIN_TIMEOUT                   (30)
+#define XBEE_JOIN_TIMEOUT                   (120)
 /*! Join network delay between tries [ms] */
 #define XBEE_JOIN_TIMEOUT_DELAY             (50)
 
@@ -49,15 +44,10 @@
 /*! Wake-up delay between tries [ms] */
 #define XBEE_WAKE_TIMEOUT_DELAY             (5)
 
-/*! RX timeout [s] */
-#define XBEE_RX_TIMEOUT                     (5)
-/*! RX delay between tries [ms] */
-#define XBEE_RX_TIMEOUT_DELAY               (5)
-
-/*! TX timeout [s] */
-#define XBEE_TX_TIMEOUT                     (5)
-/*! TX delay between tries [ms] */
-#define XBEE_TX_TIMEOUT_DELAY               (5)
+/*! Response timeout [s] */
+#define XBEE_RESPONSE_TIMEOUT               (5)
+/*! Response delay between tries [ms] */
+#define XBEE_RESPONSE_TIMEOUT_DELAY         (5)
 
 /*! Maximum Number of Transmission Bytes (for transparent mode) */
 #define XBEE_CONF_NP                        (54)
@@ -127,7 +117,8 @@ typedef enum {
     XBEE_RET_FID_NOT_MATCH              = -11,  /**< ERROR: returned FID does not match */
     XBEE_RET_MAC_NOT_MATCH              = -12,  /**< ERROR: returned MAC does not match */
     XBEE_RET_ADDR_NOT_MATCH             = -13,  /**< ERROR: returned address does not match */
-    XBEE_RET_TIMEOUT                    = -14   /**< ERROR: timeout */
+    XBEE_RET_UNEXPECTED_START           = -14,  /**< ERROR: unexpected start delimiter */
+    XBEE_RET_TIMEOUT                    = -15   /**< ERROR: timeout */
 } XBEE_RET_t;
 
 /*! Enumeration for the Xbee frame and response types */
@@ -236,19 +227,22 @@ typedef enum {
 
 
 /***** FUNCTION PROTOTYPES ****************************************************/
-void xbee_init(uint32_t baud) ;
+void xbee_init(void (*write)(char byte), char (*read)(void), uint8_t (*available)(void), void (*flush)(void));
 void xbee_set_sleep_request_gpio(volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
 void xbee_set_sleep_indicator_gpio(volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
 XBEE_RET_t xbee_sleep_enable(void);
 XBEE_RET_t xbee_sleep_disable(void);
 
 /*** FRAMES ***/
+/* Frame ID */
+uint8_t fid_get_next(void);
+void fid_reset(void);
 /* Local AT commands */
-XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value, uint8_t fid);
-XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value, uint8_t fid);
+XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value);
+XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value);
 /* Remote AT commands */
-XBEE_RET_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, uint64_t value, uint8_t fid);
-XBEE_RET_t xbee_at_remote_cmd_read(uint64_t mac, uint16_t addr, char* command, uint64_t* value, uint8_t fid);
+XBEE_RET_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, uint64_t value);
+XBEE_RET_t xbee_at_remote_cmd_read(uint64_t mac, uint16_t addr, char* command, uint64_t* value);
 /* Transmit */
 XBEE_RET_t xbee_transmit(uint64_t mac, uint16_t addr, uint8_t* payload, uint16_t cnt, uint8_t fid);
 XBEE_RET_t xbee_transmit_status(uint8_t* delivery);
@@ -264,11 +258,5 @@ XBEE_RET_t xbee_is_connected(void);
 XBEE_RET_t xbee_wait_for_connected(uint8_t timeout);
 XBEE_RET_t xbee_cmd_get_temperature(float* temp);
 XBEE_RET_t xbee_cmd_get_vss(float* vss);
-
-/*** CIRCULAR BUFFER ***/
-void xbee_rx_flush(void);
-void xbee_tx_flush(void);
-uint8_t xbee_rx_cnt(void);
-uint8_t xbee_tx_cnt(void);
 
 #endif // _ASNX_XBEE_H_

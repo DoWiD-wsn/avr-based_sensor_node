@@ -26,12 +26,12 @@
 
 
 /*** APP CONFIGURATION ***/
-#define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
+#define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
 #define ENABLE_DBG_MSG              0               /**< Enable debug output of message content */
 #define UPDATE_INTERVAL             1               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
-#define ENABLE_DS18B20              1               /**< enable DS18B20 sensor */
+#define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
 #define ENABLE_AM2302               1               /**< enable AM2302 sensor */
 #define ENABLE_SHTC3                0               /**< enable SHTC3 sensor */
 /* Check configuration */
@@ -129,7 +129,7 @@ void sleep_until_reset(uint8_t delay);
 #if ASNX_VERSION_MINOR==0
 void update(void);
 #endif
-#if ENABLE_DBG
+#if ENABLE_DBG_MSG
 void dbg_print_msg(MSG_t* msg);
 #endif
 
@@ -181,7 +181,7 @@ void update(void) {
  */
 #if ENABLE_DBG_MSG
 void dbg_print_msg(MSG_t* msg) {
-    printf("\n===== SENSOR MESSAGE CONTENTS =====\n");
+    printf("===== SENSOR MESSAGE CONTENTS =====\n");
     printf("%d message updates\n",msg->time);
     printf("=== SENSOR VALUES ===\n");
     printf("T_air:   %.2f C\n",fp_fixed16_to_float_10to6(msg->t_air));
@@ -197,7 +197,7 @@ void dbg_print_msg(MSG_t* msg) {
     printf("X_IC:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_ic));
     printf("X_ADC:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_adc));
     printf("X_USART: %.2f\n",fp_fixed8_to_float_2to6(msg->x_usart));
-    printf("===================================\n\n");
+    printf("===================================\n");
 }
 #endif
 
@@ -253,7 +253,7 @@ int main(void) {
 #endif
     
 #if ENABLE_DBG
-    /* Initialize UART1 for debug purposes */
+    /* Initialize UART1 for debug purposes (9600 baud) */
     uart1_init();
     /* Initialize the printf function to use the uart1_putc() function for output */
     printf_init(uart1_putc);
@@ -271,8 +271,9 @@ int main(void) {
     adc_disable_din(0x07);
     /* Initialize I2C master interface */
     i2c_init();
-    /* Initialize Xbee 3 (uses UART0) */
-    xbee_init(9600UL);
+    /* Initialize Xbee 3 (uses UART0 @9600 baud) */
+    uart0_init();
+    xbee_init(uart0_putc, uart0_getc, uart0_rx_ready, uart0_rx_flush);
     /* Status message */
     printf("Communication interfaces initialized ...\n");
     
@@ -352,22 +353,11 @@ int main(void) {
 
     
     /*** 2.) connect to the Zigbee network ****************************/
-    /* Reset the XBee RX buffer */
-    xbee_rx_flush();
     /* Check Xbee module connection */
-    uint32_t retries = 0;
-    /* Check Xbee module connection */
-    while(xbee_is_connected() != XBEE_RET_OK) {
-        /* Check if timeout [s] has been reached (counter in [ms]) */
-        if(retries >= ((uint32_t)XBEE_JOIN_TIMEOUT*1000)) {
-            printf("Couldn't connect to the network ... aborting!\n");
-            /* Wait for watchdog reset */
-            sleep_until_reset(WDTO_8S);
-        } else {
-            /* Wait for some time */
-            retries += XBEE_JOIN_TIMEOUT_DELAY;
-            _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
-        }
+    if(xbee_wait_for_connected(XBEE_JOIN_TIMEOUT) != XBEE_RET_OK) {
+        printf("Couldn't connect to the network ... aborting!\n");
+        /* Wait for watchdog reset */
+        sleep_until_reset(WDTO_8S);
     }
     /* Print status message */
     printf("... ZIGBEE connected\n");
@@ -509,7 +499,6 @@ int main(void) {
         /* MCU surface temperature (103JT thermistor via ADC CH2) */
         t_mcu = diag_tsurface_read();
         /* Xbee3 temperature */
-        xbee_rx_flush();
         if(xbee_cmd_get_temperature(&t_trx) == XBEE_RET_OK) {
             printf("... Xbee temperature: %.2f\n", t_trx);
             x_ic_dec(X_IC_DEC_NORM);
@@ -535,7 +524,6 @@ int main(void) {
         /* MCU supply voltage in volts (V) */
         v_mcu = diag_vcc_read();
         /* Xbee3 supply voltage */
-        xbee_rx_flush();
         if(xbee_cmd_get_vss(&v_trx) == XBEE_RET_OK) {
             printf("... Xbee voltage: %.2f\n", v_trx);
             x_ic_dec(X_IC_DEC_NORM);
@@ -563,7 +551,7 @@ int main(void) {
             /* Subsequent cycle -> measurement available */
             runtime_ms = (uint16_t)((float)runtime * 0.064);
             msg.x_art = fp_float_to_fixed8_2to6(x_art_get_normalized(runtime_ms));
-            printf("... Runtime: %d ms (%d steps)\n\n",runtime_ms,runtime);
+            printf("... Runtime: %d ms (%d steps)\n",runtime_ms,runtime);
         } else {
             msg.x_art = fp_float_to_fixed8_2to6(0.0);
         }
@@ -591,10 +579,24 @@ int main(void) {
         dbg_print_msg(&msg);
 #endif
         /* Send the measurement to the CH */
-        int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
+        int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), fid_get_next());
         if(ret == XBEE_RET_OK) {
-            printf("%d. sensor value update sent!\n",msg.time);
-            x_ic_dec(X_IC_DEC_NORM);
+            printf("%d. sensor value update sent ... ",msg.time);
+            /* Check the transmit response */
+            uint8_t status;
+            ret = xbee_transmit_status(&status);
+            if(ret == XBEE_RET_OK) {
+                if(ret == XBEE_TRANSMIT_STAT_DEL_OK) {
+                    printf("positive response received!\n");
+                    x_ic_dec(X_IC_DEC_NORM);
+                } else {
+                    printf("NEGATIVE response received (%d)!\n",status);
+                    x_ic_inc(X_IC_INC_SERIOUS);
+                }
+            } else {
+                printf("ERROR receiving response (%d)!\n",ret);
+                x_ic_inc(X_IC_INC_SERIOUS);
+            }
         } else {
             printf("ERROR sending message (%d)!\n",ret);
             x_ic_inc(X_IC_INC_SERIOUS);
