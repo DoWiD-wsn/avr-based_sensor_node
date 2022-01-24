@@ -227,7 +227,7 @@ typedef enum {
 
 
 /***** FUNCTION PROTOTYPES ****************************************************/
-void xbee_init(void (*write)(char byte), char (*read)(void), uint8_t (*available)(void), void (*flush)(void));
+void xbee_init(void (*write)(uint8_t byte), int8_t (*read)(uint8_t* byte), uint8_t (*available)(void));
 void xbee_set_sleep_request_gpio(volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
 void xbee_set_sleep_indicator_gpio(volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin);
 XBEE_RET_t xbee_sleep_enable(void);

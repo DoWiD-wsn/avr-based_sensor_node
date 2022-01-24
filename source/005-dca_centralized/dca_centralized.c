@@ -20,8 +20,8 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.1.9
- * @date    2022/01/18
+ * @version 1.1.10
+ * @date    2022/01/24
  */
 
 
@@ -254,9 +254,9 @@ int main(void) {
     
 #if ENABLE_DBG
     /* Initialize UART1 for debug purposes (9600 baud) */
-    uart1_init();
-    /* Initialize the printf function to use the uart1_putc() function for output */
-    printf_init(uart1_putc);
+    uart1_init(9600UL);
+    /* Initialize the printf function to use the uart1_write_char() function for output */
+    printf_init(uart1_write_char);
 #else
     /* Disable UART1 */
     PRR0 |= _BV(PRUSART1);
@@ -271,9 +271,10 @@ int main(void) {
     adc_disable_din(0x07);
     /* Initialize I2C master interface */
     i2c_init();
-    /* Initialize Xbee 3 (uses UART0 @9600 baud) */
-    uart0_init();
-    xbee_init(uart0_putc, uart0_getc, uart0_rx_ready, uart0_rx_flush);
+    /* Initialize Xbee 3 (uses UART0 @9600 baud; receive via ISR) */
+    uart0_init(9600UL);
+    uart0_interrupt_enable();
+    xbee_init(uart0_write_byte, uart0_pop_byte, uart0_rx_buffer_cnt);
     /* Status message */
     printf("Communication interfaces initialized ...\n");
     
@@ -578,15 +579,20 @@ int main(void) {
         /* Print the contents of the message to be sent */
         dbg_print_msg(&msg);
 #endif
-        /* Send the measurement to the CH */
-        int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), fid_get_next());
+        /* Send the measurement to the CH
+         * -) FID != 0 => with extended response
+         * -) FID == 0 => without response
+         */
+        uint8_t fid = fid_get_next();
+        int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), fid);
         if(ret == XBEE_RET_OK) {
             printf("%d. sensor value update sent ... ",msg.time);
             /* Check the transmit response */
-            uint8_t status;
-            ret = xbee_transmit_status(&status);
-            if(ret == XBEE_RET_OK) {
-                if(ret == XBEE_TRANSMIT_STAT_DEL_OK) {
+            uint16_t addr=0x0000;
+            uint8_t retries=0, status=0, discovery=0, fid_ret=0;
+            ret = xbee_transmit_status_ext(&addr, &retries, &status, &discovery, &fid_ret);
+            if((fid == fid_ret) && (ret == XBEE_RET_OK)) {
+                if(status == XBEE_TRANSMIT_STAT_DEL_OK) {
                     printf("positive response received!\n");
                     x_ic_dec(X_IC_DEC_NORM);
                 } else {

@@ -14,10 +14,6 @@
 #include "xbee.h"
 
 
-#include "uart/uart.h"
-#  include "util/printf.h"
-
-
 /***** GLOBAL VARIABLES ***********************************************/
 /*! Xbee sleep request pin GPIO structure */
 hw_io_t xbee_sleep_req;
@@ -26,13 +22,11 @@ hw_io_t xbee_sleep_ind;
 /*! Frame ID (start with 1; 0 is reserved) */
 uint8_t fid_cur = 1;
 /*! Function callback for writing a byte */
-void (*_write)(char byte) = NULL;
+void (*_write)(uint8_t byte) = NULL;
 /*! Function callback for reading a byte */
-char (*_read)(void) = NULL;
+int8_t (*_read)(uint8_t* byte) = NULL;
 /*! Function callback for rx data available check */
 uint8_t (*_available)(void) = NULL;
-/*! Function callback for flushing RX buffer */
-void (*_flush)(void) = NULL;
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
@@ -53,14 +47,12 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
  * @param[in]   write       Function callback for writing data
  * @param[in]   read        Function callback for reading data
  * @param[in]   available   Function callback for data available check
- * @param[in]   flush       Function callback for flushing RX buffer
  */
-void xbee_init(void (*write)(char byte), char (*read)(void), uint8_t (*available)(void), void (*flush)(void)) {
+void xbee_init(void (*write)(uint8_t byte), int8_t (*read)(uint8_t* byte), uint8_t (*available)(void)) {
     /* Set the function callbacks */
     _write = write;
     _read = read;
     _available = available;
-    _flush = flush;
     /* (Re)set the Frame ID */
     fid_reset();
     /* Fill the sleep signal GPIO structures (default) */
@@ -303,9 +295,6 @@ static XBEE_RET_t _at_local_query(char* command, uint8_t fid) {
  * @return      Size of the command value in case of success; ERROR otherwise
  */
 static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
-    
-    printf("_at_local_response()\n");
-    
     /* Data array for the frame (max. length: 17 bytes) */
     uint8_t data[17] = {0};
     /* Number of bytes of the response value received */
@@ -314,21 +303,21 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
     uint16_t len = 0;
     /* Reading position (index) */
     uint8_t pos = 0;
+    /* Flag for completed response */
+    uint8_t complete = 0;
     
     /*** Read data ***/
     uint16_t timeout = XBEE_RESPONSE_TIMEOUT * (1000UL / XBEE_RESPONSE_TIMEOUT_DELAY);
-    while(timeout--) {
-        printf("    try %d of %d\n",timeout,XBEE_RESPONSE_TIMEOUT * (1000UL / XBEE_RESPONSE_TIMEOUT_DELAY));
-        printf("    UART0 RX buffer = %d\n",uart0_rx_ready());
+    do {
         /* Check if data is available to be received */
         if(_available()) {
-            printf("    got data ...\n");
             /* Read next byte */
-            data[pos] = (uint8_t)_read();
+            if(_read(&data[pos]) != 0) {
+                /* Read failed */
+                continue;
+            }
             /* Check if an unexpected start delimiter occurred */
             if((pos > 0) && (data[pos] == XBEE_START_DELIMITER)) {
-                /* Flush RX buffer */
-                _flush();
                 /* New packet start before previous packeted completed */
                 return XBEE_RET_UNEXPECTED_START;
             }
@@ -346,7 +335,7 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
                 /* Second byte should be the length MSB */
                 case 1:
                     /* Add MSB value to len variable */
-                    len = (uint16_t)data[pos] << 8;
+                    len |= (uint16_t)data[pos] << 8;
                     /* Increment position */
                     pos++;
                     
@@ -354,24 +343,22 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
                 /* Third byte should be the length LSB */
                 case 2:
                     /* Add LSB value to len variable */
-                    len = (uint16_t)data[pos];
+                    len |= (uint16_t)data[pos];
                     /* Increment position */
                     pos++;
-                    
                     break;
                 /* All other bytes ... */
                 default:
                     /* Check if maximum frame data size has been exceeded */
                     if(pos > (17-1)) {
-                        /* Flush RX buffer */
-                        _flush();
                         /* Size limit exceed */
                         return XBEE_RET_PAYLOAD_SIZE_EXCEEDED;
                     }
                     /* Check if the end of the frame has been reached */
                     /* Packet length does not include start, length, or checksum bytes -> add 3 */
                     if(pos == (len+3)) {
-                        /* Continue with data processing */
+                        /* Reception done ... continue with data processing */
+                        complete = 1;
                         break;
                     } else {
                         /* Increment position */
@@ -380,16 +367,12 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
                     
                     break;
             }
-        } else {
-            printf("    NO data ...\n");
         }
         /* Wait for some time */
         _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    }
+    } while((--timeout) && (complete==0));
     /* Check if timeout has triggered */
     if(timeout == 0) {
-        /* Flush RX buffer */
-        _flush();
         /* Response timed out */
         return XBEE_RET_TIMEOUT;
     }
@@ -589,8 +572,6 @@ XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value) {
     /* Get the ID for the current frame */
     uint8_t fid = fid_get_next();
     
-    printf("xbee_at_local_cmd_read()\n");
-    
     /* Send the local AT command */
     ret = _at_local_query(command, fid);
     if(ret != XBEE_RET_OK) {
@@ -789,18 +770,21 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
     uint16_t len;
     /* Reading position (index) */
     uint8_t pos = 0;
+    /* Flag for completed response */
+    uint8_t complete = 0;
     
     /*** Read data ***/
     uint16_t timeout = XBEE_RESPONSE_TIMEOUT * (1000UL / XBEE_RESPONSE_TIMEOUT_DELAY);
-    while(timeout--) {
+    do {
         /* Check if data is available to be received */
         if(_available()) {
             /* Read next byte */
-            data[pos] = (uint8_t)_read();
+            if(_read(&data[pos]) != 0) {
+                /* Read failed */
+                continue;
+            }
             /* Check if an unexpected start delimiter occurred */
             if((pos > 0) && (data[pos] == XBEE_START_DELIMITER)) {
-                /* Flush RX buffer */
-                _flush();
                 /* New packet start before previous packeted completed */
                 return XBEE_RET_UNEXPECTED_START;
             }
@@ -818,7 +802,7 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
                 /* Second byte should be the length MSB */
                 case 1:
                     /* Add MSB value to len variable */
-                    len = (uint16_t)data[pos] << 8;
+                    len |= (uint16_t)data[pos] << 8;
                     /* Increment position */
                     pos++;
                     
@@ -826,7 +810,7 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
                 /* Third byte should be the length LSB */
                 case 2:
                     /* Add LSB value to len variable */
-                    len = (uint16_t)data[pos];
+                    len |= (uint16_t)data[pos];
                     /* Increment position */
                     pos++;
                     
@@ -835,15 +819,14 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
                 default:
                     /* Check if maximum frame data size has been exceeded */
                     if(pos > (27-1)) {
-                        /* Flush RX buffer */
-                        _flush();
                         /* Size limit exceed */
                         return XBEE_RET_PAYLOAD_SIZE_EXCEEDED;
                     }
                     /* Check if the end of the frame has been reached */
                     /* Packet length does not include start, length, or checksum bytes -> add 3 */
                     if(pos == (len+3)) {
-                        /* Continue with data processing */
+                        /* Reception done ... continue with data processing */
+                        complete = 1;
                         break;
                     } else {
                         /* Increment position */
@@ -855,11 +838,9 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
         }
         /* Wait for some time */
         _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    }
+    } while((--timeout) && (complete==0));
     /* Check if timeout has triggered */
     if(timeout == 0) {
-        /* Flush RX buffer */
-        _flush();
         /* Response timed out */
         return XBEE_RET_TIMEOUT;
     }
@@ -1217,18 +1198,21 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
     uint16_t len = 0;
     /* Reading position (index) */
     uint8_t pos = 0;
+    /* Flag for completed response */
+    uint8_t complete = 0;
     
     /*** Read data ***/
     uint16_t timeout = XBEE_RESPONSE_TIMEOUT * (1000UL / XBEE_RESPONSE_TIMEOUT_DELAY);
-    while(timeout--) {
+    do {
         /* Check if data is available to be received */
         if(_available()) {
             /* Read next byte */
-            data[pos] = (uint8_t)_read();
+            if(_read(&data[pos]) != 0) {
+                /* Read failed */
+                continue;
+            }
             /* Check if an unexpected start delimiter occurred */
             if((pos > 0) && (data[pos] == XBEE_START_DELIMITER)) {
-                /* Flush RX buffer */
-                _flush();
                 /* New packet start before previous packeted completed */
                 return XBEE_RET_UNEXPECTED_START;
             }
@@ -1246,7 +1230,7 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
                 /* Second byte should be the length MSB */
                 case 1:
                     /* Add MSB value to len variable */
-                    len = (uint16_t)data[pos] << 8;
+                    len |= (uint16_t)data[pos] << 8;
                     /* Increment position */
                     pos++;
                     
@@ -1254,7 +1238,7 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
                 /* Third byte should be the length LSB */
                 case 2:
                     /* Add LSB value to len variable */
-                    len = (uint16_t)data[pos];
+                    len |= (uint16_t)data[pos];
                     /* Increment position */
                     pos++;
                     
@@ -1263,15 +1247,14 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
                 default:
                     /* Check if maximum frame data size has been exceeded */
                     if(pos > (11-1)) {
-                        /* Flush RX buffer */
-                        _flush();
                         /* Size limit exceed */
                         return XBEE_RET_PAYLOAD_SIZE_EXCEEDED;
                     }
                     /* Check if the end of the frame has been reached */
                     /* Packet length does not include start, length, or checksum bytes -> add 3 */
                     if(pos == (len+3)) {
-                        /* Continue with data processing */
+                        /* Reception done ... continue with data processing */
+                        complete = 1;
                         break;
                     } else {
                         /* Increment position */
@@ -1283,18 +1266,16 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
         }
         /* Wait for some time */
         _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    }
+    } while((--timeout) && (complete==0));
     /* Check if timeout has triggered */
     if(timeout == 0) {
-        /* Flush RX buffer */
-        _flush();
         /* Response timed out */
         return XBEE_RET_TIMEOUT;
     }
     
     /*** Process data ***/
     /* Check the frame type */
-    if(data[3] != XBEE_FRAME_TRANSMIT_STATUS_EXT) {
+    if(data[3] != XBEE_FRAME_TRANSMIT_STATUS) {
         /* Frame type does not match */
         return XBEE_RET_INVALID_FRAME;
     }
@@ -1327,18 +1308,21 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
     uint16_t len = 0;
     /* Reading position (index) */
     uint8_t pos = 0;
+    /* Flag for completed response */
+    uint8_t complete = 0;
     
     /*** Read data ***/
     uint16_t timeout = XBEE_RESPONSE_TIMEOUT * (1000UL / XBEE_RESPONSE_TIMEOUT_DELAY);
-    while(timeout--) {
+    do {
         /* Check if data is available to be received */
         if(_available()) {
             /* Read next byte */
-            data[pos] = (uint8_t)_read();
+            if(_read(&data[pos]) != 0) {
+                /* Read failed */
+                continue;
+            }
             /* Check if an unexpected start delimiter occurred */
             if((pos > 0) && (data[pos] == XBEE_START_DELIMITER)) {
-                /* Flush RX buffer */
-                _flush();
                 /* New packet start before previous packeted completed */
                 return XBEE_RET_UNEXPECTED_START;
             }
@@ -1356,7 +1340,7 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
                 /* Second byte should be the length MSB */
                 case 1:
                     /* Add MSB value to len variable */
-                    len = (uint16_t)data[pos] << 8;
+                    len |= (uint16_t)data[pos] << 8;
                     /* Increment position */
                     pos++;
                     
@@ -1364,7 +1348,7 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
                 /* Third byte should be the length LSB */
                 case 2:
                     /* Add LSB value to len variable */
-                    len = (uint16_t)data[pos];
+                    len |= (uint16_t)data[pos];
                     /* Increment position */
                     pos++;
                     
@@ -1373,15 +1357,14 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
                 default:
                     /* Check if maximum frame data size has been exceeded */
                     if(pos > (23-1)) {
-                        /* Flush RX buffer */
-                        _flush();
                         /* Size limit exceed */
                         return XBEE_RET_PAYLOAD_SIZE_EXCEEDED;
                     }
                     /* Check if the end of the frame has been reached */
                     /* Packet length does not include start, length, or checksum bytes -> add 3 */
                     if(pos == (len+3)) {
-                        /* Continue with data processing */
+                        /* Reception done ... continue with data processing */
+                        complete = 1;
                         break;
                     } else {
                         /* Increment position */
@@ -1393,11 +1376,9 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
         }
         /* Wait for some time */
         _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    }
+    } while((--timeout) && (complete==0));
     /* Check if timeout has triggered */
     if(timeout == 0) {
-        /* Flush RX buffer */
-        _flush();
         /* Response timed out */
         return XBEE_RET_TIMEOUT;
     }
@@ -1444,7 +1425,7 @@ uint8_t xbee_get_crc(uint8_t* data, uint8_t len) {
         checksum = checksum + data[i];
     }
     /* Subtract checksum from 0xFF */
-    checksum = 0xFF - checksum;
+    checksum = 0xFF - (checksum & 0xFF);
     /* Return the calculated CRC value */
     return (uint8_t)checksum;
 }
@@ -1510,9 +1491,6 @@ inline XBEE_RET_t xbee_transmit_unicast(uint64_t mac, uint8_t* payload, uint16_t
  * @return      OK in case of success; ERROR otherwise
  */
 XBEE_RET_t xbee_is_connected(void) {
-    
-    printf("xbee_is_connected()\n");
-    
     uint64_t response;
     /* Check Xbee connection status (need 1 return byte) */
     if(xbee_at_local_cmd_read((char *)"AI", &response) == 1) {
@@ -1532,11 +1510,6 @@ XBEE_RET_t xbee_is_connected(void) {
  * @return      OK in case of success; ERROR otherwise
  */
 XBEE_RET_t xbee_wait_for_connected(uint8_t timeout) {
-    
-    
-    printf("xbee_wait_for_connected()\n");
-    
-    
     /* Get maximum number of retries */
     uint16_t retries = timeout * (1000UL / XBEE_JOIN_TIMEOUT_DELAY);
     /* Check xbee's response */
