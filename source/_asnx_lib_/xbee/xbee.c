@@ -1534,9 +1534,8 @@ XBEE_RET_t xbee_wait_for_connected(uint8_t timeout) {
  * @return      OK in case of success; ERROR otherwise
  */
 XBEE_RET_t xbee_cmd_get_temperature(float* temp) {
-    int8_t ret;
     uint64_t retval;
-    ret = xbee_at_local_cmd_read((char *)"TP", &retval);
+    int8_t ret = xbee_at_local_cmd_read((char *)"TP", &retval);
     if(ret != 2) {
         /* Return error */
         return ret;
@@ -1555,9 +1554,8 @@ XBEE_RET_t xbee_cmd_get_temperature(float* temp) {
  * @return      OK in case of success; ERROR otherwise
  */
 XBEE_RET_t xbee_cmd_get_vss(float* vss) {
-    int8_t ret;
     uint64_t retval;
-    ret = xbee_at_local_cmd_read((char *)"%V", &retval);
+    int8_t ret = xbee_at_local_cmd_read((char *)"%V", &retval);
     if(ret != 2) {
         /* Return error */
         return ret;

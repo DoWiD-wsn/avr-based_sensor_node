@@ -240,6 +240,8 @@ int main(void) {
     float t_mcu=0.0, t_trx=0.0, t_brd=0.0;
     /* Runtime measurement */
     uint16_t runtime = 0, runtime_ms = 0;
+    /* Function return value */
+    int8_t ret = 0;
 
 
     /*** 1.) initialize modules ***************************************/
@@ -289,8 +291,9 @@ int main(void) {
 #if ASNX_VERSION_MINOR>0
     /* Initialize the RTC */
     time.minutes = UPDATE_INTERVAL;
-    if(pcf85263_init_wakeup_src(&time) != PCF85263_RET_OK) {
-        printf("Couldn't initialize RTC ... aborting!\n");
+    ret = pcf85263_init_wakeup_src(&time);
+    if(ret != PCF85263_RET_OK) {
+        printf("Couldn't initialize RTC (%d) ... aborting!\n",ret);
         sleep_until_reset(WDTO_15MS);
     }
     /* Configure INT2 to fire interrupt when logic level is "low" */
@@ -307,13 +310,15 @@ int main(void) {
     sei();
 
     /* Initialize the TMP275 sensor */
-    if(tmp275_init(&tmp275, TMP275_I2C_ADDRESS) != TMP275_RET_OK) {
-        printf("Couldn't initialize TMP275!\n");
+    ret = tmp275_init(&tmp275, TMP275_I2C_ADDRESS);
+    if(ret != TMP275_RET_OK) {
+        printf("Couldn't initialize TMP275 (%d) ... aborting!\n",ret);
         sleep_until_reset(WDTO_15MS);
     }
     /* Configure the TMP275 sensor (SD; 10-bit mode) */
-    if(tmp275_set_config(&tmp275, 0x21) != TMP275_RET_OK) {
-        printf("Couldn't configure TMP275!\n");
+    ret = tmp275_set_config(&tmp275, 0x21);
+    if(ret != TMP275_RET_OK) {
+        printf("Couldn't configure TMP275 (%d) ... aborting!\n",ret);
         sleep_until_reset(WDTO_15MS);
     }
     /* Status message */
@@ -321,8 +326,9 @@ int main(void) {
 
 #if ENABLE_DS18B20
     /* Initialize the DS18B20 sensor */
-    if(ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6) != DS18X20_RET_OK) {
-        printf("Couldn't initialize DS18B20!\n");
+    ret = ds18x20_init(&ds18b20, &DDRD, &PORTD, &PIND, PD6);
+    if(ret != DS18X20_RET_OK) {
+        printf("Couldn't initialize DS18B20 (%d)!\n",ret);
         ds18b20_en = 0;
     } else {
         printf("DS18B20 initialized ...\n");
@@ -332,8 +338,9 @@ int main(void) {
 
 #if ENABLE_AM2302
     /* Initialize the AMS2302 sensor */
-    if(dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302) != DHT_RET_OK) {
-        printf("Couldn't initialize AMS2302!\n");
+    ret = dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
+    if(ret != DHT_RET_OK) {
+        printf("Couldn't initialize AMS2302 (%d)!\n",ret);
         am2302_en = 0;
     } else {
         printf("AMS2302 initialized ...\n");
@@ -343,8 +350,9 @@ int main(void) {
 
 #if ENABLE_SHTC3
     /* Initialize the SHTC3 sensor */
-    if(shtc3_init(&shtc3, SHTC3_I2C_ADDRESS) != SHTC3_RET_OK) {
-        printf("Couldn't initialize SHTC3!\n");
+    ret = shtc3_init(&shtc3, SHTC3_I2C_ADDRESS);
+    if(ret != SHTC3_RET_OK) {
+        printf("Couldn't initialize SHTC3! (%d)\n",ret);
         shtc3_en = 0;
     } else {
         printf("SHTC3 initialized ...\n");
@@ -355,8 +363,9 @@ int main(void) {
     
     /*** 2.) connect to the Zigbee network ****************************/
     /* Check Xbee module connection */
-    if(xbee_wait_for_connected(XBEE_JOIN_TIMEOUT) != XBEE_RET_OK) {
-        printf("Couldn't connect to the network ... aborting!\n");
+    ret = xbee_wait_for_connected(XBEE_JOIN_TIMEOUT);
+    if(ret != XBEE_RET_OK) {
+        printf("Couldn't connect to the network (%d) ... aborting!\n",ret);
         /* Wait for watchdog reset */
         sleep_until_reset(WDTO_8S);
     }
@@ -372,8 +381,9 @@ int main(void) {
 #if ASNX_VERSION_MINOR>0
         /*** 3.1) reset RTC (stop-watch mode) *************************/
         /* Stop RTC */
-        if(pcf85263_stop() != PCF85263_RET_OK) {
-            printf("Couldn't stop RTC ... aborting!\n");
+        ret = pcf85263_stop();
+        if(ret != PCF85263_RET_OK) {
+            printf("Couldn't stop RTC (%d) ... aborting!\n",ret);
             sleep_until_reset(WDTO_15MS);
         }
         /* Reset time structure for stop-watch reset below */
@@ -381,8 +391,9 @@ int main(void) {
         /* Reset stop-watch time */
         pcf85263_set_stw_time(&time);
         /* Start RTC */
-        if(pcf85263_start() != PCF85263_RET_OK) {
-            printf("Couldn't re-start RTC ... aborting!\n");
+        ret = pcf85263_start();
+        if(ret != PCF85263_RET_OK) {
+            printf("Couldn't re-start RTC (%d) ... aborting!\n",ret);
             sleep_until_reset(WDTO_15MS);
         }
 #else
@@ -397,8 +408,9 @@ int main(void) {
 
         /*** 3.2) enable modules/sensors ******************************/
         /* Wake-up xbee */
-        if(xbee_sleep_disable() != XBEE_RET_OK) {
-            printf("Couldn't wake-up xbee radio ... aborting!\n");
+        ret = xbee_sleep_disable();
+        if(ret != XBEE_RET_OK) {
+            printf("Couldn't wake-up xbee radio (%d) ... aborting!\n",ret);
             /* Wait for watchdog reset */
             sleep_until_reset(WDTO_15MS);
         }
@@ -423,12 +435,13 @@ int main(void) {
         }
         if(ds18b20_en == 1) {
             /* DS18B20 - Temperature in degree Celsius (°C) */
-            if(ds18x20_get_temperature(&ds18b20, &measurement) == DS18X20_RET_OK) {
+            ret = ds18x20_get_temperature(&ds18b20, &measurement);
+            if(ret == DS18X20_RET_OK) {
                 printf("... DS18B20 temperature: %.2f\n", measurement);
                 msg.t_soil = fp_float_to_fixed16_10to6(measurement);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
-                printf("... DS18B20 reading failed\n");
+                printf("... DS18B20 reading failed (%d)\n",ret);
                 msg.t_soil = 0;
                 x_ic_inc(X_IC_INC_NORM);
             }
@@ -446,14 +459,15 @@ int main(void) {
         }
         if(am2302_en == 1) {
             /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
-            if(dht_get_temperature_humidity(&am2302, &measurement, &measurement2) == DHT_RET_OK) {
+            ret = dht_get_temperature_humidity(&am2302, &measurement, &measurement2);
+            if(ret == DHT_RET_OK) {
                 printf("... AM2302 temperature: %.2f\n", measurement);
                 printf("... AM2302 humidity: %.2f\n", measurement2);
                 msg.t_air = fp_float_to_fixed16_10to6(measurement);
                 msg.h_air = fp_float_to_fixed16_10to6(measurement2);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
-                printf("... AM2302 reading failed\n");
+                printf("... AM2302 reading failed (%d)\n",ret);
                 msg.t_air = 0;
                 msg.h_air = 0;
                 x_ic_inc(X_IC_INC_NORM);
@@ -475,14 +489,15 @@ int main(void) {
         }
         if(shtc3_en == 1) {
             /* SHTC3 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
-            if(shtc3_get_temperature_humidity(&shtc3, &measurement, &measurement2, 1) == SHTC3_RET_OK) {
+            ret = shtc3_get_temperature_humidity(&shtc3, &measurement, &measurement2, 1);
+            if(ret == SHTC3_RET_OK) {
                 printf("... SHTC3 temperature: %.2f\n", measurement);
                 printf("... SHTC3 humidity: %.2f\n", measurement2);
                 msg.t_air = fp_float_to_fixed16_10to6(measurement);
                 msg.h_air = fp_float_to_fixed16_10to6(measurement2);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
-                printf("... SHTC3 reading failed\n");
+                printf("... SHTC3 reading failed (%d)\n",ret);
                 msg.t_air = 0;
                 msg.h_air = 0;
                 x_ic_inc(X_IC_INC_NORM);
@@ -500,25 +515,28 @@ int main(void) {
         /* MCU surface temperature (103JT thermistor via ADC CH2) */
         t_mcu = diag_tsurface_read();
         /* Xbee3 temperature */
-        if(xbee_cmd_get_temperature(&t_trx) == XBEE_RET_OK) {
+        uart0_rx_cb_flush();
+        ret = xbee_cmd_get_temperature(&t_trx);
+        if(ret == XBEE_RET_OK) {
             printf("... Xbee temperature: %.2f\n", t_trx);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
-            printf("... XBee temperature reading failed\n");
+            printf("... XBee temperature reading failed (%d)\n",ret);
             x_ic_inc(X_IC_INC_NORM);
         }
         /* Board temperature (TMP275 via TWI) */
         if(tmp275_ret == TMP275_RET_OK) {
             /* Get temperature in degree Celsius (°C) */
-            if(tmp275_get_temperature(&tmp275, &t_brd) == TMP275_RET_OK) {
+            ret = tmp275_get_temperature(&tmp275, &t_brd);
+            if(ret == TMP275_RET_OK) {
                 printf("... Board temperature: %.2f\n", t_brd);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
-                printf("... Board temperature reading failed\n");
+                printf("... Board temperature reading failed (%d)\n",ret);
                 x_ic_inc(X_IC_INC_NORM);
             }
         }  else {
-            printf("... TMP275 start measurement failed\n");
+            printf("... TMP275 start measurement failed (%d)\n",tmp275_ret);
             x_ic_inc(X_IC_INC_NORM);
         }
         
@@ -526,11 +544,13 @@ int main(void) {
         v_mcu = diag_vcc_read();
         printf("... MCU voltage: %.2f V\n",v_mcu);
         /* Xbee3 supply voltage */
-        if(xbee_cmd_get_vss(&v_trx) == XBEE_RET_OK) {
+        uart0_rx_cb_flush();
+        ret = xbee_cmd_get_vss(&v_trx);
+        if(ret == XBEE_RET_OK) {
             printf("... Xbee voltage: %.2f\n", v_trx);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
-            printf("... XBee voltage reading failed\n");
+            printf("... XBee voltage reading failed (%d)\n",ret);
             x_ic_inc(X_IC_INC_NORM);
         }
         /* Battery voltage (via ADC) */
@@ -576,7 +596,7 @@ int main(void) {
         dbg_print_msg(&msg);
 #endif
         /* Send the measurement to the CH (without response) */
-        int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0);
+        ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0);
         if(ret == XBEE_RET_OK) {
             printf("%d. sensor value update sent\n",msg.time);
             x_ic_dec(X_IC_DEC_NORM);
@@ -596,8 +616,9 @@ int main(void) {
         /* Reset timer1 counter value to 0 */
         timer1_set_tcnt(0);
         /* Send xbee to sleep */
-        if(xbee_sleep_enable() != XBEE_RET_OK) {
-            printf("Couldn't send xbee radio to sleep ... aborting!\n");
+        ret = xbee_sleep_enable();
+        if(ret != XBEE_RET_OK) {
+            printf("Couldn't send xbee radio to sleep (%d) ... aborting!\n",ret);
             /* Wait for watchdog reset */
             sleep_until_reset(WDTO_8S);
         }
