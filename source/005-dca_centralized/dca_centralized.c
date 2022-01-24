@@ -28,7 +28,7 @@
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
 #define ENABLE_DBG_MSG              0               /**< Enable debug output of message content */
-#define UPDATE_INTERVAL             5               /**< Update interval [min] */
+#define UPDATE_INTERVAL             1               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
@@ -267,7 +267,7 @@ int main(void) {
     /* Initialize the user LEDs and disable both by default */
     led_init();
     /* Initialize the ADC */
-    adc_init(ADC_ADPS_16,ADC_REFS_VCC);
+    adc_init(ADC_ADPS_32,ADC_REFS_VCC);
     adc_disable_din(0x07);
     /* Initialize I2C master interface */
     i2c_init();
@@ -403,8 +403,8 @@ int main(void) {
             sleep_until_reset(WDTO_15MS);
         }
         
-        /* Start timer1 with prescaler 256 -> measurement interval [64us; 4.19s] */
-        timer1_start(TIMER_PRESCALER_256);
+        /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16.78s] */
+        timer1_start(TIMER_PRESCALER_1024);
         
         /* Enable ADC */
         adc_enable();
@@ -524,6 +524,7 @@ int main(void) {
         
         /* MCU supply voltage in volts (V) */
         v_mcu = diag_vcc_read();
+        printf("... MCU voltage: %.2f V\n",v_mcu);
         /* Xbee3 supply voltage */
         if(xbee_cmd_get_vss(&v_trx) == XBEE_RET_OK) {
             printf("... Xbee voltage: %.2f\n", v_trx);
@@ -534,12 +535,7 @@ int main(void) {
         }
         /* Battery voltage (via ADC) */
         v_bat = diag_vbat_read(v_mcu);
-#if ENABLE_DBG
-        /* Battery SoC */
-        uint8_t soc = diag_vbat_soc(v_bat);
-        printf("... Battery voltage: %.2f V\n",v_bat);
-        printf("... Battery SoC: %2d %%\n",soc);
-#endif
+        printf("... Battery voltage: %.2f V (SOC: %2d %%)\n",v_bat,diag_vbat_soc(v_bat));
         
         /* Node temperature monitor (X_NT) */
         msg.x_nt = fp_float_to_fixed8_2to6(x_nt_get_normalized(t_mcu, t_brd, t_trx));
@@ -550,9 +546,9 @@ int main(void) {
         /* Active runtime monitor (X_ART) */
         if(runtime > 0) {
             /* Subsequent cycle -> measurement available */
-            runtime_ms = (uint16_t)((float)runtime * 0.064);
+            runtime_ms = (uint16_t)((float)runtime * 0.256);
             msg.x_art = fp_float_to_fixed8_2to6(x_art_get_normalized(runtime_ms));
-            printf("... Runtime: %d ms (%d steps)\n",runtime_ms,runtime);
+            printf("... Runtime: %d ms (%u steps)\n",runtime_ms,runtime);
         } else {
             msg.x_art = fp_float_to_fixed8_2to6(0.0);
         }
@@ -582,7 +578,7 @@ int main(void) {
         /* Send the measurement to the CH (without response) */
         int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0);
         if(ret == XBEE_RET_OK) {
-            printf("%d. sensor value update sent",msg.time);
+            printf("%d. sensor value update sent\n",msg.time);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
             printf("ERROR sending message (%d)!\n",ret);

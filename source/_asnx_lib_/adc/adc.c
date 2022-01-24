@@ -151,13 +151,13 @@ float adc_read_vcc(void) {
     /* Set the register accordingly */
     ADMUX  = 0x5E;
     /* Give the reference some time to settle */
-    _delay_us(ADC_DELAY_CHANGE_REFERENCE);
+    _delay_us(ADC_SETTLE_DELAY);
     /* Store the converted ADC value */
     float result = (1.1 * (1023.0/(float)adc_read()));
     /* Restore the ADMUX configuration */
     ADMUX = reg;
     /* Give the reference some time to settle */
-    _delay_us(ADC_DELAY_CHANGE_REFERENCE);
+    _delay_us(ADC_SETTLE_DELAY);
     /* Return the result */
     return result;
 }

@@ -21,8 +21,8 @@
 
 
 /***** MACROS *****************************************************************/
-/*! Delay after changing the reference source [us] (min. 125us) */
-#define ADC_DELAY_CHANGE_REFERENCE      (150)
+/*! Settling delay after changing input/reference [us] */
+#define ADC_SETTLE_DELAY            (500)
 
 
 /***** ENUMERATION ************************************************************/

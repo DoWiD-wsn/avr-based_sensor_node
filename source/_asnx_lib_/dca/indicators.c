@@ -21,7 +21,7 @@ uint8_t x_bat_index = 0;
 /*! Battery voltage monitor Welford structure */
 welford_t x_bat_data;
 /*! Active runtime monitor value array */
-uint32_t x_art_values[X_ART_N] = {0};
+uint16_t x_art_values[X_ART_N] = {0};
 /*! Active runtime monitor value array index */
 uint8_t x_art_index = 0;
 /*! Active runtime monitor Welford structure */
@@ -146,21 +146,14 @@ float x_bat_get_normalized(float v_bat) {
         float old = x_bat_values[x_bat_index];
         /* Replace oldest value with new one */
         welford_replace(&x_bat_data, old, v_bat);
-        /* Store value in array */
-        x_bat_values[x_bat_index] = v_bat;
-        /* Get next array index */
-        x_bat_index = (x_bat_index+1) % X_BAT_N;
     } else {
-        /* Fill array */
-        for (uint8_t i=0; i<X_BAT_N; i++) {
-            x_bat_values[i] = v_bat;
-        }
+        /* Add value */
         welford_add(&x_bat_data, v_bat);
-        /* Manually set element count to N */
-        x_bat_data.cnt = X_BAT_N;
-        /* Set array index to 2. position */
-        x_bat_index = 1;
     }
+    /* Store value in array */
+    x_bat_values[x_bat_index] = v_bat;
+    /* Get next array index */
+    x_bat_index = (x_bat_index+1) % X_BAT_N;
     /* Return normalized standard deviation as X_BAT (max: 1.0) */
     return fmin(1.0, welford_get_stddev(&x_bat_data) / X_BAT_MAX);
 }
@@ -187,28 +180,21 @@ void x_art_reset(void) {
  * @param[in]   t_art       length of the last active phase (ms)
  * @return      normalized active runtime monitor fault indicator (X_ART) value
  */
-float x_art_get_normalized(uint32_t t_art) {
+float x_art_get_normalized(uint16_t t_art) {
     /* Check if window size is reached */
     if(x_art_data.cnt >= X_ART_N) {
         /* Get oldest value from array (current index) */
-        float old = x_art_values[x_art_index];
+        uint16_t old = x_art_values[x_art_index];
         /* Replace oldest value with new one */
         welford_replace(&x_art_data, old, t_art);
-        /* Store value in array */
-        x_art_values[x_art_index] = t_art;
-        /* Get next array index */
-        x_art_index = (x_art_index+1) % X_ART_N;
     } else {
-        /* Fill array */
-        for (uint8_t i=0; i<X_ART_N; i++) {
-            x_art_values[i] = t_art;
-        }
+        /* Add value */
         welford_add(&x_art_data, t_art);
-        /* Manually set element count to N */
-        x_art_data.cnt = X_ART_N;
-        /* Set array index to 2. position */
-        x_art_index = 1;
     }
+    /* Store value in array */
+    x_art_values[x_art_index] = t_art;
+    /* Get next array index */
+    x_art_index = (x_art_index+1) % X_ART_N;
     /* Get standard deviation */
     float x_art_stddev = welford_get_stddev(&x_art_data);
     /* Return normalized X_ART depending on magnitude of difference (max: 1.0) */

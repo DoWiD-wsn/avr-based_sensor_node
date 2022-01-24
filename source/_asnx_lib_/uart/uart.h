@@ -24,7 +24,7 @@
 /*! Enable UART0 interrupts */
 #define UART0_ENABLE_INTERRUPT      (1)
 /*! Enable UART1 interrupts */
-#define UART1_ENABLE_INTERRUPT      (1)
+#define UART1_ENABLE_INTERRUPT      (0)
 
 
 /***** INCLUDES *******************************************************/

@@ -16,6 +16,8 @@
 /*** STD ***/
 #include <stdint.h>
 #include <stddef.h>
+/*** AVR ***/
+#include <util/delay.h>
 /*** ASNX LIB ***/
 #include "adc/adc.h"
 #include "hw/hw.h"

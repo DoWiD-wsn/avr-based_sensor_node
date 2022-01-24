@@ -57,8 +57,12 @@ void diag_disable(void) {
  * @return      10-bit conversion result (stored in 16-bit right aligned)
  */
 uint16_t diag_adc_check(void){
-    /* Basically, return the ADC value of channel 0 */
-    return adc_read_input(DIAG_ADC_CH);
+    /* Change ADC input */
+    adc_set_input(DIAG_ADC_CH);
+    /* Give the ADC some time to settle */
+    _delay_us(ADC_SETTLE_DELAY);
+    /* Perform conversion */
+    return adc_read();
 }
 
 
@@ -80,7 +84,12 @@ float diag_vcc_read(void) {
  * @return      Battery voltage in volts (V)
  */
 float diag_vbat_read(float vcc) {
-    return 2.0 * (adc_read_input(DIAG_VBAT_CH) * (vcc / 1023.0));
+    /* Change ADC input */
+    adc_set_input(DIAG_VBAT_CH);
+    /* Give the ADC some time to settle */
+    _delay_us(ADC_SETTLE_DELAY);
+    /* Perform conversion */
+    return 2.0 * (adc_read() * (vcc / 1023.0));
 }
 
 
@@ -91,11 +100,16 @@ float diag_vbat_read(float vcc) {
  * @return      State-of-charge of the battery (%)
  */
 uint8_t diag_vbat_soc(float vbat) {
+    static float approx = -1;
     /* Calculate linear approximation */
-    float approx = (vbat - DIAG_VBAT_MIN) / DIAG_VBAT_RANGE;
-    approx *= 100;
+    if(approx < 0) {
+        approx = (vbat - DIAG_VBAT_MIN) / DIAG_VBAT_RANGE;
+    } else {
+        approx += (vbat - DIAG_VBAT_MIN) / DIAG_VBAT_RANGE;
+        approx /= 2;
+    }
     /* Return the linear approximation */
-    return (uint8_t)approx;
+    return (uint8_t)(approx * 100);
 }
 
 

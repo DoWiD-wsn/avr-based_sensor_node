@@ -92,7 +92,7 @@ void x_bat_reset(void);
 float x_bat_get_normalized(float v_bat);
 /* Active runtime monitor (X_ART) */
 void x_art_reset(void);
-float x_art_get_normalized(uint32_t t_art);
+float x_art_get_normalized(uint16_t t_art);
 /* Reset monitor (X_RST) */
 void x_rst_reset(void);
 void x_rst_set(float x_rst);
