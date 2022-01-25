@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/util/diagnostics.h
  * @author  Dominik Widhalm
- * @version 1.4.1
- * @date    2021/12/29
+ * @version 1.4.2
+ * @date    2022/01/25
  */
 
 #ifndef _ASNX_DIAG_H_

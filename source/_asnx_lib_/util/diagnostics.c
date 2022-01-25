@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/util/diagnostics.c
  * @author  Dominik Widhalm
- * @version 1.4.1
- * @date    2021/12/29
+ * @version 1.4.2
+ * @date    2022/01/25
  */
 
 /***** INCLUDES *******************************************************/
@@ -119,5 +119,10 @@ uint8_t diag_vbat_soc(float vbat) {
  * @return      MCU surface temperature in degrees Celsius (°C)
  */
 float diag_tsurface_read(void) {
-    return jt103_get_temperature(adc_read_input(DIAG_TMCU_CH));
+    /* Change ADC input */
+    adc_set_input(DIAG_TMCU_CH);
+    /* Give the ADC some time to settle */
+    _delay_us(ADC_SETTLE_DELAY);
+    /* Measure and calculate temperature */
+    return jt103_get_temperature(adc_read());
 }

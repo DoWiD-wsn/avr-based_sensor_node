@@ -20,15 +20,15 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 1.1.10
- * @date    2022/01/24
+ * @version 2.0.0
+ * @date    2022/01/25
  */
 
 
 /*** APP CONFIGURATION ***/
-#define ENABLE_DBG                  1               /**< Enable debug output via UART1 (9600 BAUD) */
+#define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
 #define ENABLE_DBG_MSG              0               /**< Enable debug output of message content */
-#define UPDATE_INTERVAL             1               /**< Update interval [min] */
+#define UPDATE_INTERVAL             5               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
@@ -41,6 +41,8 @@
 
 
 /***** INCLUDES *******************************************************/
+/*** STD ***/
+#include <math.h>
 /*** AVR ***/
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -89,25 +91,21 @@
 
 /***** STRUCTURES *****************************************************/
 /*!
- * A structure to store the sensor and fault indicator values.
+ * A structure to store the sensor and indicator values.
  */
 typedef struct {
     /* additional data */
     uint16_t time;          /**< timestamp (2 byte) */
     /* use case data */
     uint16_t t_air;         /**< air temperature (fixed point) */
-    uint16_t t_soil;        /**< soil temperature (fixed point) */
     uint16_t h_air;         /**< air humidity (fixed point) */
+    uint16_t t_soil;        /**< soil temperature (fixed point) */
     uint16_t h_soil;        /**< soil humidity (fixed point) */
-    /* fault indicator */
-    uint8_t x_nt;           /**< X_NT */
-    uint8_t x_vs;           /**< X_VS */
-    uint8_t x_bat;          /**< X_BAT */
-    uint8_t x_art;          /**< X_ART */
-    uint8_t x_rst;          /**< X_RST */
-    uint8_t x_ic;           /**< X_IC */
-    uint8_t x_adc;          /**< X_ADC */
-    uint8_t x_usart;        /**< X_USART */
+    /* battery SoC */
+    uint8_t soc;            /**< battery state-of-charge (fixed point) */
+    /* indicator */
+    uint8_t danger;         /**< danger indicator (fixed point) */
+    uint8_t safe;           /**< safe indicator (fixed point) */
 } MSG_t;
 
 
@@ -184,19 +182,15 @@ void dbg_print_msg(MSG_t* msg) {
     printf("===== SENSOR MESSAGE CONTENTS =====\n");
     printf("%d message updates\n",msg->time);
     printf("=== SENSOR VALUES ===\n");
-    printf("T_air:   %.2f C\n",fp_fixed16_to_float_10to6(msg->t_air));
-    printf("T_soil:  %.2f C\n",fp_fixed16_to_float_10to6(msg->t_soil));
-    printf("H_air:   %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_air));
-    printf("H_soil:  %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_soil));
+    printf("T_air: %.2f C\n",fp_fixed16_to_float_10to6(msg->t_air));
+    printf("H_air: %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_air));
+    printf("T_soil: %.2f C\n",fp_fixed16_to_float_10to6(msg->t_soil));
+    printf("H_soil: %.2f %%\n",fp_fixed16_to_float_10to6(msg->h_soil));
+    printf("=== BATTERY ===\n");
+    printf("SoC: %d\n",msg->soc);
     printf("=== SENSOR VALUES ===\n");
-    printf("X_NT:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_nt));
-    printf("X_VS:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_vs));
-    printf("X_BAT:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_bat));
-    printf("X_ART:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_art));
-    printf("X_RST:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_rst));
-    printf("X_IC:    %.2f\n",fp_fixed8_to_float_2to6(msg->x_ic));
-    printf("X_ADC:   %.2f\n",fp_fixed8_to_float_2to6(msg->x_adc));
-    printf("X_USART: %.2f\n",fp_fixed8_to_float_2to6(msg->x_usart));
+    printf("Danger: %.2f\n",fp_fixed8_to_float_2to6(msg->danger));
+    printf("Safe: %.2f\n",fp_fixed8_to_float_2to6(msg->safe));
     printf("===================================\n");
 }
 #endif
@@ -238,6 +232,13 @@ int main(void) {
     /* Diagnostic values */
     float v_bat=0.0, v_mcu=0.0, v_trx=0.0;
     float t_mcu=0.0, t_trx=0.0, t_brd=0.0;
+    /* Sensor values */
+    float t_air_t=0.0, h_air_t=0.0, t_soil_t=0.0, h_soil_t=0.0;
+    /* Fault indicator */
+    float x_nt=0.0, x_vs=0.0, x_bat=0.0, x_art=0.0, x_rst=0.0, x_ic=0.0, x_adc=0.0, x_usart=0.0;
+    /* Safe indicator */
+    float t_air_i=0.0, h_air_i=0.0, t_soil_i=0.0, h_soil_i=0.0;
+    safe_t t_air_s, h_air_s, t_soil_s, h_soil_s;
     /* Runtime measurement */
     uint16_t runtime = 0, runtime_ms = 0;
     /* Function return value */
@@ -285,6 +286,11 @@ int main(void) {
     diag_disable();
     /* Initialize the fault indicators */
     indicators_init();
+    /* Initialize the safe indicators */
+    safe_init(&t_air_s);
+    safe_init(&h_air_s);
+    safe_init(&t_soil_s);
+    safe_init(&h_soil_s);
     /* Status message */
     printf("Fault indicators initialized ...\n");
 
@@ -363,6 +369,7 @@ int main(void) {
     
     /*** 2.) connect to the Zigbee network ****************************/
     /* Check Xbee module connection */
+    printf("Connecting to Zigbee network ...\n");
     ret = xbee_wait_for_connected(XBEE_JOIN_TIMEOUT);
     if(ret != XBEE_RET_OK) {
         printf("Couldn't connect to the network (%d) ... aborting!\n",ret);
@@ -370,7 +377,7 @@ int main(void) {
         sleep_until_reset(WDTO_8S);
     }
     /* Print status message */
-    printf("ZIGBEE connected ...\n");
+    printf("Zigbee connected ...\n");
 
 
     while(1) {
@@ -438,14 +445,17 @@ int main(void) {
             ret = ds18x20_get_temperature(&ds18b20, &measurement);
             if(ret == DS18X20_RET_OK) {
                 printf("... DS18B20 temperature: %.2f\n", measurement);
-                msg.t_soil = fp_float_to_fixed16_10to6(measurement);
+                t_soil_t = measurement;
+                msg.t_soil = fp_float_to_fixed16_10to6(t_soil_t);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
                 printf("... DS18B20 reading failed (%d)\n",ret);
+                t_soil_t = 0.0;
                 msg.t_soil = 0;
                 x_ic_inc(X_IC_INC_NORM);
             }
         } else {
+            t_soil_t = 0.0;
             msg.t_soil = 0;
         }
 #endif
@@ -463,16 +473,22 @@ int main(void) {
             if(ret == DHT_RET_OK) {
                 printf("... AM2302 temperature: %.2f\n", measurement);
                 printf("... AM2302 humidity: %.2f\n", measurement2);
-                msg.t_air = fp_float_to_fixed16_10to6(measurement);
-                msg.h_air = fp_float_to_fixed16_10to6(measurement2);
+                t_air_t = measurement;
+                h_air_t = measurement2;
+                msg.t_air = fp_float_to_fixed16_10to6(t_air_t);
+                msg.h_air = fp_float_to_fixed16_10to6(h_air_t);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
                 printf("... AM2302 reading failed (%d)\n",ret);
+                t_air_t = 0.0;
+                h_air_t = 0.0;
                 msg.t_air = 0;
                 msg.h_air = 0;
                 x_ic_inc(X_IC_INC_NORM);
             }
         } else {
+            t_air_t = 0.0;
+            h_air_t = 0.0;
             msg.t_air = 0;
             msg.h_air = 0;
         }
@@ -493,16 +509,22 @@ int main(void) {
             if(ret == SHTC3_RET_OK) {
                 printf("... SHTC3 temperature: %.2f\n", measurement);
                 printf("... SHTC3 humidity: %.2f\n", measurement2);
-                msg.t_air = fp_float_to_fixed16_10to6(measurement);
-                msg.h_air = fp_float_to_fixed16_10to6(measurement2);
+                t_air_t = measurement;
+                h_air_t = measurement2;
+                msg.t_air = fp_float_to_fixed16_10to6(t_air_t);
+                msg.h_air = fp_float_to_fixed16_10to6(h_air_t);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
                 printf("... SHTC3 reading failed (%d)\n",ret);
+                t_air_t = 0.0;
+                h_air_t = 0.0;
                 msg.t_air = 0;
                 msg.h_air = 0;
                 x_ic_inc(X_IC_INC_NORM);
             }
         } else {
+            t_air_t = 0.0;
+            h_air_t = 0.0;
             msg.t_air = 0;
             msg.h_air = 0;
         }
@@ -555,32 +577,60 @@ int main(void) {
         }
         /* Battery voltage (via ADC) */
         v_bat = diag_vbat_read(v_mcu);
-        printf("... Battery voltage: %.2f V (SOC: %2d %%)\n",v_bat,diag_vbat_soc(v_bat));
+        msg.soc = diag_vbat_soc(v_bat);
+        printf("... Battery voltage: %.2f V\n",v_bat);
         
+        /*** fault indicator ***/
+        printf("... Danger indicators:\n");
         /* Node temperature monitor (X_NT) */
-        msg.x_nt = fp_float_to_fixed8_2to6(x_nt_get_normalized(t_mcu, t_brd, t_trx));
+        x_nt = x_nt_get_normalized(t_mcu, t_brd, t_trx);
+        printf("...... X_nt: %.2f\n",x_nt);
         /* Supply voltage monitor (X_VS) */
-        msg.x_vs = fp_float_to_fixed8_2to6(x_vs_get_normalized(v_mcu, v_trx));
+        x_vs = x_vs_get_normalized(v_mcu, v_trx);
+        printf("...... X_vsv: %.2f\n",x_vs);
         /* Battery voltage monitor (X_BAT) */
-        msg.x_bat = fp_float_to_fixed8_2to6(x_bat_get_normalized(v_bat));
+        x_bat = x_bat_get_normalized(v_bat);
+        printf("...... X_bat: %.2f\n",x_bat);
         /* Active runtime monitor (X_ART) */
         if(runtime > 0) {
             /* Subsequent cycle -> measurement available */
             runtime_ms = (uint16_t)((float)runtime * 0.256);
-            msg.x_art = fp_float_to_fixed8_2to6(x_art_get_normalized(runtime_ms));
+            x_art = x_art_get_normalized(runtime_ms);
             printf("... Runtime: %d ms (%u steps)\n",runtime_ms,runtime);
         } else {
-            msg.x_art = fp_float_to_fixed8_2to6(0.0);
+            x_art = 0.0;
         }
+        printf("...... X_art: %.2f\n",x_art);
         /* Reset monitor (X_RST) */
-        msg.x_rst = fp_float_to_fixed8_2to6(x_rst_get_normalized(MCUSR_dump & 0x0F));
+        x_rst = x_rst_get_normalized(MCUSR_dump & 0x0F);
         MCUSR_dump = 0;
+        printf("...... X_rst: %.2f\n",x_rst);
         /* Software incident counter (X_IC) */
-        msg.x_ic = fp_float_to_fixed8_2to6(x_ic_get_normalized());
+        x_ic = x_ic_get_normalized();
+        printf("...... X_ic: %.2f\n",x_ic);
         /* ADC self-check (X_ADC) */
-        msg.x_adc = fp_float_to_fixed8_2to6(x_adc_get_normalized(diag_adc_check()));
+        x_adc = x_adc_get_normalized(diag_adc_check());
+        printf("...... X_adc: %.2f\n",x_adc);
         /* USART self-check (X_USART) */
-        msg.x_usart = fp_float_to_fixed8_2to6(x_usart_get_normalized(NULL, NULL, 0));
+        x_usart = x_usart_get_normalized(NULL, NULL, 0);
+        printf("...... X_usart: %.2f\n",x_usart);
+        
+        /*** danger indicator ***/
+        msg.danger = fp_float_to_fixed8_2to6(fmin(1, (x_nt + x_vs + x_bat + x_art + x_rst + x_ic + x_adc + x_usart)));
+        
+        /*** safe indicator ***/
+        /* Get the updated safe indicator values */
+        printf("... Safe indicators:\n");
+        t_air_i = safe_update(&t_air_s, t_air_t);
+        printf("...... T_air-stdev: %.2f\n",t_air_i);
+        h_air_i = safe_update(&h_air_s, h_air_t);
+        printf("...... H_air-stdev: %.2f\n",h_air_i);
+        t_soil_i = safe_update(&t_soil_s, t_soil_t);
+        printf("...... T_soil-stdev: %.2f\n",t_soil_i);
+        h_soil_i = safe_update(&h_soil_s, h_soil_t);
+        printf("...... H_soil-stdev: %.2f\n",h_soil_i);
+        /* Get the aggregated value */
+        msg.safe = fp_float_to_fixed8_2to6(exp(-fmax(fmax(t_air_i,h_air_i), fmax(t_soil_i,h_soil_i))*SAFE_SENS));
 
         /* Check incident counter value */
         if(x_ic_get() >= X_IC_THRESHOLD) {
@@ -598,7 +648,7 @@ int main(void) {
         /* Send the measurement to the CH (without response) */
         ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0);
         if(ret == XBEE_RET_OK) {
-            printf("%d. sensor value update sent\n",msg.time);
+            printf("%d. sensor value update sent\n\n",msg.time);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
             printf("ERROR sending message (%d)!\n",ret);

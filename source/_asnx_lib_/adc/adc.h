@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/adc/adc.h
  * @author  Dominik Widhalm
- * @version 1.2.3
- * @date    2022/01/10
+ * @version 1.2.4
+ * @date    2022/01/25
  */
 
 #ifndef _ASNX_ADC_H_
@@ -22,7 +22,7 @@
 
 /***** MACROS *****************************************************************/
 /*! Settling delay after changing input/reference [us] */
-#define ADC_SETTLE_DELAY            (500)
+#define ADC_SETTLE_DELAY            (150)
 
 
 /***** ENUMERATION ************************************************************/

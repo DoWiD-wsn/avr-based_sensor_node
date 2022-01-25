@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/adc/adc.c
  * @author  Dominik Widhalm
- * @version 1.2.3
- * @date    2022/01/10
+ * @version 1.2.4
+ * @date    2022/01/25
  */
 
 /***** INCLUDES *******************************************************/
@@ -156,8 +156,6 @@ float adc_read_vcc(void) {
     float result = (1.1 * (1023.0/(float)adc_read()));
     /* Restore the ADMUX configuration */
     ADMUX = reg;
-    /* Give the reference some time to settle */
-    _delay_us(ADC_SETTLE_DELAY);
     /* Return the result */
     return result;
 }

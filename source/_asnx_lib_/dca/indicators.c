@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/dca/indicators.c
  * @author  Dominik Widhalm
- * @version 1.4.4
- * @date    2022/01/18
+ * @version 2.0.0
+ * @date    2022/01/25
  */
 
 /***** INCLUDES *******************************************************/
@@ -33,6 +33,9 @@ uint16_t x_ic = 0;
 
 
 /***** FUNCTIONS ******************************************************/
+
+/*** FAULT INDICATOR ******************/
+
 /* General */
 /*!
  * Initialize the fault indicators, that is, reset all values expect for
@@ -339,4 +342,50 @@ float x_usart_get_normalized(uint8_t* tx, uint8_t* rx, uint8_t len) {
     }
     /* Normalize and return value (max: 1.0) */
     return fmin(1.0, ((float)diff / X_USART_MAX));
+}
+
+
+/*** SAFE INDICATOR *******************/
+
+/*!
+ * Initialize the data structure for a safe indicator.
+ * 
+ * @param[in]   data        pointer to the data structure
+ */
+void safe_init(safe_t* data) {
+    /* Initialize data array */
+    for(uint8_t i=0; i<SAFE_N; i++) {
+        /* Set the value to zero */
+        data->value[i] = 0.0;
+    }
+    /* (Re)set the array index */
+    data->index = 0;
+    /* Reset the welford data structure */
+    welford_init(&(data->work));
+}
+
+
+/*!
+ * Initialize the data structure for a safe indicator.
+ * 
+ * @param[in]   data        pointer to the data structure
+ * @param[in]   measurement latest sensor measurement
+ */
+float safe_update(safe_t* data, float measurement) {
+    /* Check if window size is reached */
+    if(data->work.cnt >= SAFE_N) {
+        /* Get oldest value from array (current index) */
+        float old = data->value[data->index];
+        /* Replace oldest value with new one */
+        welford_replace(&(data->work), old, measurement);
+    } else {
+        /* Add value */
+        welford_add(&(data->work), measurement);
+    }
+    /* Store value in array */
+    data->value[data->index] = measurement;
+    /* Get next array index */
+    data->index = ((data->index)+1) % SAFE_N;
+    /* Return the standard deviation */
+    return welford_get_stddev(&(data->work));
 }
