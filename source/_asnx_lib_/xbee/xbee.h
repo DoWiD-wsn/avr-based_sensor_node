@@ -117,8 +117,7 @@ typedef enum {
     XBEE_RET_FID_NOT_MATCH              = -11,  /**< ERROR: returned FID does not match */
     XBEE_RET_MAC_NOT_MATCH              = -12,  /**< ERROR: returned MAC does not match */
     XBEE_RET_ADDR_NOT_MATCH             = -13,  /**< ERROR: returned address does not match */
-    XBEE_RET_UNEXPECTED_START           = -14,  /**< ERROR: unexpected start delimiter */
-    XBEE_RET_TIMEOUT                    = -15   /**< ERROR: timeout */
+    XBEE_RET_TIMEOUT                    = -14   /**< ERROR: timeout */
 } XBEE_RET_t;
 
 /*! Enumeration for the Xbee frame and response types */

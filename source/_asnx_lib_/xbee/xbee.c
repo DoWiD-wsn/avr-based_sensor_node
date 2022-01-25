@@ -316,11 +316,6 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
                 /* Read failed */
                 continue;
             }
-            /* Check if an unexpected start delimiter occurred */
-            if((pos > 0) && (data[pos] == XBEE_START_DELIMITER)) {
-                /* New packet start before previous packeted completed */
-                return XBEE_RET_UNEXPECTED_START;
-            }
             /* Store/process data based on frame position (index) */
             switch(pos) {
                 /* First byte should be the start delimiter */
@@ -783,11 +778,6 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
                 /* Read failed */
                 continue;
             }
-            /* Check if an unexpected start delimiter occurred */
-            if((pos > 0) && (data[pos] == XBEE_START_DELIMITER)) {
-                /* New packet start before previous packeted completed */
-                return XBEE_RET_UNEXPECTED_START;
-            }
             /* Store/process data based on frame position (index) */
             switch(pos) {
                 /* First byte should be the start delimiter */
@@ -1211,11 +1201,6 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
                 /* Read failed */
                 continue;
             }
-            /* Check if an unexpected start delimiter occurred */
-            if((pos > 0) && (data[pos] == XBEE_START_DELIMITER)) {
-                /* New packet start before previous packeted completed */
-                return XBEE_RET_UNEXPECTED_START;
-            }
             /* Store/process data based on frame position (index) */
             switch(pos) {
                 /* First byte should be the start delimiter */
@@ -1320,11 +1305,6 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
             if(_read(&data[pos]) != 0) {
                 /* Read failed */
                 continue;
-            }
-            /* Check if an unexpected start delimiter occurred */
-            if((pos > 0) && (data[pos] == XBEE_START_DELIMITER)) {
-                /* New packet start before previous packeted completed */
-                return XBEE_RET_UNEXPECTED_START;
             }
             /* Store/process data based on frame position (index) */
             switch(pos) {
