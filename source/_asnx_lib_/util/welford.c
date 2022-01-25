@@ -149,17 +149,15 @@ void welford_replace(welford_t* data, float value_o, float value_n) {
     /* Add new value */
     welford_add(data,value_n);
     
-    // TODO: the following code was found, but does not work!?
-    
     ///* Intermediate mean differences */
     //float delta_no = value_n - value_o;
     //float delta_o = value_o - data->mean;
     //float delta_n = value_n - data->mean;
     ///* Update mean value */
-    //data->mean = data->mean + delta_no / data->cnt;
+    //data->mean += delta_no / data->cnt;
     ///* Get mean value without new value */
     //float delta_np = value_n - data->mean;
     ///* Update working data */
-    //data->work = data->work - data->cnt / (data->cnt-1) * (delta_o * delta_o - delta_n * delta_np) - delta_no * delta_np / (data->cnt-1);
+    //data->work = data->work - data->cnt / (data->cnt-1) * (delta_o * delta_o - delta_n * delta_np) - delta_no * delta_np / (data->cnt-1);                                 // <= Overflow? Simplify?
 }
 
