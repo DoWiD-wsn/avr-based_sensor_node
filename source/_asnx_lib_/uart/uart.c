@@ -715,6 +715,8 @@ void uart1_tx_cb_flush(void) {
  * UART0 RX complete interrupt.
  */
 ISR(USART0_RX_vect) {
+    /* Disable interrupts */
+    cli();
     /* Push received byte in RX buffer */
     cbuf_push(&uart0_cb_rx,UDR0);
     /* Check if a callback function was defined */
@@ -722,6 +724,8 @@ ISR(USART0_RX_vect) {
         /* Call function */
         uart0_isr.f_rx();
     }
+    /* Enable interrupts */
+    sei();
 }
 
 
@@ -729,11 +733,15 @@ ISR(USART0_RX_vect) {
  * UART0 TX complete interrupt.
  */
 ISR(USART0_TX_vect) {
+    /* Disable interrupts */
+    cli();
     /* Check if a callback function was defined */
     if(uart0_isr.f_tx != NULL) {
         /* Call function */
         uart0_isr.f_tx();
     }
+    /* Enable interrupts */
+    sei();
 }
 
 
@@ -743,6 +751,8 @@ ISR(USART0_TX_vect) {
 ISR(USART0_UDRE_vect) {
     uint8_t tmp;
     int8_t ret;
+    /* Disable interrupts */
+    cli();
     /* Try to pop one byte from the CB */
     ret = cbuf_pop(&uart0_cb_tx, &tmp);
     /* Check if pop was successful */
@@ -758,6 +768,8 @@ ISR(USART0_UDRE_vect) {
             uart0_isr.f_empty();
         }
     }
+    /* Enable interrupts */
+    sei();
 }
 #endif
 
@@ -767,6 +779,8 @@ ISR(USART0_UDRE_vect) {
  * UART1 RX complete interrupt.
  */
 ISR(USART1_RX_vect) {
+    /* Disable interrupts */
+    cli();
     /* Push received byte in RX buffer */
     cbuf_push(&uart1_cb_rx,UDR1);
     /* Check if a callback function was defined */
@@ -774,6 +788,8 @@ ISR(USART1_RX_vect) {
         /* Call function */
         uart1_isr.f_rx();
     }
+    /* Enable interrupts */
+    sei();
 }
 
 
@@ -781,11 +797,15 @@ ISR(USART1_RX_vect) {
  * UART1 TX complete interrupt.
  */
 ISR(USART1_TX_vect) {
+    /* Disable interrupts */
+    cli();
     /* Check if a callback function was defined */
     if(uart1_isr.f_tx != NULL) {
         /* Call function */
         uart1_isr.f_tx();
     }
+    /* Enable interrupts */
+    sei();
 }
 
 
@@ -795,6 +815,8 @@ ISR(USART1_TX_vect) {
 ISR(USART1_UDRE_vect) {
     uint8_t tmp;
     int8_t ret;
+    /* Disable interrupts */
+    cli();
     /* Try to pop one byte from the CB */
     ret = cbuf_pop(&uart1_cb_tx, &tmp);
     /* Check if pop was successful */
@@ -810,5 +832,7 @@ ISR(USART1_UDRE_vect) {
             uart1_isr.f_empty();
         }
     }
+    /* Enable interrupts */
+    sei();
 }
 #endif
