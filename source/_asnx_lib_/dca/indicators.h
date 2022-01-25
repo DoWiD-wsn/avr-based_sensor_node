@@ -104,6 +104,7 @@ float x_vs_get_normalized(float v_mcu, float v_trx);
 /* Battery voltage monitor (X_BAT) */
 void x_bat_reset(void);
 float x_bat_get_normalized(float v_bat);
+float x_bat_get_mean(void);
 /* Active runtime monitor (X_ART) */
 void x_art_reset(void);
 float x_art_get_normalized(uint16_t t_art);

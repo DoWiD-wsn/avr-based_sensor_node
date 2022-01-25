@@ -36,6 +36,7 @@ typedef struct {
 
 /***** FUNCTION PROTOTYPES ********************************************/
 void welford_init(welford_t* data);
+float welford_get_mean(welford_t* data);
 float welford_get_variance(welford_t* data);
 float welford_get_stddev(welford_t* data);
 void welford_add(welford_t* data, float value);

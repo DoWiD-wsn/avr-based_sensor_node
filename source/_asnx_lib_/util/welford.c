@@ -32,6 +32,20 @@ void welford_init(welford_t* data) {
 
 
 /*!
+ * Return the mean value using Welford's Algorithm.
+ * 
+ * @param[in]   data        Pointer to the Welford data structure
+ * @return      Mean value of the given data structure.
+ */
+float welford_get_mean(welford_t* data) {
+    /* Check if data structure is "empty" */
+    if(data->cnt == 0) {
+        return 0.0;
+    }
+    return data->mean;
+}
+
+/*!
  * Return the variance using Welford's Algorithm.
  * 
  * @param[in]   data        Pointer to the Welford data structure

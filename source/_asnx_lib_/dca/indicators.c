@@ -162,6 +162,16 @@ float x_bat_get_normalized(float v_bat) {
 }
 
 
+/*!
+ * Get the mean battery voltage (in V) of the last measurements.
+ * 
+ * @return      mean battery voltage level [V]
+ */
+float x_bat_get_mean(void) {
+    return welford_get_mean(&x_bat_data);
+}
+
+
 /* Active runtime monitor (X_ART) */
 /*!
  * Reset the active runtime monitor fault indicator (X_ART) value.

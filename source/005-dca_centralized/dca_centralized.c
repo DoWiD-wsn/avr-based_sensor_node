@@ -292,7 +292,7 @@ int main(void) {
     safe_init(&t_soil_s);
     safe_init(&h_soil_s);
     /* Status message */
-    printf("Fault indicators initialized ...\n");
+    printf("Indicators initialized ...\n");
 
 #if ASNX_VERSION_MINOR>0
     /* Initialize the RTC */
@@ -369,15 +369,15 @@ int main(void) {
     
     /*** 2.) connect to the Zigbee network ****************************/
     /* Check Xbee module connection */
-    printf("Connecting to Zigbee network ...\n");
+    printf("Connecting to Zigbee network ...");
     ret = xbee_wait_for_connected(XBEE_JOIN_TIMEOUT);
     if(ret != XBEE_RET_OK) {
-        printf("Couldn't connect to the network (%d) ... aborting!\n",ret);
+        printf("\nCouldn't connect to the network (%d) ... aborting!\n",ret);
         /* Wait for watchdog reset */
         sleep_until_reset(WDTO_8S);
     }
     /* Print status message */
-    printf("Zigbee connected ...\n");
+    printf("connected\n");
 
 
     while(1) {
@@ -540,7 +540,6 @@ int main(void) {
         uart0_rx_cb_flush();
         ret = xbee_cmd_get_temperature(&t_trx);
         if(ret == XBEE_RET_OK) {
-            printf("... Xbee temperature: %.2f\n", t_trx);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
             printf("... XBee temperature reading failed (%d)\n",ret);
@@ -551,7 +550,6 @@ int main(void) {
             /* Get temperature in degree Celsius (°C) */
             ret = tmp275_get_temperature(&tmp275, &t_brd);
             if(ret == TMP275_RET_OK) {
-                printf("... Board temperature: %.2f\n", t_brd);
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
                 printf("... Board temperature reading failed (%d)\n",ret);
@@ -564,12 +562,10 @@ int main(void) {
         
         /* MCU supply voltage in volts (V) */
         v_mcu = diag_vcc_read();
-        printf("... MCU voltage: %.2f V\n",v_mcu);
         /* Xbee3 supply voltage */
         uart0_rx_cb_flush();
         ret = xbee_cmd_get_vss(&v_trx);
         if(ret == XBEE_RET_OK) {
-            printf("... Xbee voltage: %.2f\n", v_trx);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
             printf("... XBee voltage reading failed (%d)\n",ret);
@@ -577,20 +573,14 @@ int main(void) {
         }
         /* Battery voltage (via ADC) */
         v_bat = diag_vbat_read(v_mcu);
-        msg.soc = diag_vbat_soc(v_bat);
-        printf("... Battery voltage: %.2f V\n",v_bat);
         
         /*** fault indicator ***/
-        printf("... Danger indicators:\n");
         /* Node temperature monitor (X_NT) */
         x_nt = x_nt_get_normalized(t_mcu, t_brd, t_trx);
-        printf("...... X_nt: %.2f\n",x_nt);
         /* Supply voltage monitor (X_VS) */
         x_vs = x_vs_get_normalized(v_mcu, v_trx);
-        printf("...... X_vsv: %.2f\n",x_vs);
         /* Battery voltage monitor (X_BAT) */
         x_bat = x_bat_get_normalized(v_bat);
-        printf("...... X_bat: %.2f\n",x_bat);
         /* Active runtime monitor (X_ART) */
         if(runtime > 0) {
             /* Subsequent cycle -> measurement available */
@@ -600,37 +590,30 @@ int main(void) {
         } else {
             x_art = 0.0;
         }
-        printf("...... X_art: %.2f\n",x_art);
         /* Reset monitor (X_RST) */
         x_rst = x_rst_get_normalized(MCUSR_dump & 0x0F);
         MCUSR_dump = 0;
-        printf("...... X_rst: %.2f\n",x_rst);
         /* Software incident counter (X_IC) */
         x_ic = x_ic_get_normalized();
-        printf("...... X_ic: %.2f\n",x_ic);
         /* ADC self-check (X_ADC) */
         x_adc = x_adc_get_normalized(diag_adc_check());
-        printf("...... X_adc: %.2f\n",x_adc);
         /* USART self-check (X_USART) */
         x_usart = x_usart_get_normalized(NULL, NULL, 0);
-        printf("...... X_usart: %.2f\n",x_usart);
         
         /*** danger indicator ***/
         msg.danger = fp_float_to_fixed8_2to6(fmin(1, (x_nt + x_vs + x_bat + x_art + x_rst + x_ic + x_adc + x_usart)));
         
         /*** safe indicator ***/
         /* Get the updated safe indicator values */
-        printf("... Safe indicators:\n");
         t_air_i = safe_update(&t_air_s, t_air_t);
-        printf("...... T_air-stdev: %.2f\n",t_air_i);
         h_air_i = safe_update(&h_air_s, h_air_t);
-        printf("...... H_air-stdev: %.2f\n",h_air_i);
         t_soil_i = safe_update(&t_soil_s, t_soil_t);
-        printf("...... T_soil-stdev: %.2f\n",t_soil_i);
         h_soil_i = safe_update(&h_soil_s, h_soil_t);
-        printf("...... H_soil-stdev: %.2f\n",h_soil_i);
         /* Get the aggregated value */
         msg.safe = fp_float_to_fixed8_2to6(exp(-fmax(fmax(t_air_i,h_air_i), fmax(t_soil_i,h_soil_i))*SAFE_SENS));
+
+        /* Battery SoC */
+        msg.soc = diag_vbat_soc(x_bat_get_mean());
 
         /* Check incident counter value */
         if(x_ic_get() >= X_IC_THRESHOLD) {
