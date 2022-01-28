@@ -100,16 +100,13 @@ float diag_vbat_read(float vcc) {
  * @return      State-of-charge of the battery (%)
  */
 uint8_t diag_vbat_soc(float vbat) {
-    static float approx = -1;
-    /* Calculate linear approximation */
-    if(approx < 0) {
-        approx = (vbat - DIAG_VBAT_MIN) / DIAG_VBAT_RANGE;
-    } else {
-        approx += (vbat - DIAG_VBAT_MIN) / DIAG_VBAT_RANGE;
-        approx /= 2;
+    /* Check if battery voltage is above max level (e.g. USB powered) */
+    if(vbat >= DIAG_VBAT_MAX) {
+        /* Return 100% */
+        return 100;
     }
     /* Return the linear approximation */
-    return (uint8_t)(approx * 100);
+    return (uint8_t)((((float)vbat - DIAG_VBAT_MIN) / DIAG_VBAT_RANGE) * 100.0);
 }
 
 
