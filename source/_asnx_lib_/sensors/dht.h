@@ -32,9 +32,9 @@
 #endif
 
 /*! Minimal duration between two consecutive readings [s] */
-#define DHT_TIMING_MIN_INTERVAL 2000UL
-/*! Time-out value [ms] */
-#define DHT_TIMING_TIMEOUT      200
+#define DHT_TIMING_MIN_INTERVAL 2000U
+/*! Time-out value [iterations] */
+#define DHT_TIMING_TIMEOUT      500U
 
 
 /***** ENUMERATION ****************************************************/
