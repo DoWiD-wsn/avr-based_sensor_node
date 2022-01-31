@@ -30,6 +30,8 @@
 #define ENABLE_DBG_MSG              0               /**< Enable debug output of message content */
 #define UPDATE_INTERVAL             5               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
+/* Zigbee network */
+#define ZIGBEE_ENABLE_ACK           0               /**< Enable (1) or disable (0) transmit response */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
 #define ENABLE_AM2302               1               /**< enable AM2302 sensor */
@@ -640,15 +642,42 @@ int main(void) {
         /* Print the contents of the message to be sent */
         dbg_print_msg(&msg);
 #endif
+#if ZIGBEE_ENABLE_ACK
+        uint8_t fid = fid_get_next();
+        ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), fid);
+        if(ret == XBEE_RET_OK) {
+            printf("%d. sensor value update sent ... ",msg.time);
+            /* Check the transmit response */
+            uint16_t addr=0x0000;
+            uint8_t retries=0, status=0, discovery=0, fid_ret=0;
+            ret = xbee_transmit_status_ext(&addr, &retries, &status, &discovery, &fid_ret);
+            if((fid == fid_ret) && (ret == XBEE_RET_OK)) {
+                if(status == XBEE_TRANSMIT_STAT_DEL_OK) {
+                    printf("positive response received!\n\n");
+                    x_ic_dec(X_IC_DEC_NORM);
+                } else {
+                    printf("NEGATIVE response received (%d)!\n\n",status);
+                    x_ic_inc(X_IC_INC_SERIOUS);
+                }
+            } else {
+                printf("ERROR receiving response (%d)!\n\n",ret);
+                x_ic_inc(X_IC_INC_SERIOUS);
+            }
+        } else {
+            printf("ERROR sending message (%d)!\n\n",ret);
+            x_ic_inc(X_IC_INC_SERIOUS);
+        }
+#else
         /* Send the measurement to the CH (without response) */
         ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0);
         if(ret == XBEE_RET_OK) {
             printf("%d. sensor value update sent\n\n",msg.time);
             x_ic_dec(X_IC_DEC_NORM);
         } else {
-            printf("ERROR sending message (%d)!\n",ret);
+            printf("ERROR sending message (%d)!\n\n",ret);
             x_ic_inc(X_IC_INC_SERIOUS);
         }
+#endif
         /* Increment message number ("time") */
         msg.time++;
 
