@@ -259,7 +259,8 @@ XBEE_RET_t xbee_check_crc(uint8_t* data, uint8_t len, uint8_t crc);
 XBEE_RET_t xbee_transmit_broadcast(uint8_t* payload, uint16_t cnt, uint8_t fid);
 XBEE_RET_t xbee_transmit_unicast(uint64_t mac, uint8_t* payload, uint16_t cnt, uint8_t fid);
 XBEE_RET_t xbee_is_connected(void);
-XBEE_RET_t xbee_wait_for_connected(uint8_t timeout, uint8_t delay);
+XBEE_RET_t xbee_wait_for_connected(uint8_t timeout);
+XBEE_RET_t xbee_wait_for_reconnected(uint8_t timeout);
 XBEE_RET_t xbee_cmd_get_temperature(float* temp);
 XBEE_RET_t xbee_cmd_get_vss(float* vss);
 

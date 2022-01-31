@@ -20,8 +20,8 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 2.0.0
- * @date    2022/01/25
+ * @version 2.1.0
+ * @date    2022/01/31
  */
 
 
@@ -374,7 +374,7 @@ int main(void) {
     /*** 2.) connect to the Zigbee network ****************************/
     /* Check Xbee module connection */
     printf("Connecting to Zigbee network ...");
-    ret = xbee_wait_for_connected(XBEE_JOIN_TIMEOUT, XBEE_JOIN_TIMEOUT_DELAY);
+    ret = xbee_wait_for_connected(XBEE_JOIN_TIMEOUT);
     if(ret != XBEE_RET_OK) {
         printf("\nCouldn't connect to the network (%d) ... aborting!\n",ret);
         /* Wait for watchdog reset */
@@ -630,7 +630,7 @@ int main(void) {
         /* Check Xbee module connection */
         printf("Check Zigbee network connection ...");
         uart0_rx_cb_flush();
-        ret = xbee_wait_for_connected(XBEE_REJOIN_TIMEOUT, XBEE_REJOIN_TIMEOUT_DELAY);
+        ret = xbee_wait_for_reconnected(XBEE_REJOIN_TIMEOUT);
         if(ret != XBEE_RET_OK) {
             printf("ERROR rejoining the netwotk (%d) ... aborting!\n",ret);
             /* Wait for watchdog reset */

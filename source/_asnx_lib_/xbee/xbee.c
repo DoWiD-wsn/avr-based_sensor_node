@@ -762,7 +762,7 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
     /* Number of bytes of the response value received */
     uint8_t resp_cnt = 0;
     /* Temporary variables for frame length (depends on value) and timeout */
-    uint16_t len;
+    uint16_t len = 0;
     /* Reading position (index) */
     uint8_t pos = 0;
     /* Flag for completed response */
@@ -1488,12 +1488,11 @@ XBEE_RET_t xbee_is_connected(void) {
  * Wait until the device has successfully joined a network.
  *
  * @param[in]   timeout     Timeout in [s]
- * @param[in]   delay       Delay between tries [ms]
  * @return      OK in case of success; ERROR otherwise
  */
-XBEE_RET_t xbee_wait_for_connected(uint8_t timeout, uint8_t delay) {
+XBEE_RET_t xbee_wait_for_connected(uint8_t timeout) {
     /* Get maximum number of retries */
-    uint16_t retries = timeout * (1000UL / delay);
+    uint16_t retries = timeout * (1000UL / XBEE_JOIN_TIMEOUT_DELAY);
     /* Check xbee's response */
     while(retries--) {
         /* Check Xbee module connection */
@@ -1502,7 +1501,31 @@ XBEE_RET_t xbee_wait_for_connected(uint8_t timeout, uint8_t delay) {
             return XBEE_RET_OK;
         }
         /* Wait for some time */
-        _delay_ms(delay);
+        _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
+    }
+    /* Connection established failed */
+    return XBEE_RET_TIMEOUT;
+}
+
+
+/*!
+ * Wait until the device has successfully rejoined a network.
+ *
+ * @param[in]   timeout     Timeout in [s]
+ * @return      OK in case of success; ERROR otherwise
+ */
+XBEE_RET_t xbee_wait_for_reconnected(uint8_t timeout) {
+    /* Get maximum number of retries */
+    uint16_t retries = timeout * (1000UL / XBEE_REJOIN_TIMEOUT_DELAY);
+    /* Check xbee's response */
+    while(retries--) {
+        /* Check Xbee module connection */
+        if(xbee_is_connected() == XBEE_RET_OK) {
+            /* Connection established successfully */
+            return XBEE_RET_OK;
+        }
+        /* Wait for some time */
+        _delay_ms(XBEE_REJOIN_TIMEOUT_DELAY);
     }
     /* Connection established failed */
     return XBEE_RET_TIMEOUT;
