@@ -7,9 +7,11 @@ However, the major and minor number are used to express the version of the hardw
 ## [dev]
 ### Added
 - Added silk layer labels to pins of the expansion headers
+- Added decoupling capacitors to ADC diagnostic inputs
 ### Changed
 - Changed diagnostic voltage divider resistors to 100k (lesser power consumption; still accurate)
 - Changed Varef capacitor to 47nF (Atmel recommendation)
+- Major update of ASN(x) software (libraries and demos)
 ### Removed
 - Removed unintentionally left label of reset button
 

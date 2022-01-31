@@ -1424,7 +1424,7 @@ F 3 "" H 6800 6050 50  0001 C CNN
 	1    6800 6050
 	1    0    0    -1  
 $EndComp
-Text Label 8000 5700 0    50   ~ 0
+Text Label 8100 5700 0    50   ~ 0
 ADC2
 Text Notes 6650 4800 0    50   ~ 0
 Vbat measurement
@@ -1616,12 +1616,12 @@ $EndComp
 $Comp
 L Jumper:SolderJumper_2_Bridged JP6
 U 1 1 60B40551
-P 7850 5700
-F 0 "JP6" H 7850 5800 50  0000 C CNN
-F 1 "Jumper_Bridged" H 8000 5600 50  0000 C CNN
-F 2 "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm" H 7850 5700 50  0001 C CNN
-F 3 "~" H 7850 5700 50  0001 C CNN
-	1    7850 5700
+P 7950 5700
+F 0 "JP6" H 7950 5800 50  0000 C CNN
+F 1 "Jumper_Bridged" H 8100 5600 50  0000 C CNN
+F 2 "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm" H 7950 5700 50  0001 C CNN
+F 3 "~" H 7950 5700 50  0001 C CNN
+	1    7950 5700
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
@@ -1978,7 +1978,7 @@ $EndComp
 Wire Wire Line
 	6050 5650 6050 5700
 Wire Wire Line
-	6350 5700 6050 5700
+	6350 5700 6300 5700
 Connection ~ 6050 5700
 Wire Wire Line
 	6050 5700 6050 5750
@@ -1989,7 +1989,7 @@ Wire Notes Line
 Wire Wire Line
 	6800 5650 6800 5700
 Wire Wire Line
-	7100 5700 6800 5700
+	7100 5700 7050 5700
 Connection ~ 6800 5700
 Wire Wire Line
 	6800 5700 6800 5750
@@ -2025,7 +2025,6 @@ Wire Wire Line
 	7500 5700 7700 5700
 Wire Wire Line
 	7700 5850 7700 5700
-Connection ~ 7700 5700
 Text Label 7800 5450 0    50   ~ 0
 RDEN
 Wire Notes Line
@@ -2126,4 +2125,62 @@ Wire Wire Line
 Wire Wire Line
 	5600 5700 5600 5650
 Connection ~ 5600 5700
+$Comp
+L Device:C C17
+U 1 1 61F8D7B4
+P 6300 5900
+F 0 "C17" H 6400 6000 50  0000 C CNN
+F 1 "100n" H 6450 5800 50  0000 C CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 6338 5750 50  0001 C CNN
+F 3 "~" H 6300 5900 50  0001 C CNN
+	1    6300 5900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6300 5750 6300 5700
+Connection ~ 6300 5700
+Wire Wire Line
+	6300 5700 6050 5700
+Wire Wire Line
+	6300 6050 6050 6050
+Connection ~ 6050 6050
+$Comp
+L Device:C C18
+U 1 1 61FA6BB3
+P 7050 5900
+F 0 "C18" H 7150 6000 50  0000 C CNN
+F 1 "100n" H 7200 5800 50  0000 C CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 7088 5750 50  0001 C CNN
+F 3 "~" H 7050 5900 50  0001 C CNN
+	1    7050 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C C19
+U 1 1 61FA8A71
+P 7800 5900
+F 0 "C19" H 7900 6000 50  0000 C CNN
+F 1 "100n" H 7950 5800 50  0000 C CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 7838 5750 50  0001 C CNN
+F 3 "~" H 7800 5900 50  0001 C CNN
+	1    7800 5900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7050 5750 7050 5700
+Connection ~ 7050 5700
+Wire Wire Line
+	7050 5700 6800 5700
+Wire Wire Line
+	7050 6050 6800 6050
+Connection ~ 6800 6050
+Wire Wire Line
+	7800 6050 7700 6050
+Connection ~ 7700 6050
+Wire Wire Line
+	7700 5700 7800 5700
+Connection ~ 7700 5700
+Wire Wire Line
+	7800 5700 7800 5750
+Connection ~ 7800 5700
 $EndSCHEMATC
