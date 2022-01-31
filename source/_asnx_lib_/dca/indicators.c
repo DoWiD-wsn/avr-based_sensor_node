@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/dca/indicators.c
  * @author  Dominik Widhalm
- * @version 1.4.1
- * @date    2021/10/25
+ * @version 2.0.0
+ * @date    2022/01/25
  */
 
 /***** INCLUDES *******************************************************/
@@ -21,7 +21,7 @@ uint8_t x_bat_index = 0;
 /*! Battery voltage monitor Welford structure */
 welford_t x_bat_data;
 /*! Active runtime monitor value array */
-uint32_t x_art_values[X_ART_N] = {0};
+uint16_t x_art_values[X_ART_N] = {0};
 /*! Active runtime monitor value array index */
 uint8_t x_art_index = 0;
 /*! Active runtime monitor Welford structure */
@@ -33,6 +33,9 @@ uint16_t x_ic = 0;
 
 
 /***** FUNCTIONS ******************************************************/
+
+/*** FAULT INDICATOR ******************/
+
 /* General */
 /*!
  * Initialize the fault indicators, that is, reset all values expect for
@@ -84,19 +87,19 @@ float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
     float D_mcu = t_mcu - t_mcu_prev;
     float D_brd = t_brd - t_brd_prev;
     float D_trx = t_trx - t_trx_prev;
+    /* Calculate the mean value of the three temperature differences */
+    float mu_nt = (D_mcu + D_brd + D_trx) / 3.0;
+    /* Calculate the standard deviation of the three temperature differences */
+    float sigma_nt = (float)sqrt(((double)(D_mcu-mu_nt)*(double)(D_mcu-mu_nt) + \
+                                  (double)(D_brd-mu_nt)*(double)(D_brd-mu_nt) + \
+                                  (double)(D_trx-mu_nt)*(double)(D_trx-mu_nt) \
+                                 ) / 3.0);
     /* Remember previous measurements */
     t_mcu_prev = t_mcu;
     t_brd_prev = t_brd;
     t_trx_prev = t_trx;
-    /* Calculate the mean value of the three temperature differences */
-    float mu_nt = (D_mcu + D_brd + D_trx) / 3.0;
-    /* Calculate the variance of the three temperature differences */
-    float var_nt = ((D_mcu-mu_nt)*(D_mcu-mu_nt) + \
-                    (D_brd-mu_nt)*(D_brd-mu_nt) + \
-                    (D_trx-mu_nt)*(D_trx-mu_nt) \
-                   ) / 3.0;
-    /* Calculate and return X_NT as the normalized standard deviation (max: 1.0) */
-    return fmin(1.0, sqrt(var_nt) / X_NT_MAX);
+    /* Return X_NT with normalized standard deviation (max: 1.0) */
+    return fmin(1.0, (sigma_nt/X_NT_MAX));
 }
 
 
@@ -111,9 +114,9 @@ float x_nt_get_normalized(float t_mcu, float t_brd, float t_trx) {
 float x_vs_get_normalized(float v_mcu, float v_trx) {
     /* Calculate and return the normalized difference between both voltages (max: 1.0) */
     if(v_mcu > v_trx) {
-        return fmin(1.0, (v_mcu-v_trx) / X_VS_MAX);
+        return fmin(1.0, ((v_mcu-v_trx) / X_VS_MAX));
     } else {
-        return fmin(1.0, (v_trx-v_mcu) / X_VS_MAX);
+        return fmin(1.0, ((v_trx-v_mcu) / X_VS_MAX));
     }
 }
 
@@ -147,7 +150,7 @@ float x_bat_get_normalized(float v_bat) {
         /* Replace oldest value with new one */
         welford_replace(&x_bat_data, old, v_bat);
     } else {
-        /* Add new value */
+        /* Add value */
         welford_add(&x_bat_data, v_bat);
     }
     /* Store value in array */
@@ -156,6 +159,16 @@ float x_bat_get_normalized(float v_bat) {
     x_bat_index = (x_bat_index+1) % X_BAT_N;
     /* Return normalized standard deviation as X_BAT (max: 1.0) */
     return fmin(1.0, welford_get_stddev(&x_bat_data) / X_BAT_MAX);
+}
+
+
+/*!
+ * Get the mean battery voltage (in V) of the last measurements.
+ * 
+ * @return      mean battery voltage level [V]
+ */
+float x_bat_get_mean(void) {
+    return welford_get_mean(&x_bat_data);
 }
 
 
@@ -180,15 +193,15 @@ void x_art_reset(void) {
  * @param[in]   t_art       length of the last active phase (ms)
  * @return      normalized active runtime monitor fault indicator (X_ART) value
  */
-float x_art_get_normalized(uint32_t t_art) {
+float x_art_get_normalized(uint16_t t_art) {
     /* Check if window size is reached */
     if(x_art_data.cnt >= X_ART_N) {
         /* Get oldest value from array (current index) */
-        float old = x_art_values[x_art_index];
+        uint16_t old = x_art_values[x_art_index];
         /* Replace oldest value with new one */
         welford_replace(&x_art_data, old, t_art);
     } else {
-        /* Add new value */
+        /* Add value */
         welford_add(&x_art_data, t_art);
     }
     /* Store value in array */
@@ -240,10 +253,12 @@ float x_rst_get_normalized(uint8_t mcusr) {
     if((a-b) > X_RST_UPDATE) {
         eeprom_write_float((float *)X_RST_EEPROM,x_rst);
     }
+    /* Check the final value (max: 1.0) */
+    x_rst = fmin(1.0, x_rst);
     /* Updated stored previous value */
     x_rst_prev = x_rst;
-    /* Return updated value (max: 1.0) */
-    return fmin(1.0, x_rst);
+    /* Return updated value */
+    return x_rst;
 }
 
 
@@ -309,9 +324,9 @@ float x_ic_get_normalized(void) {
 float x_adc_get_normalized(uint16_t adc_value) {
     /* Calculate and return the normalized difference between acquired and expected value (max: 1.0) */
     if(adc_value > X_ADC_EXPECTED) {
-        return fmin(1.0, (adc_value-X_ADC_EXPECTED) / X_ADC_MAX);
+        return fmin(1.0, ((adc_value-X_ADC_EXPECTED) / X_ADC_MAX));
     } else {
-        return fmin(1.0, (X_ADC_EXPECTED-adc_value) / X_ADC_MAX);
+        return fmin(1.0, ((X_ADC_EXPECTED-adc_value) / X_ADC_MAX));
     }
 }
 
@@ -336,5 +351,51 @@ float x_usart_get_normalized(uint8_t* tx, uint8_t* rx, uint8_t len) {
         }
     }
     /* Normalize and return value (max: 1.0) */
-    return fmin(1.0, (float)diff / X_USART_MAX);
+    return fmin(1.0, ((float)diff / X_USART_MAX));
+}
+
+
+/*** SAFE INDICATOR *******************/
+
+/*!
+ * Initialize the data structure for a safe indicator.
+ * 
+ * @param[in]   data        pointer to the data structure
+ */
+void safe_init(safe_t* data) {
+    /* Initialize data array */
+    for(uint8_t i=0; i<SAFE_N; i++) {
+        /* Set the value to zero */
+        data->value[i] = 0.0;
+    }
+    /* (Re)set the array index */
+    data->index = 0;
+    /* Reset the welford data structure */
+    welford_init(&(data->work));
+}
+
+
+/*!
+ * Initialize the data structure for a safe indicator.
+ * 
+ * @param[in]   data        pointer to the data structure
+ * @param[in]   measurement latest sensor measurement
+ */
+float safe_update(safe_t* data, float measurement) {
+    /* Check if window size is reached */
+    if(data->work.cnt >= SAFE_N) {
+        /* Get oldest value from array (current index) */
+        float old = data->value[data->index];
+        /* Replace oldest value with new one */
+        welford_replace(&(data->work), old, measurement);
+    } else {
+        /* Add value */
+        welford_add(&(data->work), measurement);
+    }
+    /* Store value in array */
+    data->value[data->index] = measurement;
+    /* Get next array index */
+    data->index = ((data->index)+1) % SAFE_N;
+    /* Return the standard deviation */
+    return welford_get_stddev(&(data->work));
 }

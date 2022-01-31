@@ -243,11 +243,15 @@ void timer0_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)(
  * TIMER0 compare match interrupt.
  */
 ISR(TIMER0_COMPA_vect) {
+    /* Disable interrupts */
+    cli();
     /* If a callback is defined */
     if(_timer0_callback != NULL) {
         /* Call the callback function */
         _timer0_callback();
     }
+    /* Enable interrupts */
+    sei();
 }
 #endif
 
@@ -467,11 +471,15 @@ void timer1_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)(
  * TIMER1 compare match interrupt.
  */
 ISR(TIMER1_COMPA_vect) {
+    /* Disable interrupts */
+    cli();
     /* If a callback is defined */
     if(_timer1_callback != NULL) {
         /* Call the callback function */
         _timer1_callback();
     }
+    /* Enable interrupts */
+    sei();
 }
 #endif
 
@@ -707,11 +715,15 @@ void timer2_start_isr_ms(uint16_t ms, TIMER2_PRESCALER_t prescaler, void (*func)
  * TIMER2 compare match interrupt.
  */
 ISR(TIMER2_COMPA_vect) {
+    /* Disable interrupts */
+    cli();
     /* If a callback is defined */
     if(_timer2_callback != NULL) {
         /* Call the callback function */
         _timer2_callback();
     }
+    /* Enable interrupts */
+    sei();
 }
 #endif
 
@@ -928,10 +940,14 @@ void timer3_start_isr_ms(uint16_t ms, TIMER_PRESCALER_t prescaler, void (*func)(
  * TIMER3 compare match interrupt.
  */
 ISR(TIMER3_COMPA_vect) {
+    /* Disable interrupts */
+    cli();
     /* If a callback is defined */
     if(_timer3_callback != NULL) {
         /* Call the callback function */
         _timer3_callback();
     }
+    /* Enable interrupts */
+    sei();
 }
 #endif

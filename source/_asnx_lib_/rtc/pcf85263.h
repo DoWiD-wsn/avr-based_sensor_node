@@ -24,7 +24,7 @@
 #define PCF85263_I2C_ADDRESS                0x51
 
 /* Enable 100th seconds (0 .. disabled / 1 .. enabled) */
-#define PCF85263_100TH_SECONDS_ENABLE       1
+#define PCF85263_100TH_SECONDS_ENABLE       0
 /* Use 12h (0) or 24h (1) mode */
 #define PCF85263_24H_MODE_ENABLE            1
 

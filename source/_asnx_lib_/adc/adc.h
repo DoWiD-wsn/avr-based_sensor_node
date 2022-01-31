@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/adc/adc.h
  * @author  Dominik Widhalm
- * @version 1.2.3
- * @date    2022/01/10
+ * @version 1.2.4
+ * @date    2022/01/25
  */
 
 #ifndef _ASNX_ADC_H_
@@ -21,8 +21,8 @@
 
 
 /***** MACROS *****************************************************************/
-/*! Delay after changing the reference source [us] (min. 125us) */
-#define ADC_DELAY_CHANGE_REFERENCE      (250)
+/*! Settling delay after changing input/reference [us] */
+#define ADC_SETTLE_DELAY            (150)
 
 
 /***** ENUMERATION ************************************************************/
@@ -94,7 +94,7 @@ void adc_deinit(void);
 /* Specific init */
 void adc_enable(void);
 void adc_disable(void);
-void adc_disable_input(uint8_t channels);
+void adc_disable_din(uint8_t channels);
 void adc_set_input(ADC_INPUT_t input);
 void adc_set_prescaler(ADC_PRESCALER_t prescaler);
 void adc_set_reference(ADC_AREF_t reference);
