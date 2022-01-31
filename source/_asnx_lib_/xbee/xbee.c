@@ -1487,11 +1487,13 @@ XBEE_RET_t xbee_is_connected(void) {
 /*!
  * Wait until the device has successfully joined a network.
  *
+ * @param[in]   timeout     Timeout in [s]
+ * @param[in]   delay       Delay between tries [ms]
  * @return      OK in case of success; ERROR otherwise
  */
-XBEE_RET_t xbee_wait_for_connected(uint8_t timeout) {
+XBEE_RET_t xbee_wait_for_connected(uint8_t timeout, uint8_t delay) {
     /* Get maximum number of retries */
-    uint16_t retries = timeout * (1000UL / XBEE_JOIN_TIMEOUT_DELAY);
+    uint16_t retries = timeout * (1000UL / delay);
     /* Check xbee's response */
     while(retries--) {
         /* Check Xbee module connection */
@@ -1500,7 +1502,7 @@ XBEE_RET_t xbee_wait_for_connected(uint8_t timeout) {
             return XBEE_RET_OK;
         }
         /* Wait for some time */
-        _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
+        _delay_ms(delay);
     }
     /* Connection established failed */
     return XBEE_RET_TIMEOUT;

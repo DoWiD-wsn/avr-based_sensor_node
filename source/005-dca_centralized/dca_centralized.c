@@ -246,6 +246,8 @@ int main(void) {
 
 
     /*** 1.) initialize modules ***************************************/
+    /* Disable WDT just to be sure */
+    wdt_disable();
     /* Disable unused hardware modules */
 #if ASNX_VERSION_MINOR>0
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
@@ -370,7 +372,7 @@ int main(void) {
     /*** 2.) connect to the Zigbee network ****************************/
     /* Check Xbee module connection */
     printf("Connecting to Zigbee network ...");
-    ret = xbee_wait_for_connected(XBEE_JOIN_TIMEOUT);
+    ret = xbee_wait_for_connected(XBEE_JOIN_TIMEOUT, XBEE_JOIN_TIMEOUT_DELAY);
     if(ret != XBEE_RET_OK) {
         printf("\nCouldn't connect to the network (%d) ... aborting!\n",ret);
         /* Wait for watchdog reset */
@@ -586,7 +588,6 @@ int main(void) {
             /* Subsequent cycle -> measurement available */
             runtime_ms = (uint16_t)((float)runtime * 0.256);
             x_art = x_art_get_normalized(runtime_ms);
-            printf("... Runtime: %d ms (%u steps)\n",runtime_ms,runtime);
         } else {
             x_art = 0.0;
         }
@@ -624,6 +625,17 @@ int main(void) {
 
 
         /*** 3.5) send values via Zigbee ******************************/
+        /* Check Xbee module connection */
+        printf("Check Zigbee network connection ...");
+        uart0_rx_cb_flush();
+        ret = xbee_wait_for_connected(XBEE_REJOIN_TIMEOUT, XBEE_REJOIN_TIMEOUT_DELAY);
+        if(ret != XBEE_RET_OK) {
+            printf("ERROR rejoining the netwotk (%d) ... aborting!\n",ret);
+            /* Wait for watchdog reset */
+            sleep_until_reset(WDTO_8S);
+        } else {
+            printf(" connected\n");
+        }
 #if ENABLE_DBG_MSG
         /* Print the contents of the message to be sent */
         dbg_print_msg(&msg);

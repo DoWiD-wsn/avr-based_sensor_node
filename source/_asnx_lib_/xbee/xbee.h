@@ -39,6 +39,11 @@
 /*! Join network delay between tries [ms] */
 #define XBEE_JOIN_TIMEOUT_DELAY             (50)
 
+/*! Re-join network timeout [s] */
+#define XBEE_REJOIN_TIMEOUT                 (5)
+/*! Re-join network delay between tries [ms] */
+#define XBEE_REJOIN_TIMEOUT_DELAY           (5)
+
 /*! Wake-up timeout [s] */
 #define XBEE_WAKE_TIMEOUT                   (5)
 /*! Wake-up delay between tries [ms] */
@@ -254,7 +259,7 @@ XBEE_RET_t xbee_check_crc(uint8_t* data, uint8_t len, uint8_t crc);
 XBEE_RET_t xbee_transmit_broadcast(uint8_t* payload, uint16_t cnt, uint8_t fid);
 XBEE_RET_t xbee_transmit_unicast(uint64_t mac, uint8_t* payload, uint16_t cnt, uint8_t fid);
 XBEE_RET_t xbee_is_connected(void);
-XBEE_RET_t xbee_wait_for_connected(uint8_t timeout);
+XBEE_RET_t xbee_wait_for_connected(uint8_t timeout, uint8_t delay);
 XBEE_RET_t xbee_cmd_get_temperature(float* temp);
 XBEE_RET_t xbee_cmd_get_vss(float* vss);
 
