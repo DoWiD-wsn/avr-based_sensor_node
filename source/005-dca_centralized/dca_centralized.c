@@ -20,7 +20,7 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 2.1.0
+ * @version 2.1.1
  * @date    2022/01/31
  */
 
@@ -28,7 +28,7 @@
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
 #define ENABLE_DBG_MSG              0               /**< Enable debug output of message content */
-#define UPDATE_INTERVAL             5               /**< Update interval [min] */
+#define UPDATE_INTERVAL             10              /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Zigbee network */
 #define ZIGBEE_ENABLE_ACK           0               /**< Enable (1) or disable (0) transmit response */
@@ -632,7 +632,7 @@ int main(void) {
         uart0_rx_cb_flush();
         ret = xbee_wait_for_reconnected(XBEE_REJOIN_TIMEOUT);
         if(ret != XBEE_RET_OK) {
-            printf("ERROR rejoining the netwotk (%d) ... aborting!\n",ret);
+            printf("ERROR rejoining the network (%d) ... aborting!\n",ret);
             /* Wait for watchdog reset */
             sleep_until_reset(WDTO_8S);
         } else {
