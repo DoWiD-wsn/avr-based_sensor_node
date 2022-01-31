@@ -6,12 +6,8 @@
  *
  * @file    /_asnx_lib_/util/welford.h
  * @author  Dominik Widhalm
- * @version 1.0.1
- * @date    2021/12/27
- * 
- * @see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
- * @see https://www.kite.com/python/answers/how-to-find-a-running-standard-deviation-in-python
- * @see https://gist.github.com/qubyte/4064710
+ * @version 1.1.0
+ * @date    2022/01/31
  */
 
 #ifndef _ASNX_WELFORD_H_

@@ -6,8 +6,8 @@
  *
  * @file    /_asnx_lib_/util/welford.c
  * @author  Dominik Widhalm
- * @version 1.0.1
- * @date    2021/12/27
+ * @version 1.1.0
+ * @date    2022/01/31
  * 
  * @see https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
  * @see https://www.kite.com/python/answers/how-to-find-a-running-standard-deviation-in-python
@@ -148,16 +148,5 @@ void welford_replace(welford_t* data, float value_o, float value_n) {
     welford_remove(data,value_o);
     /* Add new value */
     welford_add(data,value_n);
-    
-    ///* Intermediate mean differences */
-    //float delta_no = value_n - value_o;
-    //float delta_o = value_o - data->mean;
-    //float delta_n = value_n - data->mean;
-    ///* Update mean value */
-    //data->mean += delta_no / data->cnt;
-    ///* Get mean value without new value */
-    //float delta_np = value_n - data->mean;
-    ///* Update working data */
-    //data->work = data->work - data->cnt / (data->cnt-1) * (delta_o * delta_o - delta_n * delta_np) - delta_no * delta_np / (data->cnt-1);                                 // <= Overflow? Simplify?
 }
 
