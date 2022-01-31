@@ -5,9 +5,9 @@
  * network destination and increment the value after each cycle.
  *
  * @file    /003-xbee_demo/xbee_demo.c
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1 $
- * @date    $Date: 2021/05/10 $
+ * @author  Dominik Widhalm
+ * @version 1.2
+ * @date    2022/01/31
  *****/
 
 
@@ -24,7 +24,7 @@
 
 
 /***** DEFINES ********************************************************/
-#define XBEE_DESTINATION_MAC        (0x0013A20041B9FD07)
+#define XBEE_DESTINATION_MAC                (0x0013A20041B9FD07)
 
 /***** MAIN ***********************************************************/
 int main(void) {
@@ -35,12 +35,14 @@ int main(void) {
     led2_high();
 
     /* Initialize the UART0 */
-    uart1_init();
-    /* Initialize the printf function to use the uart1_putc() function for output */
-    printf_init(uart1_putc);
+    uart1_init(9600UL);
+    /* Initialize the printf function to use the uart1_write_char() function for output */
+    printf_init(uart1_write_char);
     
-    /* Xbee 3 */
-    xbee_init(9600UL);
+    /* Initialize Xbee 3 (uses UART0 @9600 baud; receive via ISR) */
+    uart0_init(9600UL);
+    uart0_interrupt_enable();
+    xbee_init(uart0_write_byte, uart0_pop_byte, uart0_rx_buffer_cnt);
     
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");

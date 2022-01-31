@@ -4,9 +4,9 @@
  * Simple blinky application with the user LEDs.
  *
  * @file    /000-blinky_demo/blinky_demo.c
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.1 $
- * @date    $Date: 2021/05/10 $
+ * @author  Dominik Widhalm
+ * @version 1.2
+ * @date    2022/01/31
  *****/
 
 

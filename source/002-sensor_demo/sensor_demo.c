@@ -8,21 +8,21 @@
  *
  * @file    /002-sensor_demo/sensor_demo.c
  * @author  Dominik Widhalm
- * @version 1.1.1
- * @date    2021/12/14
+ * @version 1.2.0
+ * @date    2022/01/31
  *****/
 
 /*** DEMO CONFIGURATION ***/
 /* Update interval [s] */
 #define UPDATE_INTERVAL     15
 /* Enable/disable sensors */
-#define ENABLE_JT103        (1)     /**< Enable the 103JT thermistor (via ADC) */
-#define ENABLE_DS18X20      (1)     /**< Enable the DS18X20 sensor (OWI) */
-#define ENABLE_AM2302       (1)     /**< Enable the AM2302 sensor (OWI) */
-#define ENABLE_BME280       (1)     /**< Enable the BME280 sensor (TWI) */
 #define ENABLE_TMP275       (1)     /**< Enable the TMP275 sensor (TWI) */
-#define ENABLE_LM75         (1)     /**< Enable the LM75 sensor (TWI) */
-#define ENABLE_STEMMA       (1)     /**< Enable the STEMMA SOIL sensor (TWI) */
+#define ENABLE_JT103        (0)     /**< Enable the 103JT thermistor (via ADC) */
+#define ENABLE_DS18X20      (0)     /**< Enable the DS18X20 sensor (OWI) */
+#define ENABLE_AM2302       (0)     /**< Enable the AM2302 sensor (OWI) */
+#define ENABLE_BME280       (0)     /**< Enable the BME280 sensor (TWI) */
+#define ENABLE_LM75         (0)     /**< Enable the LM75 sensor (TWI) */
+#define ENABLE_STEMMA       (0)     /**< Enable the STEMMA SOIL sensor (TWI) */
 
 
 /***** INCLUDES *******************************************************/
@@ -218,9 +218,9 @@ int main(void) {
     i2c_init();
     
     /* Initialize the UART0 */
-    uart1_init();
-    /* Initialize the printf function to use the uart1_putc() function for output */
-    printf_init(uart1_putc);
+    uart1_init(9600UL);
+    /* Initialize the printf function to use the uart1_write_char() function for output */
+    printf_init(uart1_write_char);
     
     /* Initialize the ADC */
     adc_init(ADC_ADPS_16,ADC_REFS_VCC);

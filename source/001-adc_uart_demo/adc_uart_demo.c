@@ -6,9 +6,9 @@
  * voltage is read and transmitted.
  *
  * @file    /001-adc_uart_demo/adc_uart_demo.c
- * @author  $Author: Dominik Widhalm $
- * @version $Revision: 1.2 $
- * @date    $Date: 2021/08/09 $
+ * @author  Dominik Widhalm
+ * @version 1.3
+ * @date    2022/01/31
  *****/
 
 
@@ -34,8 +34,8 @@ int main(void) {
     led1_low();                         // Initially, set LED1 to low
     led2_high();                        // Initially, set LED2 to high
     adc_init(ADC_ADPS_16,ADC_REFS_VCC); // Initialize the ADC
-    uart1_init();                       // Initialize the UART0
-    printf_init(uart1_putc);            // Initialize the printf function
+    uart1_init(9600UL);                 // Initialize the UART0
+    printf_init(uart1_write_char);      // Initialize the printf function
     
     /* Main Routine */
     while (1) {
