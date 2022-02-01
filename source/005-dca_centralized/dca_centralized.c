@@ -20,7 +20,7 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 2.1.2
+ * @version 2.1.3
  * @date    2022/02/01
  */
 
@@ -28,6 +28,7 @@
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
 #define ENABLE_DBG_MSG              0               /**< Enable debug output of message content */
+#define ENABLE_DBG_INDICATOR        0               /**< Enable debug output of indicator values */
 #define UPDATE_INTERVAL             10              /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Zigbee network */
@@ -132,6 +133,9 @@ void update(void);
 #if ENABLE_DBG_MSG
 void dbg_print_msg(MSG_t* msg);
 #endif
+#if ENABLE_DBG_INDICATOR
+void dbg_print_indicator(float danger, float safe, float x_nt, float x_vs, float x_bat, float x_art, float x_rst, float x_ic, float x_adc, float x_usart, float t_air_i, float h_air_i, float t_soil_i, float h_soil_i);
+#endif
 
 
 /***** LOCAL FUNCTIONS ************************************************/
@@ -181,7 +185,7 @@ void update(void) {
  */
 #if ENABLE_DBG_MSG
 void dbg_print_msg(MSG_t* msg) {
-    printf("===== SENSOR MESSAGE CONTENTS =====\n");
+    printf("\n===== SENSOR MESSAGE CONTENTS =====\n");
     printf("%d message updates\n",msg->time);
     printf("=== SENSOR VALUES ===\n");
     printf("T_air: %.2f C\n",fp_fixed16_to_float_10to6(msg->t_air));
@@ -193,7 +197,34 @@ void dbg_print_msg(MSG_t* msg) {
     printf("=== SENSOR VALUES ===\n");
     printf("Danger: %.2f\n",fp_fixed8_to_float_2to6(msg->danger));
     printf("Safe: %.2f\n",fp_fixed8_to_float_2to6(msg->safe));
-    printf("===================================\n");
+    printf("===================================\n\n");
+}
+#endif
+
+
+/*!
+ * Debug: print the values of the single indicator shares
+ */
+#if ENABLE_DBG_INDICATOR
+void dbg_print_indicator(float danger, float safe, float x_nt, float x_vs, float x_bat, float x_art, float x_rst, float x_ic, float x_adc, float x_usart, float t_air_i, float h_air_i, float t_soil_i, float h_soil_i) {
+    printf("\n===== INDICATOR VALUES =====\n");
+    printf("danger: %.2f\n",danger);
+    printf("safe: %.2f\n",safe);
+    printf("=== DANGER/FAULT INDICATORS ===\n");
+    printf("X_NT: %.2f\n",x_nt);
+    printf("X_VS: %.2f\n",x_vs);
+    printf("X_BAT: %.2f\n",x_bat);
+    printf("X_ART: %.2f\n",x_art);
+    printf("X_RST: %.2f\n",x_rst);
+    printf("X_IC: %.2f\n",x_ic);
+    printf("X_ADC: %.2f\n",x_adc);
+    printf("X_UART: %.2f\n",x_usart);
+    printf("=== SAFE INDICATORS ===\n");
+    printf("T_AIR: %.2f\n",t_air_i);
+    printf("H_AIR: %.2f\n",h_air_i);
+    printf("T_SOIL: %.2f\n",t_soil_i);
+    printf("H_SOIL: %.2f\n",h_soil_i);
+    printf("===================================\n\n");
 }
 #endif
 
@@ -241,6 +272,8 @@ int main(void) {
     /* Safe indicator */
     float t_air_i=0.0, h_air_i=0.0, t_soil_i=0.0, h_soil_i=0.0;
     safe_t t_air_s, h_air_s, t_soil_s, h_soil_s;
+    /* Aggregated indicator */
+    float danger=0.0, safe=0.0;
     /* Runtime measurement */
     uint16_t runtime = 0, runtime_ms = 0;
     /* Function return value */
@@ -604,7 +637,8 @@ int main(void) {
         x_usart = x_usart_get_normalized(NULL, NULL, 0);
         
         /*** danger indicator ***/
-        msg.danger = fp_float_to_fixed8_2to6(fmin(1, (x_nt + x_vs + x_bat + x_art + x_rst + x_ic + x_adc + x_usart)));
+        danger = fmin(1, (x_nt + x_vs + x_bat + x_art + x_rst + x_ic + x_adc + x_usart));
+        msg.danger = fp_float_to_fixed8_2to6(danger);
         
         /*** safe indicator ***/
         /* Get the updated safe indicator values */
@@ -613,7 +647,13 @@ int main(void) {
         t_soil_i = safe_update(&t_soil_s, t_soil_t);
         h_soil_i = safe_update(&h_soil_s, h_soil_t);
         /* Get the aggregated value */
-        msg.safe = fp_float_to_fixed8_2to6(exp(-fmax(fmax(t_air_i,h_air_i), fmax(t_soil_i,h_soil_i))*SAFE_SENS));
+        safe = exp(-fmax(fmax(t_air_i,h_air_i), fmax(t_soil_i,h_soil_i))*SAFE_SENS);
+        msg.safe = fp_float_to_fixed8_2to6(safe);
+
+#if ENABLE_DBG_INDICATOR
+        /* Print the indicator values */
+        dbg_print_indicator(danger, safe, x_nt, x_vs, x_bat, x_art, x_rst, x_ic, x_adc, x_usart, t_air_i, h_air_i, t_soil_i, h_soil_i);
+#endif
 
         /* Battery SoC */
         msg.soc = diag_vbat_soc(x_bat_get_mean());

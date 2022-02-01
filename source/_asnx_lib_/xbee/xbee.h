@@ -5,7 +5,7 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.h
  * @author  Dominik Widhalm
- * @version 1.3.1
+ * @version 1.3.2
  * @date    2022/02/01
  */
 
@@ -40,12 +40,12 @@
 #define XBEE_JOIN_TIMEOUT_DELAY             (50)
 
 /*! Re-join network timeout [ms] */
-#define XBEE_REJOIN_TIMEOUT                 (500UL)
+#define XBEE_REJOIN_TIMEOUT                 (2000UL)
 /*! Re-join network delay between tries [ms] */
 #define XBEE_REJOIN_TIMEOUT_DELAY           (10)
 
 /*! Wake-up timeout [ms] */
-#define XBEE_WAKE_TIMEOUT                   (500UL)
+#define XBEE_WAKE_TIMEOUT                   (2000UL)
 /*! Wake-up delay between tries [ms] */
 #define XBEE_WAKE_TIMEOUT_DELAY             (5)
 

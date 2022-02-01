@@ -5,7 +5,7 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.c
  * @author  Dominik Widhalm
- * @version 1.3.1
+ * @version 1.3.2
  * @date    2022/02/01
  */
 
