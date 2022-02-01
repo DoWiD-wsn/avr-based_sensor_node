@@ -102,13 +102,15 @@ XBEE_RET_t xbee_sleep_enable(void) {
     /* Request xbee sleep */
     hw_set_output_high(&xbee_sleep_req);
     /* Check xbee's response */
-    uint16_t timeout = XBEE_WAKE_TIMEOUT / XBEE_WAKE_TIMEOUT_DELAY;
-    while(timeout--) {
+    uint16_t timeout = 0;
+    while(timeout < XBEE_WAKE_TIMEOUT) {
         /* Check sleep indicator pin state */
         if(hw_read_input(&xbee_sleep_ind) == HW_STATE_LOW) {
             /* Sleep request successful */
             return XBEE_RET_OK;
         }
+        /* Increase timeout counter */
+        timeout += XBEE_WAKE_TIMEOUT_DELAY;
         /* Wait for some time */
         _delay_ms(XBEE_WAKE_TIMEOUT_DELAY);
     }
@@ -126,13 +128,15 @@ XBEE_RET_t xbee_sleep_disable(void) {
     /* Request xbee wake-up */
     hw_set_output_low(&xbee_sleep_req);
     /* Check xbee's response */
-    uint16_t timeout = XBEE_WAKE_TIMEOUT / XBEE_WAKE_TIMEOUT_DELAY;
-    while(timeout--) {
+    uint16_t timeout = 0;
+    while(timeout < XBEE_WAKE_TIMEOUT) {
         /* Check sleep indicator pin state */
         if(hw_read_input(&xbee_sleep_ind) == HW_STATE_HIGH) {
             /* Wake-up successful */
             return XBEE_RET_OK;
         }
+        /* Increase timeout counter */
+        timeout += XBEE_WAKE_TIMEOUT_DELAY;
         /* Wait for some time */
         _delay_ms(XBEE_WAKE_TIMEOUT_DELAY);
     }
@@ -307,7 +311,7 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
     uint8_t complete = 0;
     
     /*** Read data ***/
-    uint16_t timeout = XBEE_RESPONSE_TIMEOUT / XBEE_RESPONSE_TIMEOUT_DELAY;
+    uint16_t timeout = 0;
     do {
         /* Check if data is available to be received */
         if(_available()) {
@@ -363,11 +367,13 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
                     break;
             }
         }
+        /* Increase timeout counter */
+        timeout += XBEE_RESPONSE_TIMEOUT_DELAY;
         /* Wait for some time */
         _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    } while((--timeout) && (complete==0));
+    } while((timeout < XBEE_RESPONSE_TIMEOUT) && (complete==0));
     /* Check if timeout has triggered */
-    if(timeout == 0) {
+    if(timeout >= XBEE_RESPONSE_TIMEOUT) {
         /* Response timed out */
         return XBEE_RET_TIMEOUT;
     }
@@ -775,7 +781,7 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
     uint8_t complete = 0;
     
     /*** Read data ***/
-    uint16_t timeout = XBEE_RESPONSE_TIMEOUT / XBEE_RESPONSE_TIMEOUT_DELAY;
+    uint16_t timeout = 0;
     do {
         /* Check if data is available to be received */
         if(_available()) {
@@ -832,11 +838,13 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
                     break;
             }
         }
+        /* Increase timeout counter */
+        timeout += XBEE_RESPONSE_TIMEOUT_DELAY;
         /* Wait for some time */
         _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    } while((--timeout) && (complete==0));
+    } while((timeout < XBEE_RESPONSE_TIMEOUT) && (complete==0));
     /* Check if timeout has triggered */
-    if(timeout == 0) {
+    if(timeout >= XBEE_RESPONSE_TIMEOUT) {
         /* Response timed out */
         return XBEE_RET_TIMEOUT;
     }
@@ -1204,7 +1212,7 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
     uint8_t complete = 0;
     
     /*** Read data ***/
-    uint16_t timeout = XBEE_RESPONSE_TIMEOUT / XBEE_RESPONSE_TIMEOUT_DELAY;
+    uint16_t timeout = 0;
     do {
         /* Check if data is available to be received */
         if(_available()) {
@@ -1261,11 +1269,13 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
                     break;
             }
         }
+        /* Increase timeout counter */
+        timeout += XBEE_RESPONSE_TIMEOUT_DELAY;
         /* Wait for some time */
         _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    } while((--timeout) && (complete==0));
+    } while((timeout < XBEE_RESPONSE_TIMEOUT) && (complete==0));
     /* Check if timeout has triggered */
-    if(timeout == 0) {
+    if(timeout >= XBEE_RESPONSE_TIMEOUT) {
         /* Response timed out */
         return XBEE_RET_TIMEOUT;
     }
@@ -1309,7 +1319,7 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
     uint8_t complete = 0;
     
     /*** Read data ***/
-    uint16_t timeout = XBEE_RESPONSE_TIMEOUT / XBEE_RESPONSE_TIMEOUT_DELAY;
+    uint16_t timeout = 0;
     do {
         /* Check if data is available to be received */
         if(_available()) {
@@ -1366,11 +1376,13 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
                     break;
             }
         }
+        /* Increase timeout counter */
+        timeout += XBEE_RESPONSE_TIMEOUT_DELAY;
         /* Wait for some time */
         _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    } while((--timeout) && (complete==0));
+    } while((timeout < XBEE_RESPONSE_TIMEOUT) && (complete==0));
     /* Check if timeout has triggered */
-    if(timeout == 0) {
+    if(timeout >= XBEE_RESPONSE_TIMEOUT) {
         /* Response timed out */
         return XBEE_RET_TIMEOUT;
     }
@@ -1505,15 +1517,16 @@ XBEE_RET_t xbee_is_connected(void) {
  * @return      OK in case of success; ERROR otherwise
  */
 XBEE_RET_t xbee_wait_for_connected(void) {
-    /* Get maximum number of retries */
-    uint16_t retries = XBEE_JOIN_TIMEOUT / XBEE_JOIN_TIMEOUT_DELAY;
+    uint16_t timeout = 0;
     /* Check xbee's response */
-    while(retries--) {
+    while(timeout < XBEE_JOIN_TIMEOUT) {
         /* Check Xbee module connection */
         if(xbee_is_connected() == XBEE_RET_OK) {
             /* Connection established successfully */
             return XBEE_RET_OK;
         }
+        /* Increase timeout counter */
+        timeout += XBEE_JOIN_TIMEOUT_DELAY;
         /* Wait for some time */
         _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
     }
@@ -1528,15 +1541,16 @@ XBEE_RET_t xbee_wait_for_connected(void) {
  * @return      OK in case of success; ERROR otherwise
  */
 XBEE_RET_t xbee_wait_for_reconnected(void) {
-    /* Get maximum number of retries */
-    uint16_t retries = XBEE_REJOIN_TIMEOUT / XBEE_REJOIN_TIMEOUT_DELAY;
+    uint16_t timeout = 0;
     /* Check xbee's response */
-    while(retries--) {
+    while(timeout < XBEE_REJOIN_TIMEOUT) {
         /* Check Xbee module connection */
         if(xbee_is_connected() == XBEE_RET_OK) {
             /* Connection established successfully */
             return XBEE_RET_OK;
         }
+        /* Increase timeout counter */
+        timeout += XBEE_REJOIN_TIMEOUT_DELAY;
         /* Wait for some time */
         _delay_ms(XBEE_REJOIN_TIMEOUT_DELAY);
     }

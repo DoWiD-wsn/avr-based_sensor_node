@@ -632,7 +632,7 @@ int main(void) {
         uart0_rx_cb_flush();
         ret = xbee_wait_for_reconnected();
         if(ret != XBEE_RET_OK) {
-            printf("ERROR rejoining the network (%d) ... aborting!\n",ret);
+            printf("\nERROR rejoining the network (%d) ... aborting!\n",ret);
             /* Wait for watchdog reset */
             sleep_until_reset(WDTO_8S);
         } else {
@@ -720,5 +720,7 @@ int main(void) {
 ISR(INT2_vect) {
     /* Actually not needed, but still ... */
     sleep_disable();
+    /* Give the MCU some time to fully wake up */
+    _delay_ms(5);
 }
 #endif

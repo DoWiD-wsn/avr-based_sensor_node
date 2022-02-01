@@ -40,19 +40,19 @@
 #define XBEE_JOIN_TIMEOUT_DELAY             (50)
 
 /*! Re-join network timeout [ms] */
-#define XBEE_REJOIN_TIMEOUT                 (1000UL)
+#define XBEE_REJOIN_TIMEOUT                 (500UL)
 /*! Re-join network delay between tries [ms] */
-#define XBEE_REJOIN_TIMEOUT_DELAY           (5)
+#define XBEE_REJOIN_TIMEOUT_DELAY           (10)
 
 /*! Wake-up timeout [ms] */
-#define XBEE_WAKE_TIMEOUT                   (1000UL)
+#define XBEE_WAKE_TIMEOUT                   (500UL)
 /*! Wake-up delay between tries [ms] */
 #define XBEE_WAKE_TIMEOUT_DELAY             (5)
 
 /*! Response retries [cnt] */
 #define XBEE_RESPONSE_RETRIES               (5)
 /*! Response timeout [ms] */
-#define XBEE_RESPONSE_TIMEOUT               (1000UL)
+#define XBEE_RESPONSE_TIMEOUT               (500UL)
 /*! Response delay between tries [ms] */
 #define XBEE_RESPONSE_TIMEOUT_DELAY         (5)
 
@@ -211,7 +211,7 @@ typedef enum {
     XBEE_TRANSMIT_STAT_DEL_NOT_JOINED   = 0x22, /**< Not joined to network (0x22) */
     XBEE_TRANSMIT_STAT_DEL_SELF_ADDRESS = 0x23, /**< Self-addressed (0x23) */
     XBEE_TRANSMIT_STAT_DEL_NO_ADDR      = 0x24, /**< Address not found (0x24) */
-    XBEE_TRANSMIT_STAT_DEL_NO_ROUTE     = 0x25, /**<  Route not found (0x25) */
+    XBEE_TRANSMIT_STAT_DEL_NO_ROUTE     = 0x25, /**< Route not found (0x25) */
     XBEE_TRANSMIT_STAT_DEL_BC_SRC_FAIL  = 0x26, /**< Broadcast source failed to hear a neighbor relay the message (0x26) */
     XBEE_TRANSMIT_STAT_DEL_INV_BINDING  = 0x2B, /**< Invalid binding table index (0x2B) */
     XBEE_TRANSMIT_STAT_DEL_RES_ERR      = 0x2C, /**< Resource error - lack of free buffers, timers, etc. (0x2C) */
