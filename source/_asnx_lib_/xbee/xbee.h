@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.h
  * @author  Dominik Widhalm
- * @version 1.3.0
- * @date    2022/01/21
+ * @version 1.3.1
+ * @date    2022/02/01
  */
 
 #ifndef _ASNX_XBEE_H_
@@ -34,23 +34,25 @@
 #define XBEE_SLEEP_IND_PIN                  (PINC)
 #define XBEE_SLEEP_IND_GPIO                 (PC7)
 
-/*! Join network timeout [s] */
-#define XBEE_JOIN_TIMEOUT                   (120)
+/*! Join network timeout [ms] */
+#define XBEE_JOIN_TIMEOUT                   (30000UL)
 /*! Join network delay between tries [ms] */
-#define XBEE_JOIN_TIMEOUT_DELAY             (100)
+#define XBEE_JOIN_TIMEOUT_DELAY             (50)
 
-/*! Re-join network timeout [s] */
-#define XBEE_REJOIN_TIMEOUT                 (5)
+/*! Re-join network timeout [ms] */
+#define XBEE_REJOIN_TIMEOUT                 (1000UL)
 /*! Re-join network delay between tries [ms] */
 #define XBEE_REJOIN_TIMEOUT_DELAY           (5)
 
-/*! Wake-up timeout [s] */
-#define XBEE_WAKE_TIMEOUT                   (5)
+/*! Wake-up timeout [ms] */
+#define XBEE_WAKE_TIMEOUT                   (1000UL)
 /*! Wake-up delay between tries [ms] */
 #define XBEE_WAKE_TIMEOUT_DELAY             (5)
 
-/*! Response timeout [s] */
-#define XBEE_RESPONSE_TIMEOUT               (5)
+/*! Response retries [cnt] */
+#define XBEE_RESPONSE_RETRIES               (5)
+/*! Response timeout [ms] */
+#define XBEE_RESPONSE_TIMEOUT               (1000UL)
 /*! Response delay between tries [ms] */
 #define XBEE_RESPONSE_TIMEOUT_DELAY         (5)
 
@@ -259,8 +261,8 @@ XBEE_RET_t xbee_check_crc(uint8_t* data, uint8_t len, uint8_t crc);
 XBEE_RET_t xbee_transmit_broadcast(uint8_t* payload, uint16_t cnt, uint8_t fid);
 XBEE_RET_t xbee_transmit_unicast(uint64_t mac, uint8_t* payload, uint16_t cnt, uint8_t fid);
 XBEE_RET_t xbee_is_connected(void);
-XBEE_RET_t xbee_wait_for_connected(uint8_t timeout);
-XBEE_RET_t xbee_wait_for_reconnected(uint8_t timeout);
+XBEE_RET_t xbee_wait_for_connected(void);
+XBEE_RET_t xbee_wait_for_reconnected(void);
 XBEE_RET_t xbee_cmd_get_temperature(float* temp);
 XBEE_RET_t xbee_cmd_get_vss(float* vss);
 

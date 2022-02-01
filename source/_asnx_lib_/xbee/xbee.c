@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.c
  * @author  Dominik Widhalm
- * @version 1.3.0
- * @date    2022/01/21
+ * @version 1.3.1
+ * @date    2022/02/01
  */
 
 
@@ -102,7 +102,7 @@ XBEE_RET_t xbee_sleep_enable(void) {
     /* Request xbee sleep */
     hw_set_output_high(&xbee_sleep_req);
     /* Check xbee's response */
-    uint16_t timeout = XBEE_WAKE_TIMEOUT * (1000UL / XBEE_WAKE_TIMEOUT_DELAY);
+    uint16_t timeout = XBEE_WAKE_TIMEOUT / XBEE_WAKE_TIMEOUT_DELAY;
     while(timeout--) {
         /* Check sleep indicator pin state */
         if(hw_read_input(&xbee_sleep_ind) == HW_STATE_LOW) {
@@ -126,7 +126,7 @@ XBEE_RET_t xbee_sleep_disable(void) {
     /* Request xbee wake-up */
     hw_set_output_low(&xbee_sleep_req);
     /* Check xbee's response */
-    uint16_t timeout = XBEE_WAKE_TIMEOUT * (1000UL / XBEE_WAKE_TIMEOUT_DELAY);
+    uint16_t timeout = XBEE_WAKE_TIMEOUT / XBEE_WAKE_TIMEOUT_DELAY;
     while(timeout--) {
         /* Check sleep indicator pin state */
         if(hw_read_input(&xbee_sleep_ind) == HW_STATE_HIGH) {
@@ -307,7 +307,7 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
     uint8_t complete = 0;
     
     /*** Read data ***/
-    uint16_t timeout = XBEE_RESPONSE_TIMEOUT * (1000UL / XBEE_RESPONSE_TIMEOUT_DELAY);
+    uint16_t timeout = XBEE_RESPONSE_TIMEOUT / XBEE_RESPONSE_TIMEOUT_DELAY;
     do {
         /* Check if data is available to be received */
         if(_available()) {
@@ -536,14 +536,17 @@ XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value){
         return ret;
     }
     
-    /* Check the response */
-    ret = _at_local_response(&resp, &fid_ret);
-    if(ret < XBEE_RET_OK) {
-        /* Response error */
-        return ret;
-    }
+    uint8_t retries = 0;
+    do {
+        /* Check the response */
+        ret = _at_local_response(&resp, &fid_ret);
+        if(ret < XBEE_RET_OK) {
+            /* Response error */
+            return ret;
+        }
+    } while((fid != fid_ret) && (retries++ < XBEE_RESPONSE_RETRIES));
     
-    /* Check if the FIDs match */
+    /* Check if the FIDs matched eventually */
     if(fid != fid_ret) {
         /* FIDs do not match */
         return XBEE_RET_FID_NOT_MATCH;
@@ -574,12 +577,15 @@ XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value) {
         return ret;
     }
     
-    /* Check the response */
-    ret = _at_local_response(value, &fid_ret);
-    if(ret < XBEE_RET_OK) {
-        /* Response error */
-        return ret;
-    }
+    uint8_t retries = 0;
+    do {
+        /* Check the response */
+        ret = _at_local_response(value, &fid_ret);
+        if(ret < XBEE_RET_OK) {
+            /* Response error */
+            return ret;
+        }
+    } while((fid != fid_ret) && (retries++ < XBEE_RESPONSE_RETRIES));
     
     /* Check if the FIDs match */
     if(fid != fid_ret) {
@@ -769,7 +775,7 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
     uint8_t complete = 0;
     
     /*** Read data ***/
-    uint16_t timeout = XBEE_RESPONSE_TIMEOUT * (1000UL / XBEE_RESPONSE_TIMEOUT_DELAY);
+    uint16_t timeout = XBEE_RESPONSE_TIMEOUT / XBEE_RESPONSE_TIMEOUT_DELAY;
     do {
         /* Check if data is available to be received */
         if(_available()) {
@@ -1023,12 +1029,15 @@ XBEE_RET_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, 
         return ret;
     }
     
-    /* Check the response */
-    ret = _at_remote_response(&mac_ret, &addr_ret, &resp, &fid_ret);
-    if(ret < XBEE_RET_OK) {
-        /* Response error */
-        return ret;
-    }
+    uint8_t retries = 0;
+    do {
+        /* Check the response */
+        ret = _at_remote_response(&mac_ret, &addr_ret, &resp, &fid_ret);
+        if(ret < XBEE_RET_OK) {
+            /* Response error */
+            return ret;
+        }
+    } while((fid != fid_ret) && (retries++ < XBEE_RESPONSE_RETRIES));
     
     /* Check if the FIDs match */
     if(fid != fid_ret) {
@@ -1081,12 +1090,15 @@ XBEE_RET_t xbee_at_remote_cmd_read(uint64_t mac, uint16_t addr, char* command, u
         return ret;
     }
     
-    /* Check the response */
-    ret = _at_remote_response(&mac_ret, &addr_ret, value, &fid_ret);
-    if(ret < XBEE_RET_OK) {
-        /* Response error */
-        return ret;
-    }
+    uint8_t retries = 0;
+    do {
+        /* Check the response */
+        ret = _at_remote_response(&mac_ret, &addr_ret, value, &fid_ret);
+        if(ret < XBEE_RET_OK) {
+            /* Response error */
+            return ret;
+        }
+    } while((fid != fid_ret) && (retries++ < XBEE_RESPONSE_RETRIES));
     
     /* Check if the FIDs match */
     if(fid != fid_ret) {
@@ -1192,7 +1204,7 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
     uint8_t complete = 0;
     
     /*** Read data ***/
-    uint16_t timeout = XBEE_RESPONSE_TIMEOUT * (1000UL / XBEE_RESPONSE_TIMEOUT_DELAY);
+    uint16_t timeout = XBEE_RESPONSE_TIMEOUT / XBEE_RESPONSE_TIMEOUT_DELAY;
     do {
         /* Check if data is available to be received */
         if(_available()) {
@@ -1297,7 +1309,7 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
     uint8_t complete = 0;
     
     /*** Read data ***/
-    uint16_t timeout = XBEE_RESPONSE_TIMEOUT * (1000UL / XBEE_RESPONSE_TIMEOUT_DELAY);
+    uint16_t timeout = XBEE_RESPONSE_TIMEOUT / XBEE_RESPONSE_TIMEOUT_DELAY;
     do {
         /* Check if data is available to be received */
         if(_available()) {
@@ -1471,13 +1483,16 @@ inline XBEE_RET_t xbee_transmit_unicast(uint64_t mac, uint8_t* payload, uint16_t
  * @return      OK in case of success; ERROR otherwise
  */
 XBEE_RET_t xbee_is_connected(void) {
-    uint64_t response;
-    /* Check Xbee connection status (need 1 return byte) */
-    if(xbee_at_local_cmd_read((char *)"AI", &response) == 1) {
-        if(response == XBEE_AI_RET_SUCCESS) {
-            /* Successfully connected */
-            return XBEE_RET_OK;
-        }
+    uint64_t retval;
+    int8_t ret = xbee_at_local_cmd_read((char *)"AI", &retval);
+    if(ret != 1) {
+        /* Return error */
+        return ret;
+    }
+    /* Check Xbee connection status */
+    if(retval == XBEE_AI_RET_SUCCESS) {
+        /* Successfully connected */
+        return XBEE_RET_OK;
     }
     /* Not connected */
     return XBEE_RET_ERROR;
@@ -1487,12 +1502,11 @@ XBEE_RET_t xbee_is_connected(void) {
 /*!
  * Wait until the device has successfully joined a network.
  *
- * @param[in]   timeout     Timeout in [s]
  * @return      OK in case of success; ERROR otherwise
  */
-XBEE_RET_t xbee_wait_for_connected(uint8_t timeout) {
+XBEE_RET_t xbee_wait_for_connected(void) {
     /* Get maximum number of retries */
-    uint16_t retries = timeout * (1000UL / XBEE_JOIN_TIMEOUT_DELAY);
+    uint16_t retries = XBEE_JOIN_TIMEOUT / XBEE_JOIN_TIMEOUT_DELAY;
     /* Check xbee's response */
     while(retries--) {
         /* Check Xbee module connection */
@@ -1511,12 +1525,11 @@ XBEE_RET_t xbee_wait_for_connected(uint8_t timeout) {
 /*!
  * Wait until the device has successfully rejoined a network.
  *
- * @param[in]   timeout     Timeout in [s]
  * @return      OK in case of success; ERROR otherwise
  */
-XBEE_RET_t xbee_wait_for_reconnected(uint8_t timeout) {
+XBEE_RET_t xbee_wait_for_reconnected(void) {
     /* Get maximum number of retries */
-    uint16_t retries = timeout * (1000UL / XBEE_REJOIN_TIMEOUT_DELAY);
+    uint16_t retries = XBEE_REJOIN_TIMEOUT / XBEE_REJOIN_TIMEOUT_DELAY;
     /* Check xbee's response */
     while(retries--) {
         /* Check Xbee module connection */
