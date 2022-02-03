@@ -58,6 +58,7 @@ ASNXOBJS  		:= $(addprefix $(BUILDDIR)/,$(subst ../,,$(ASNXCOBJS)))
 CFLAGS       	 = $(TARGET_ARCH)
 CFLAGS       	+= -DF_CPU=$(F_CPU)
 CFLAGS       	+= -O$(OPTIMIZATION)
+CFLAGS       	+= -flto
 LDFLAGS      	 = -lm
 # Compiler warning flags
 CFLAGS      	+= -std=gnu99
@@ -73,6 +74,7 @@ CFLAGS        	+= -Wstrict-prototypes
 CFLAGS        	+= -Wmissing-prototypes
 CFLAGS        	+= -Wwrite-strings
 CFLAGS        	+= -Wunreachable-code
+CFLAGS        	+= -Werror
 
 -include $(OBJS:.o=.d)
 

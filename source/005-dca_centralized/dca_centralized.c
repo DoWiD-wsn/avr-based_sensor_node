@@ -621,7 +621,7 @@ int main(void) {
         /* Active runtime monitor (X_ART) */
         if(runtime > 0) {
             /* Subsequent cycle -> measurement available */
-            runtime_ms = (uint16_t)((float)runtime * 0.256);
+            runtime_ms = (uint16_t)((double)runtime * 0.256);
             x_art = x_art_get_normalized(runtime_ms);
         } else {
             x_art = 0.0;
