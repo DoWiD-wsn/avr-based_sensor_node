@@ -126,7 +126,7 @@ uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
 void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
-void sleep_until_reset(uint8_t delay);
+void sleep_until_reset(void);
 #if ASNX_VERSION_MINOR==0
 void update(void);
 #endif
@@ -153,9 +153,9 @@ void get_mcusr(void) {
 /*!
  * Activate WDT with given delay, put MCU to sleep and wait for reset.
  */
-void sleep_until_reset(uint8_t delay) {
-    /* Enable Watchdog with given delay */
-    wdt_enable(delay);
+void sleep_until_reset(void) {
+    /* Enable Watchdog with shortest delay */
+    wdt_enable(WDTO_15MS);
     /* Put MCU to sleep */
     sleep_enable();
     sleep_bod_disable();
@@ -337,7 +337,7 @@ int main(void) {
     ret = pcf85263_init_wakeup_src(&time);
     if(ret != PCF85263_RET_OK) {
         printf("Couldn't initialize RTC (%d) ... aborting!\n",ret);
-        sleep_until_reset(WDTO_15MS);
+        sleep_until_reset();
     }
     /* Configure INT2 to fire interrupt when logic level is "low" */
     EICRA = 0x00;
@@ -356,13 +356,13 @@ int main(void) {
     ret = tmp275_init(&tmp275, TMP275_I2C_ADDRESS);
     if(ret != TMP275_RET_OK) {
         printf("Couldn't initialize TMP275 (%d) ... aborting!\n",ret);
-        sleep_until_reset(WDTO_15MS);
+        sleep_until_reset();
     }
     /* Configure the TMP275 sensor (SD; 10-bit mode) */
     ret = tmp275_set_config(&tmp275, 0x21);
     if(ret != TMP275_RET_OK) {
         printf("Couldn't configure TMP275 (%d) ... aborting!\n",ret);
-        sleep_until_reset(WDTO_15MS);
+        sleep_until_reset();
     }
     /* Status message */
     printf("TMP275 initialized ...\n");
@@ -411,7 +411,7 @@ int main(void) {
     if(ret != XBEE_RET_OK) {
         printf("\nCouldn't connect to the network (%d) ... aborting!\n",ret);
         /* Wait for watchdog reset */
-        sleep_until_reset(WDTO_8S);
+        sleep_until_reset();
     }
     /* Print status message */
     printf("connected\n");
@@ -428,7 +428,7 @@ int main(void) {
         ret = pcf85263_stop();
         if(ret != PCF85263_RET_OK) {
             printf("Couldn't stop RTC (%d) ... aborting!\n",ret);
-            sleep_until_reset(WDTO_15MS);
+            sleep_until_reset();
         }
         /* Reset time structure for stop-watch reset below */
         pcf85263_clear_stw_time(&time);
@@ -438,7 +438,7 @@ int main(void) {
         ret = pcf85263_start();
         if(ret != PCF85263_RET_OK) {
             printf("Couldn't re-start RTC (%d) ... aborting!\n",ret);
-            sleep_until_reset(WDTO_15MS);
+            sleep_until_reset();
         }
 #else
         /*** 3.1) barrier synchronization *****************************/
@@ -456,7 +456,7 @@ int main(void) {
         if(ret != XBEE_RET_OK) {
             printf("Couldn't wake-up xbee radio (%d) ... aborting!\n",ret);
             /* Wait for watchdog reset */
-            sleep_until_reset(WDTO_15MS);
+            sleep_until_reset();
         }
         
         /* Start timer1 with prescaler 1024 -> measurement interval [256us; 16.78s] */
@@ -662,8 +662,13 @@ int main(void) {
         if(x_ic_get() >= X_IC_THRESHOLD) {
             printf("There were too many software incidents ... aborting!\n");
             /* Wait for watchdog reset */
-            sleep_until_reset(WDTO_15MS);
+            sleep_until_reset();
         }
+        
+        /* Save runtime measurement */
+        timer1_stop();
+        runtime = timer1_get_tcnt();
+        timer1_set_tcnt(0);
 
 
         /*** 3.5) send values via Zigbee ******************************/
@@ -674,7 +679,7 @@ int main(void) {
         if(ret != XBEE_RET_OK) {
             printf("\nERROR rejoining the network (%d) ... aborting!\n",ret);
             /* Wait for watchdog reset */
-            sleep_until_reset(WDTO_8S);
+            sleep_until_reset();
         } else {
             printf(" connected\n");
         }
@@ -723,18 +728,12 @@ int main(void) {
 
 
         /*** 3.6) disable modules/sensors *****************************/
-        /* Stop timer1 to save runtime measurement */
-        timer1_stop();
-        /* Save timer1 counter value */
-        runtime = timer1_get_tcnt();
-        /* Reset timer1 counter value to 0 */
-        timer1_set_tcnt(0);
         /* Send xbee to sleep */
         ret = xbee_sleep_enable();
         if(ret != XBEE_RET_OK) {
             printf("Couldn't send xbee radio to sleep (%d) ... aborting!\n",ret);
             /* Wait for watchdog reset */
-            sleep_until_reset(WDTO_8S);
+            sleep_until_reset();
         }
         /* Disable ADC */
         adc_disable();
@@ -760,7 +759,5 @@ int main(void) {
 ISR(INT2_vect) {
     /* Actually not needed, but still ... */
     sleep_disable();
-    /* Give the MCU some time to fully wake up */
-    _delay_ms(5);
 }
 #endif
