@@ -3,7 +3,7 @@
 The **A**VR-based **S**ensor **N**ode with **X**bee, short **ASN(x)**, is a low-cost platform for low-power sensor nodes specifically for (environmental) monitoring applications, both indoor and outdoor.
 It was designed with a focus on energy efficiency and robustness.
 
-![PCB front (/media/pcb/avr_sensor_node-3d.png)](/media/pcb/avr_sensor_node-3d.png)
+![PCB 3D (/media/pcb/avr_sensor_node-3d.png)](/media/pcb/avr_sensor_node-3d.png)
 
 
 ## Key Facts
