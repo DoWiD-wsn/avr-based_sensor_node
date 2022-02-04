@@ -281,8 +281,6 @@ int main(void) {
 
 
     /*** 1.) initialize modules ***************************************/
-    /* Disable WDT just to be sure */
-    wdt_disable();
     /* Disable unused hardware modules */
 #if ASNX_VERSION_MINOR>0
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
@@ -406,15 +404,15 @@ int main(void) {
     
     /*** 2.) connect to the Zigbee network ****************************/
     /* Check Xbee module connection */
-    printf("Connecting to Zigbee network ... ");
+    printf("Connecting to Zigbee network ... \n");
     ret = xbee_wait_for_connected();
     if(ret != XBEE_RET_OK) {
-        printf("\nCouldn't connect to the network (%d) ... aborting!\n",ret);
+        printf("Couldn't connect to the network (%d) ... aborting!\n",ret);
         /* Wait for watchdog reset */
         sleep_until_reset();
     }
     /* Print status message */
-    printf("connected\n");
+    printf("=> Connected\n");
 
 
     while(1) {

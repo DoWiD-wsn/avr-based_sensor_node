@@ -14,9 +14,6 @@
 #include "xbee.h"
 
 
-#  include "util/printf.h"
-
-
 /***** GLOBAL VARIABLES ***********************************************/
 /*! Xbee sleep request pin GPIO structure */
 hw_io_t xbee_sleep_req;
