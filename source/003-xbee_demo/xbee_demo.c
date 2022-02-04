@@ -48,7 +48,7 @@ int main(void) {
     printf("=== STARTING UP ... ===\n");
     
     /* Check Xbee module connection */
-    if(xbee_wait_for_connected(XBEE_JOIN_TIMEOUT) != XBEE_RET_OK) {
+    if(xbee_wait_for_connected() != XBEE_RET_OK) {
         printf("Couldn't connect to the network ... aborting!\n");
         while(1);
     }

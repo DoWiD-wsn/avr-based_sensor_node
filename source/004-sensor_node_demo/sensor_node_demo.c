@@ -370,7 +370,7 @@ int main(void) {
 #endif
 
     /* Check Xbee module connection */
-    ret = xbee_wait_for_connected(XBEE_JOIN_TIMEOUT);
+    ret = xbee_wait_for_connected();
     if(ret != XBEE_RET_OK) {
         printf("Couldn't connect to the network (%d) ... aborting!\n",ret);
         /* Wait for watchdog reset */
@@ -568,7 +568,7 @@ int main(void) {
         msg.struc.cnt = index;
         /* Check Xbee module connection */
         uart0_rx_cb_flush();
-        ret = xbee_wait_for_reconnected(XBEE_REJOIN_TIMEOUT);
+        ret = xbee_wait_for_reconnected();
         if(ret != XBEE_RET_OK) {
             printf("ERROR rejoining the netwotk (%d) ... aborting!\n",ret);
             /* Wait for watchdog reset */
