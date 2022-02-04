@@ -6,6 +6,12 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
+### Changed
+### Removed
+
+
+## [1.5] - 2022-02-04
+### Added
 - Added silk layer labels to pins of the expansion headers
 - Added decoupling capacitors to ADC diagnostic inputs
 ### Changed

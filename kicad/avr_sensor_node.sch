@@ -5,8 +5,8 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title "AVR-based Sensor Node with Xbee (ASN(x))"
-Date "2021-10-14"
-Rev "1.4"
+Date "2022-02-04"
+Rev "1.5"
 Comp "UAS Technikum Wien"
 Comment1 ""
 Comment2 ""
