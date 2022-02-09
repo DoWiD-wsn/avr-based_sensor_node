@@ -115,7 +115,7 @@ typedef struct {
 /***** GLOBAL VARIABLES ***********************************************/
 #if ASNX_VERSION_MINOR==0
 /*! Variable (flag) for barrier synchronization */
-uint8_t barrier = 1;
+volatile uint8_t barrier = 1;
 #endif
 /*!
  * Put a MCUSR register dump into the .noinit section.
@@ -416,11 +416,11 @@ int main(void) {
 
 
     while(1) {
+#if ASNX_VERSION_MINOR>0
         /*** (Re-)enable I2C interface ***/
         /* Reset the TWI */
         i2c_reset();
         
-#if ASNX_VERSION_MINOR>0
         /*** 3.1) reset RTC (stop-watch mode) *************************/
         /* Stop RTC */
         ret = pcf85263_stop();
@@ -441,9 +441,7 @@ int main(void) {
 #else
         /*** 3.1) barrier synchronization *****************************/
         /* Wait until the barrier sync flag is set */
-        while(barrier == 0) {
-            _delay_ms(100);
-        }
+        while(barrier == 0);
         /* Reset barrier sync flag */
         barrier = 0;
 #endif
@@ -498,9 +496,11 @@ int main(void) {
 #if ENABLE_AM2302
         /* Check if sensor is ready */
         if(am2302_en == 0) {
-            dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302);
-            printf("Successfully (re-)initialized AM2302!\n");
-            am2302_en = 1;
+            /* Try to initialize sensor (again) */
+            if(dht_init(&am2302, &DDRD, &PORTD, &PIND, PD7, DHT_DEV_AM2302) == DHT_RET_OK) {
+                printf("Successfully (re-)initialized AM2302!\n");
+                am2302_en = 1;
+            }
         }
         if(am2302_en == 1) {
             /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
