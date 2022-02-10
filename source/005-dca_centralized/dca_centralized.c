@@ -20,8 +20,8 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 2.1.3
- * @date    2022/02/01
+ * @version 2.1.4
+ * @date    2022/02/10
  */
 
 
@@ -156,10 +156,12 @@ void get_mcusr(void) {
 void sleep_until_reset(void) {
     /* Enable Watchdog with shortest delay */
     wdt_enable(WDTO_15MS);
+#if ASNX_VERSION_MINOR>0
     /* Put MCU to sleep */
     sleep_enable();
     sleep_bod_disable();
     sleep_cpu();
+#endif
 }
 
 
