@@ -361,10 +361,13 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
                     
                     break;
             }
+        } else {
+            /* Decrease timeout */
+            timeout--;
+            /* Wait for some time */
+            _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
         }
-        /* Wait for some time */
-        _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    } while((--timeout > 0) && (complete==0));
+    } while((timeout > 0) && (complete==0));
     /* Check if timeout has triggered */
     if(timeout == 0) {
         /* Response timed out */
@@ -508,6 +511,7 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
     }
     /* Get the frame id */
     *fid = data[4];
+    
     /* Done - Return the size of the command value */
     return resp_cnt;
 }
@@ -575,7 +579,7 @@ XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value) {
         /* Sending failed */
         return ret;
     }
-    
+
     uint8_t retries = 0;
     do {
         /* Check the response */
@@ -830,10 +834,13 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
                     
                     break;
             }
+        } else {
+            /* Decrease timeout */
+            timeout--;
+            /* Wait for some time */
+            _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
         }
-        /* Wait for some time */
-        _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    } while((--timeout > 0) && (complete==0));
+    } while((timeout > 0) && (complete==0));
     /* Check if timeout has triggered */
     if(timeout == 0) {
         /* Response timed out */
@@ -1259,10 +1266,13 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
                     
                     break;
             }
+        } else {
+            /* Decrease timeout */
+            timeout--;
+            /* Wait for some time */
+            _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
         }
-        /* Wait for some time */
-        _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    } while((--timeout > 0) && (complete==0));
+    } while((timeout > 0) && (complete==0));
     /* Check if timeout has triggered */
     if(timeout == 0) {
         /* Response timed out */
@@ -1364,10 +1374,13 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
                     
                     break;
             }
+        } else {
+            /* Decrease timeout */
+            timeout--;
+            /* Wait for some time */
+            _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
         }
-        /* Wait for some time */
-        _delay_ms(XBEE_RESPONSE_TIMEOUT_DELAY);
-    } while((--timeout > 0) && (complete==0));
+    } while((timeout > 0) && (complete==0));
     /* Check if timeout has triggered */
     if(timeout == 0) {
         /* Response timed out */
