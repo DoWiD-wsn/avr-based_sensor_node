@@ -156,12 +156,10 @@ void get_mcusr(void) {
 void sleep_until_reset(void) {
     /* Enable Watchdog with shortest delay */
     wdt_enable(WDTO_15MS);
-#if ASNX_VERSION_MINOR>0
     /* Put MCU to sleep */
     sleep_enable();
     sleep_bod_disable();
     sleep_cpu();
-#endif
 }
 
 
@@ -283,11 +281,11 @@ int main(void) {
 
 
     /*** 1.) initialize modules ***************************************/
+    /* Configure the sleep mode */
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     /* Disable unused hardware modules */
 #if ASNX_VERSION_MINOR>0
     PRR0 = _BV(PRTIM2) | _BV(PRTIM0) | _BV(PRSPI);
-    /* Configure the sleep mode */
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 #else
     PRR0 = _BV(PRTIM2) | _BV(PRSPI);
 #endif
