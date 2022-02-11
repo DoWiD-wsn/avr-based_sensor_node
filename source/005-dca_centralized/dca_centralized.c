@@ -29,7 +29,7 @@
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
 #define ENABLE_DBG_MSG              0               /**< Enable debug output of message content */
 #define ENABLE_DBG_INDICATOR        0               /**< Enable debug output of indicator values */
-#define UPDATE_INTERVAL             10              /**< Update interval [min] */
+#define UPDATE_INTERVAL             5               /**< Update interval [min] */
 #define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
 /* Zigbee network */
 #define ZIGBEE_ENABLE_ACK           0               /**< Enable (1) or disable (0) transmit response */
@@ -144,9 +144,12 @@ void dbg_print_indicator(float danger, float safe, float x_nt, float x_vs, float
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
 void get_mcusr(void) {
-  MCUSR_dump = MCUSR;
-  MCUSR = 0;
-  wdt_disable();
+    /* Make a copy of the MCUSR */
+    MCUSR_dump = MCUSR;
+    /* Reset the actual MCUSR */
+    MCUSR = 0;
+    /* Disable the WDT */
+    wdt_disable();
 }
 
 
@@ -404,15 +407,15 @@ int main(void) {
     
     /*** 2.) connect to the Zigbee network ****************************/
     /* Check Xbee module connection */
-    printf("Connecting to Zigbee network ... \n");
+    printf("Connecting to Zigbee network ... ");
     ret = xbee_wait_for_connected();
     if(ret != XBEE_RET_OK) {
-        printf("Couldn't connect to the network (%d) ... aborting!\n",ret);
+        printf("\nCouldn't connect to the network (%d) ... aborting!\n",ret);
         /* Wait for watchdog reset */
         sleep_until_reset();
     }
     /* Print status message */
-    printf("=> Connected\n");
+    printf("connected!\n");
 
 
     while(1) {
@@ -679,7 +682,7 @@ int main(void) {
             /* Wait for watchdog reset */
             sleep_until_reset();
         } else {
-            printf(" connected\n");
+            printf("connected!\n");
         }
 #if ENABLE_DBG_MSG
         /* Print the contents of the message to be sent */
@@ -737,8 +740,7 @@ int main(void) {
         adc_disable();
         /* Disable the self-diagnostics */
         diag_disable();
-
-
+        
 #if ASNX_VERSION_MINOR>0
         /*** 3.7) put MCU to sleep ************************************/
         sleep_enable();

@@ -40,19 +40,19 @@
 #define XBEE_JOIN_TIMEOUT_DELAY             (50)
 
 /*! Re-join network timeout [s] */
-#define XBEE_REJOIN_TIMEOUT                 (5)
+#define XBEE_REJOIN_TIMEOUT                 (10)
 /*! Re-join network delay between tries [ms] */
 #define XBEE_REJOIN_TIMEOUT_DELAY           (25)
 
 /*! Wake-up timeout [s] */
-#define XBEE_WAKE_TIMEOUT                   (2)
+#define XBEE_WAKE_TIMEOUT                   (5)
 /*! Wake-up delay between tries [ms] */
 #define XBEE_WAKE_TIMEOUT_DELAY             (10)
 
 /*! Response retries [cnt] */
 #define XBEE_RESPONSE_RETRIES               (5)
 /*! Response timeout [s] */
-#define XBEE_RESPONSE_TIMEOUT               (2)
+#define XBEE_RESPONSE_TIMEOUT               (5)
 /*! Response delay between tries [ms] */
 #define XBEE_RESPONSE_TIMEOUT_DELAY         (10)
 
