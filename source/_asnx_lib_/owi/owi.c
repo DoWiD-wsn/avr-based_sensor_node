@@ -63,6 +63,8 @@ uint8_t owi_reset(hw_io_t* gpio) {
     do {
         /* Check if timeout has been reached */
         if(--retries == 0) {
+            /* Re-enable interrupts */
+            sei();
             return 0;
         }
         /* Wait for some time */

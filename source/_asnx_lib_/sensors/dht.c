@@ -104,6 +104,8 @@ static DHT_RET_t _read(DHT_t* dev) {
             _delay_ms(20);
             break;
         default:
+            /* Re-enable interrupts */
+            sei();
             /* Unsupported sensor type */
             return DHT_RET_ERROR_TYPE;
     }
@@ -114,11 +116,15 @@ static DHT_RET_t _read(DHT_t* dev) {
     
     /* Check start condition high level */
     if(HW_GPIO_READ(gpio)) {
+        /* Re-enable interrupts */
+        sei();
         return DHT_RET_ERROR_START;
     }
     _delay_us(80);
     /* Check start condition low level */
     if(!HW_GPIO_READ(gpio)) {
+        /* Re-enable interrupts */
+        sei();
         return DHT_RET_ERROR_START;
     }
     _delay_us(80);
@@ -136,6 +142,8 @@ static DHT_RET_t _read(DHT_t* dev) {
                 cnt++;
                 /* Check if timeout has been reached */
                 if(cnt > DHT_TIMING_TIMEOUT) {
+                    /* Re-enable interrupts */
+                    sei();
                     return DHT_RET_ERROR_TIMEOUT;
                 }
             }
@@ -152,6 +160,8 @@ static DHT_RET_t _read(DHT_t* dev) {
                 cnt++;
                 /* Check if timeout has been reached */
                 if(cnt > DHT_TIMING_TIMEOUT) {
+                    /* Re-enable interrupts */
+                    sei();
                     return DHT_RET_ERROR_TIMEOUT;
                 }
             }
