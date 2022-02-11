@@ -676,7 +676,7 @@ int main(void) {
         /* Check Xbee module connection */
         printf("Check Zigbee network connection ... ");
         uart0_rx_cb_flush();
-        ret = xbee_wait_for_reconnected();
+        ret = xbee_wait_for_connected();
         if(ret != XBEE_RET_OK) {
             printf("\nERROR rejoining the network (%d) ... aborting!\n",ret);
             /* Wait for watchdog reset */

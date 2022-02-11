@@ -37,24 +37,19 @@
 /*! Join network timeout [s] */
 #define XBEE_JOIN_TIMEOUT                   (30)
 /*! Join network delay between tries [ms] */
-#define XBEE_JOIN_TIMEOUT_DELAY             (50)
-
-/*! Re-join network timeout [s] */
-#define XBEE_REJOIN_TIMEOUT                 (10)
-/*! Re-join network delay between tries [ms] */
-#define XBEE_REJOIN_TIMEOUT_DELAY           (25)
+#define XBEE_JOIN_TIMEOUT_DELAY             (25)
 
 /*! Wake-up timeout [s] */
-#define XBEE_WAKE_TIMEOUT                   (5)
+#define XBEE_WAKE_TIMEOUT                   (1)
 /*! Wake-up delay between tries [ms] */
 #define XBEE_WAKE_TIMEOUT_DELAY             (10)
 
 /*! Response retries [cnt] */
 #define XBEE_RESPONSE_RETRIES               (5)
-/*! Response timeout [s] */
-#define XBEE_RESPONSE_TIMEOUT               (5)
+/*! Response timeout [ms] */
+#define XBEE_RESPONSE_TIMEOUT               (100)
 /*! Response delay between tries [ms] */
-#define XBEE_RESPONSE_TIMEOUT_DELAY         (10)
+#define XBEE_RESPONSE_TIMEOUT_DELAY         (5)
 
 /*! Maximum Number of Transmission Bytes (for transparent mode) */
 #define XBEE_CONF_NP                        (54)
@@ -262,7 +257,6 @@ XBEE_RET_t xbee_transmit_broadcast(uint8_t* payload, uint16_t cnt, uint8_t fid);
 XBEE_RET_t xbee_transmit_unicast(uint64_t mac, uint8_t* payload, uint16_t cnt, uint8_t fid);
 XBEE_RET_t xbee_is_connected(void);
 XBEE_RET_t xbee_wait_for_connected(void);
-XBEE_RET_t xbee_wait_for_reconnected(void);
 XBEE_RET_t xbee_cmd_get_temperature(float* temp);
 XBEE_RET_t xbee_cmd_get_vss(float* vss);
 
