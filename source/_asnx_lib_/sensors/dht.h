@@ -6,7 +6,7 @@
  *
  * @file    /_asnx_lib_/sensors/dht.h
  * @author  Dominik Widhalm
- * @version 1.2.3
+ * @version 1.2.4
  * @date    2022/02/11
  */
 

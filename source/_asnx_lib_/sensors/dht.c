@@ -6,7 +6,7 @@
  *
  * @file    /_asnx_lib_/sensors/dht.c
  * @author  Dominik Widhalm
- * @version 1.2.3
+ * @version 1.2.4
  * @date    2022/02/11
  *
  * @see     http://davidegironi.blogspot.com/2013/02/reading-temperature-and-humidity-on-avr.html
@@ -106,6 +106,9 @@ static DHT_RET_t _read(DHT_t* dev) {
         default:
             /* Re-enable interrupts */
             sei();
+            /* Re-set gpio output */
+            HW_GPIO_OUTPUT(gpio);
+            HW_GPIO_HIGH(gpio);
             /* Unsupported sensor type */
             return DHT_RET_ERROR_TYPE;
     }
@@ -118,6 +121,10 @@ static DHT_RET_t _read(DHT_t* dev) {
     if(HW_GPIO_READ(gpio)) {
         /* Re-enable interrupts */
         sei();
+        /* Re-set gpio output */
+        HW_GPIO_OUTPUT(gpio);
+        HW_GPIO_HIGH(gpio);
+        /* Did not get start condition */
         return DHT_RET_ERROR_START;
     }
     _delay_us(80);
@@ -125,6 +132,10 @@ static DHT_RET_t _read(DHT_t* dev) {
     if(!HW_GPIO_READ(gpio)) {
         /* Re-enable interrupts */
         sei();
+        /* Re-set gpio output */
+        HW_GPIO_OUTPUT(gpio);
+        HW_GPIO_HIGH(gpio);
+        /* Did not get start condition */
         return DHT_RET_ERROR_START;
     }
     _delay_us(80);
@@ -144,6 +155,10 @@ static DHT_RET_t _read(DHT_t* dev) {
                 if(cnt > DHT_TIMING_TIMEOUT) {
                     /* Re-enable interrupts */
                     sei();
+                    /* Re-set gpio output */
+                    HW_GPIO_OUTPUT(gpio);
+                    HW_GPIO_HIGH(gpio);
+                    /* Timeout reached */
                     return DHT_RET_ERROR_TIMEOUT;
                 }
             }
@@ -162,6 +177,10 @@ static DHT_RET_t _read(DHT_t* dev) {
                 if(cnt > DHT_TIMING_TIMEOUT) {
                     /* Re-enable interrupts */
                     sei();
+                    /* Re-set gpio output */
+                    HW_GPIO_OUTPUT(gpio);
+                    HW_GPIO_HIGH(gpio);
+                    /* Timeout reached */
                     return DHT_RET_ERROR_TIMEOUT;
                 }
             }
