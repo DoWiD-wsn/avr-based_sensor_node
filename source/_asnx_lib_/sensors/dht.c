@@ -6,8 +6,8 @@
  *
  * @file    /_asnx_lib_/sensors/dht.c
  * @author  Dominik Widhalm
- * @version 1.2.2
- * @date    2021/12/29
+ * @version 1.2.3
+ * @date    2022/02/11
  *
  * @see     http://davidegironi.blogspot.com/2013/02/reading-temperature-and-humidity-on-avr.html
  */

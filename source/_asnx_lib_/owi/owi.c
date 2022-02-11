@@ -6,8 +6,8 @@
  *
  * @file    /_asnx_lib_/owi/owi.c
  * @author  Dominik Widhalm
- * @version 1.2.0
- * @date    2021/06/07
+ * @version 1.2.1
+ * @date    2022/02/11
  * @see     https://github.com/szszoke/atmega328p/blob/master/onewire/
  * @see     https://hacksterio.s3.amazonaws.com/uploads/attachments/229743/OneWire.zip
  */

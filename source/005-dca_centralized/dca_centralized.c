@@ -20,8 +20,8 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 2.1.4
- * @date    2022/02/10
+ * @version 2.1.5
+ * @date    2022/02/11
  */
 
 

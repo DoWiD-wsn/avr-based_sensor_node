@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.h
  * @author  Dominik Widhalm
- * @version 1.3.3
- * @date    2022/02/10
+ * @version 1.3.4
+ * @date    2022/02/11
  */
 
 #ifndef _ASNX_XBEE_H_
