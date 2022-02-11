@@ -62,7 +62,7 @@
 /*! decrement value */
 #define X_IC_DEC_NORM                       1
 /*! threshold for maximum number of incidents in total */
-#define X_IC_THRESHOLD                      50
+#define X_IC_THRESHOLD                      10
 /* ADC self-check (X_ADC) */
 /*! maximum value for normalization */
 #define X_ADC_MAX                           25.0
