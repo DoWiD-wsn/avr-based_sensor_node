@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.h
  * @author  Dominik Widhalm
- * @version 1.3.4
- * @date    2022/02/11
+ * @version 1.3.5
+ * @date    2022/02/14
  */
 
 #ifndef _ASNX_XBEE_H_
@@ -34,22 +34,22 @@
 #define XBEE_SLEEP_IND_PIN                  (PINC)
 #define XBEE_SLEEP_IND_GPIO                 (PC7)
 
-/*! Join network timeout [s] */
-#define XBEE_JOIN_TIMEOUT                   (30)
+/*! Join network attempt retries */
+#define XBEE_JOIN_RETRIES                   (500)
 /*! Join network delay between tries [ms] */
-#define XBEE_JOIN_TIMEOUT_DELAY             (25)
+#define XBEE_JOIN_DELAY                     (50)
 
-/*! Wake-up timeout [s] */
-#define XBEE_WAKE_TIMEOUT                   (1)
+/*! Wake-up attempt retries */
+#define XBEE_WAKE_RETRIES                   (500)
 /*! Wake-up delay between tries [ms] */
-#define XBEE_WAKE_TIMEOUT_DELAY             (10)
+#define XBEE_WAKE_DELAY                     (10)
 
-/*! Response retries [cnt] */
-#define XBEE_RESPONSE_RETRIES               (5)
-/*! Response timeout [ms] */
-#define XBEE_RESPONSE_TIMEOUT               (100)
+/*! Response receice attempts [cnt] */
+#define XBEE_RESPONSE_ATTEMPTS              (5)
+/*! Response attempt retries */
+#define XBEE_RESPONSE_RETRIES               (500)
 /*! Response delay between tries [ms] */
-#define XBEE_RESPONSE_TIMEOUT_DELAY         (5)
+#define XBEE_RESPONSE_DELAY                 (10)
 
 /*! Maximum Number of Transmission Bytes (for transparent mode) */
 #define XBEE_CONF_NP                        (54)

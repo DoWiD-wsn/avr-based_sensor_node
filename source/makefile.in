@@ -58,7 +58,7 @@ ASNXOBJS  		:= $(addprefix $(BUILDDIR)/,$(subst ../,,$(ASNXCOBJS)))
 CFLAGS       	 = $(TARGET_ARCH)
 CFLAGS       	+= -DF_CPU=$(F_CPU)
 CFLAGS       	+= -O$(OPTIMIZATION)
-#CFLAGS       	+= -flto				# CAUTION: using lto was found to cause problems with AVR WDT
+CFLAGS       	+= -flto
 LDFLAGS      	 = -lm
 # Compiler warning flags
 CFLAGS      	+= -std=gnu99

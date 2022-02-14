@@ -20,8 +20,8 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 2.1.5
- * @date    2022/02/11
+ * @version 2.1.6
+ * @date    2022/02/14
  */
 
 
@@ -121,11 +121,11 @@ volatile uint8_t barrier = 1;
  * Put a MCUSR register dump into the .noinit section.
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
-uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
+uint8_t MCUSR_dump __attribute__ ((section (".noinit"), used));
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
-void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
+void get_mcusr(void) __attribute__((section(".init3"), naked, used));
 void sleep_until_reset(void);
 #if ASNX_VERSION_MINOR==0
 void update(void);
@@ -726,7 +726,6 @@ int main(void) {
 #endif
         /* Increment message number ("time") */
         msg.time++;
-
 
         /*** 3.6) disable modules/sensors *****************************/
         /* Send xbee to sleep */
