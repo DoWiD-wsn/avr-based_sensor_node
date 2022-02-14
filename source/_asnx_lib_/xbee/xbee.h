@@ -5,7 +5,7 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.h
  * @author  Dominik Widhalm
- * @version 1.3.5
+ * @version 1.3.6
  * @date    2022/02/14
  */
 
@@ -35,19 +35,19 @@
 #define XBEE_SLEEP_IND_GPIO                 (PC7)
 
 /*! Join network attempt retries */
-#define XBEE_JOIN_RETRIES                   (500)
+#define XBEE_JOIN_RETRIES                   (200)
 /*! Join network delay between tries [ms] */
 #define XBEE_JOIN_DELAY                     (50)
 
 /*! Wake-up attempt retries */
-#define XBEE_WAKE_RETRIES                   (500)
+#define XBEE_WAKE_RETRIES                   (100)
 /*! Wake-up delay between tries [ms] */
 #define XBEE_WAKE_DELAY                     (10)
 
-/*! Response receice attempts [cnt] */
+/*! Response receive attempts */
 #define XBEE_RESPONSE_ATTEMPTS              (5)
 /*! Response attempt retries */
-#define XBEE_RESPONSE_RETRIES               (500)
+#define XBEE_RESPONSE_RETRIES               (10)
 /*! Response delay between tries [ms] */
 #define XBEE_RESPONSE_DELAY                 (10)
 

@@ -5,7 +5,7 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.c
  * @author  Dominik Widhalm
- * @version 1.3.5
+ * @version 1.3.6
  * @date    2022/02/14
  */
 
@@ -310,7 +310,7 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
     uint16_t timeout = XBEE_RESPONSE_RETRIES;
     do {
         /* Check if data is available to be received */
-        if(_available()) {
+        if(_available() > 0) {
             /* Read next byte */
             if(_read(&data[pos]) != 0) {
                 /* Read failed */
@@ -342,11 +342,6 @@ static XBEE_RET_t _at_local_response(uint64_t* value, uint8_t* fid) {
                     break;
                 /* All other bytes ... */
                 default:
-                    /* Check if maximum frame data size has been exceeded */
-                    if(pos > (17-1)) {
-                        /* Size limit exceed */
-                        return XBEE_RET_PAYLOAD_SIZE_EXCEEDED;
-                    }
                     /* Check if the end of the frame has been reached */
                     /* Packet length does not include start, length, or checksum bytes -> add 3 */
                     if(pos == (len+3)) {
@@ -536,6 +531,9 @@ XBEE_RET_t xbee_at_local_cmd_write(char* command, uint64_t value){
         return ret;
     }
     
+    /* Give the xbee some time to respond */
+    _delay_ms(XBEE_RESPONSE_DELAY);
+    
     uint8_t attempts = 0;
     do {
         /* Check the response */
@@ -576,6 +574,9 @@ XBEE_RET_t xbee_at_local_cmd_read(char* command, uint64_t* value) {
         /* Sending failed */
         return ret;
     }
+
+    /* Give the xbee some time to respond */
+    _delay_ms(XBEE_RESPONSE_DELAY);
 
     uint8_t attempts = 0;
     do {
@@ -778,7 +779,7 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
     uint16_t timeout = XBEE_RESPONSE_RETRIES;
     do {
         /* Check if data is available to be received */
-        if(_available()) {
+        if(_available() > 0) {
             /* Read next byte */
             if(_read(&data[pos]) != 0) {
                 /* Read failed */
@@ -813,11 +814,6 @@ static XBEE_RET_t _at_remote_response(uint64_t* mac, uint16_t* addr, uint64_t* v
                     break;
                 /* All other bytes ... */
                 default:
-                    /* Check if maximum frame data size has been exceeded */
-                    if(pos > (27-1)) {
-                        /* Size limit exceed */
-                        return XBEE_RET_PAYLOAD_SIZE_EXCEEDED;
-                    }
                     /* Check if the end of the frame has been reached */
                     /* Packet length does not include start, length, or checksum bytes -> add 3 */
                     if(pos == (len+3)) {
@@ -1032,6 +1028,9 @@ XBEE_RET_t xbee_at_remote_cmd_write(uint64_t mac, uint16_t addr, char* command, 
         return ret;
     }
     
+    /* Give the xbee some time to respond */
+    _delay_ms(XBEE_RESPONSE_DELAY);
+    
     uint8_t attempts = 0;
     do {
         /* Check the response */
@@ -1092,6 +1091,9 @@ XBEE_RET_t xbee_at_remote_cmd_read(uint64_t mac, uint16_t addr, char* command, u
         /* Sending failed */
         return ret;
     }
+    
+    /* Give the xbee some time to respond */
+    _delay_ms(XBEE_RESPONSE_DELAY);
     
     uint8_t attempts = 0;
     do {
@@ -1210,7 +1212,7 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
     uint16_t timeout = XBEE_RESPONSE_RETRIES;
     do {
         /* Check if data is available to be received */
-        if(_available()) {
+        if(_available() > 0) {
             /* Read next byte */
             if(_read(&data[pos]) != 0) {
                 /* Read failed */
@@ -1245,11 +1247,6 @@ XBEE_RET_t xbee_transmit_status(uint8_t* delivery) {
                     break;
                 /* All other bytes ... */
                 default:
-                    /* Check if maximum frame data size has been exceeded */
-                    if(pos > (11-1)) {
-                        /* Size limit exceed */
-                        return XBEE_RET_PAYLOAD_SIZE_EXCEEDED;
-                    }
                     /* Check if the end of the frame has been reached */
                     /* Packet length does not include start, length, or checksum bytes -> add 3 */
                     if(pos == (len+3)) {
@@ -1318,7 +1315,7 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
     uint16_t timeout = XBEE_RESPONSE_RETRIES;
     do {
         /* Check if data is available to be received */
-        if(_available()) {
+        if(_available() > 0) {
             /* Read next byte */
             if(_read(&data[pos]) != 0) {
                 /* Read failed */
@@ -1353,11 +1350,6 @@ XBEE_RET_t xbee_transmit_status_ext(uint16_t* addr, uint8_t* retries, uint8_t* d
                     break;
                 /* All other bytes ... */
                 default:
-                    /* Check if maximum frame data size has been exceeded */
-                    if(pos > (23-1)) {
-                        /* Size limit exceed */
-                        return XBEE_RET_PAYLOAD_SIZE_EXCEEDED;
-                    }
                     /* Check if the end of the frame has been reached */
                     /* Packet length does not include start, length, or checksum bytes -> add 3 */
                     if(pos == (len+3)) {

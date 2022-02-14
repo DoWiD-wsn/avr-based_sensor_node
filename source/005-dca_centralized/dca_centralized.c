@@ -20,7 +20,7 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 2.1.6
+ * @version 2.1.7
  * @date    2022/02/14
  */
 
@@ -121,11 +121,14 @@ volatile uint8_t barrier = 1;
  * Put a MCUSR register dump into the .noinit section.
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
-uint8_t MCUSR_dump __attribute__ ((section (".noinit"), used));
+uint8_t MCUSR_dump __attribute__ ((section (".noinit"))) \
+                   __attribute__ ((used));             // Needed for LTO
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
-void get_mcusr(void) __attribute__((section(".init3"), naked, used));
+void get_mcusr(void) __attribute__((naked)) \
+                     __attribute__((section(".init3"))) \
+                     __attribute__((used));            // Needed for LTO
 void sleep_until_reset(void);
 #if ASNX_VERSION_MINOR==0
 void update(void);
@@ -157,8 +160,8 @@ void get_mcusr(void) {
  * Activate WDT with given delay, put MCU to sleep and wait for reset.
  */
 void sleep_until_reset(void) {
-    /* Enable Watchdog with shortest delay */
-    wdt_enable(WDTO_15MS);
+    /* Enable Watchdog with 60ms delay */
+    wdt_enable(WDTO_60MS);
     /* Put MCU to sleep */
     sleep_enable();
     sleep_bod_disable();
@@ -410,7 +413,7 @@ int main(void) {
     printf("Connecting to Zigbee network ... ");
     ret = xbee_wait_for_connected();
     if(ret != XBEE_RET_OK) {
-        printf("\nCouldn't connect to the network (%d) ... aborting!\n",ret);
+        printf("\nERROR connecting to the network (%d) ... aborting!\n",ret);
         /* Wait for watchdog reset */
         sleep_until_reset();
     }
@@ -693,6 +696,8 @@ int main(void) {
         ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), fid);
         if(ret == XBEE_RET_OK) {
             printf("%d. sensor value update sent ... ",msg.time);
+            /* Give the xbee some time to respond */
+            _delay_ms(XBEE_RESPONSE_DELAY);
             /* Check the transmit response */
             uint16_t addr=0x0000;
             uint8_t retries=0, status=0, discovery=0, fid_ret=0;
@@ -758,5 +763,7 @@ int main(void) {
 ISR(INT2_vect) {
     /* Actually not needed, but still ... */
     sleep_disable();
+    /* Give the MCU some time to fully wake up */
+    _delay_ms(10);
 }
 #endif
