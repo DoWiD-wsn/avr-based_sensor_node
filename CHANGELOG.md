@@ -6,7 +6,6 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
-- Added missing 3dshapes for 3d board preview
 ### Changed
 ### Removed
 
@@ -15,6 +14,7 @@ However, the major and minor number are used to express the version of the hardw
 ### Added
 - Added silk layer labels to pins of the expansion headers
 - Added decoupling capacitors to ADC diagnostic inputs
+- Added missing 3dshapes for 3d board preview
 ### Changed
 - Changed diagnostic voltage divider resistors to 100k (lesser power consumption; still accurate)
 - Changed Varef capacitor to 47nF (Atmel recommendation)
