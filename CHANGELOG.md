@@ -6,6 +6,7 @@ However, the major and minor number are used to express the version of the hardw
 
 ## [dev]
 ### Added
+- Added missing 3dshapes for 3d board preview
 ### Changed
 ### Removed
 
