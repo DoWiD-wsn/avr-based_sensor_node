@@ -6,8 +6,8 @@
  *
  * @file    /_asnx_lib_/sensors/dht.h
  * @author  Dominik Widhalm
- * @version 1.2.5
- * @date    2022/02/14
+ * @version 1.2.6
+ * @date    2022/02/18
  */
 
 #ifndef _ASNX_DHT_H_
@@ -75,6 +75,7 @@ typedef struct {
 
 /***** FUNCTION PROTOTYPES ********************************************/
 DHT_RET_t dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type);
+DHT_RET_t dht_reset(DHT_t* dev);
 DHT_RET_t dht_get_temperature(DHT_t* dev, float* temperature);
 DHT_RET_t dht_get_humidity(DHT_t* dev, float* humidity);
 DHT_RET_t dht_get_temperature_humidity(DHT_t* dev, float* temperature, float* humidity);

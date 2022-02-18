@@ -40,7 +40,7 @@
 #define XBEE_JOIN_DELAY                     (50)
 
 /*! Wake-up attempt retries */
-#define XBEE_WAKE_RETRIES                   (100)
+#define XBEE_WAKE_RETRIES                   (125)
 /*! Wake-up delay between tries [ms] */
 #define XBEE_WAKE_DELAY                     (10)
 
