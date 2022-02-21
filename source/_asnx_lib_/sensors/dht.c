@@ -6,10 +6,8 @@
  *
  * @file    /_asnx_lib_/sensors/dht.c
  * @author  Dominik Widhalm
- * @version 1.2.6
- * @date    2022/02/18
- *
- * @see     http://davidegironi.blogspot.com/2013/02/reading-temperature-and-humidity-on-avr.html
+ * @version 1.3.0
+ * @date    2022/02/21
  */
 
 
@@ -44,30 +42,11 @@ DHT_RET_t dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, vo
     /* Get a pointer to the HW GPIO structure */
     hw_io_t* gpio = &(dev->gpio);
     /* Setup the GPIO pin */
-    HW_GPIO_OUTPUT(gpio);
-    HW_GPIO_HIGH(gpio);
+    HW_GPIO_INPUT(gpio);
     /* Init was successful */
     return DHT_RET_OK;
 }
 
-
-/*!
- * Perform a low-level reading from the sensor.
- * 
- * @param[in]   dev     Pointer to the device structure
- * @return      OK* in case of success; ERROR* otherwise
- */
-DHT_RET_t dht_reset(DHT_t* dev) {
-    /* Get a pointer to the HW GPIO structure */
-    hw_io_t* gpio = &(dev->gpio);
-    /* Reset the data line */
-    HW_GPIO_OUTPUT(gpio);
-    HW_GPIO_HIGH(gpio);
-    /* Give the sensor some time to reset */
-    _delay_ms(100);
-    /* Return */
-    return DHT_RET_OK;
-}
 
 /*!
  * Perform a low-level reading from the sensor.
@@ -103,12 +82,14 @@ static DHT_RET_t _read(DHT_t* dev) {
         dev->data[i] = 0;
     }
     
-    /*** Start timing-critical section ***/
-    /* Disable interrupts */
-    cli();
+    /* Set data line to input */
+    HW_GPIO_INPUT(gpio);
+    /* Wait for 1ms */
+    _delay_ms(1);
 
     /* Send a read request */
     HW_GPIO_LOW(gpio);
+    HW_GPIO_OUTPUT(gpio);
     /* And wait for a period according to sensor type */
     switch(dev->type) {
         case DHT_DEV_DHT21:
@@ -119,7 +100,7 @@ static DHT_RET_t _read(DHT_t* dev) {
         case DHT_DEV_DHT11:
         case DHT_DEV_DHT12:
             /* Datasheet says "at least 18ms", 20ms just to be safe */
-            _delay_ms(18);
+            _delay_ms(20);
             break;
         default:
             /* Re-enable interrupts */
@@ -128,9 +109,13 @@ static DHT_RET_t _read(DHT_t* dev) {
             return DHT_RET_ERROR_TYPE;
     }
     /* Release the data line */
-    HW_GPIO_HIGH(gpio);
     HW_GPIO_INPUT(gpio);
+    HW_GPIO_HIGH(gpio);
     _delay_us(40);
+    
+    /*** Start timing-critical section ***/
+    /* Disable interrupts */
+    cli();
     
     /* Check start condition high level */
     if(HW_GPIO_READ(gpio)) {
@@ -195,10 +180,6 @@ static DHT_RET_t _read(DHT_t* dev) {
     /*** Timing-critical section finished ***/
     /* Restore interrupts */
     sei();
-    
-    /* Reset the data line */
-    HW_GPIO_OUTPUT(gpio);
-    HW_GPIO_HIGH(gpio);
     
     /* Check if the received CRC matches the data */
     if(dev->data[4] == ((dev->data[0] + dev->data[1] + dev->data[2] + dev->data[3]) & 0xFF)) {
@@ -299,8 +280,6 @@ DHT_RET_t dht_get_temperature_humidity(DHT_t* dev, float* temperature, float* hu
                 return DHT_RET_ERROR_TYPE;
         }
     } else {
-        /* Reset sensor */
-        dht_reset(dev);
         /* Reading the sensor failed */
         return ret;
     }
