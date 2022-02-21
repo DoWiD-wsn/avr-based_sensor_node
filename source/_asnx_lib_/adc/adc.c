@@ -5,16 +5,12 @@
  *
  * @file    /_asnx_lib_/adc/adc.c
  * @author  Dominik Widhalm
- * @version 1.2.1
- * @date    2021/12/29
+ * @version 1.2.4
+ * @date    2022/01/25
  */
 
 /***** INCLUDES *******************************************************/
 #include "adc.h"
-
-
-/***** FUNCTION PROTOTYPES ********************************************/
-void adc_dummy_conversion(void);
 
 
 /***** FUNCTIONS ******************************************************/
@@ -33,8 +29,6 @@ void adc_init(ADC_PRESCALER_t prescaler, ADC_AREF_t reference) {
     adc_set_reference(reference);
     /* Enable the ADC */
     adc_enable();
-    /* Perform a dummy conversion */
-    adc_dummy_conversion();
 }
 
 
@@ -64,6 +58,17 @@ void adc_enable(void) {
 void adc_disable(void) {
     /* Disable the ADC */
     ADCSRA &= ~_BV(ADEN);
+}
+
+
+/*!
+ * Disable digital input pins.
+ *
+ * @param[in]   channels    The channels/pins to be disabled
+ */
+void adc_disable_din(uint8_t channels) {
+    /* Disable desired input channels/pins */
+    DIDR0 = channels;
 }
 
 
@@ -132,15 +137,6 @@ uint16_t adc_read_input(ADC_INPUT_t input) {
 
 
 /*!
- * Perform a dummy conversion.
- */
-void adc_dummy_conversion(void) {
-    /* Perform a conversion but neglect the result */
-    (void)adc_read();
-}
-
-
-/*!
  * Measure the MCU's supply voltage internally.
  * Set the reference voltage to Vcc and read the VBG (1.1V) input.
  * The voltage is then calculated with:
@@ -155,15 +151,11 @@ float adc_read_vcc(void) {
     /* Set the register accordingly */
     ADMUX  = 0x5E;
     /* Give the reference some time to settle */
-    _delay_us(ADC_DELAY_CHANGE_REFERENCE);
-    /* Perform a dummy conversion */
-    adc_dummy_conversion();
+    _delay_us(ADC_SETTLE_DELAY);
     /* Store the converted ADC value */
     float result = (1.1 * (1023.0/(float)adc_read()));
     /* Restore the ADMUX configuration */
     ADMUX = reg;
-    /* Give the reference some time to settle */
-    _delay_us(ADC_DELAY_CHANGE_REFERENCE);
     /* Return the result */
     return result;
 }

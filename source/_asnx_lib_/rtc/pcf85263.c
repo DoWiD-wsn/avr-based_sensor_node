@@ -1380,8 +1380,8 @@ PCF85263_RET_t pcf85263_set_stw_alarm1(PCF85263_CNTTIME_t* data) {
     tmp[0]  = _dec2bcd(data->seconds) & PCF85263_SECONDS_MASK;
     tmp[1]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
     tmp[2]  = _dec2bcd(data->hours % 100);
-    tmp[3]  = _dec2bcd((data->hours / 100) % 100);
-    tmp[4]  = _dec2bcd((data->hours / 10000UL) % 100);
+    tmp[3]  = _dec2bcd((uint8_t)(data->hours / 100) % 100);
+    tmp[4]  = _dec2bcd((uint8_t)(data->hours / 10000UL) % 100);
     
     /* Write data to the device */
     if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_STW_SECOND_ALM1,tmp,5) != I2C_RET_OK) {
@@ -1435,7 +1435,7 @@ PCF85263_RET_t pcf85263_set_stw_alarm2(PCF85263_CNTTIME_t* data) {
     /* Write information into data array */
     tmp[0]  = _dec2bcd(data->minutes) & PCF85263_MINUTES_MASK;
     tmp[1]  = _dec2bcd(data->hours % 100);
-    tmp[2]  = _dec2bcd((data->hours / 100) % 100);
+    tmp[2]  = _dec2bcd((uint8_t)(data->hours / 100) % 100);
     
     /* Write data to the device */
     if(i2c_write_block(PCF85263_I2C_ADDRESS,PCF85263_STW_MINUTE_ALM2,tmp,3) != I2C_RET_OK) {

@@ -6,8 +6,8 @@
  *
  * @file    /_asnx_lib_/owi/owi.c
  * @author  Dominik Widhalm
- * @version 1.2.0
- * @date    2021/06/07
+ * @version 1.2.2
+ * @date    2022/02/11
  * @see     https://github.com/szszoke/atmega328p/blob/master/onewire/
  * @see     https://hacksterio.s3.amazonaws.com/uploads/attachments/229743/OneWire.zip
  */
@@ -63,6 +63,12 @@ uint8_t owi_reset(hw_io_t* gpio) {
     do {
         /* Check if timeout has been reached */
         if(--retries == 0) {
+            /* Re-enable interrupts */
+            sei();
+            /* Drive bus low */
+            HW_GPIO_LOW(gpio);
+            HW_GPIO_OUTPUT(gpio);
+            /* Timeout reached */
             return 0;
         }
         /* Wait for some time */

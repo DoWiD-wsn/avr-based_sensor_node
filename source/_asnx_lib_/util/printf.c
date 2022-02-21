@@ -241,7 +241,10 @@ static size_t _ftoa(out_fct_type out, char* buffer, size_t idx, size_t maxlen, d
     static const double pow10[] = { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 };
 
     /* test for special values */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
     if (value != value) {
+#pragma GCC diagnostic pop
         return _out_rev(out, buffer, idx, maxlen, "nan", 3, width, flags);
     }
     if (value < -DBL_MAX) {
@@ -355,7 +358,10 @@ static size_t _ftoa(out_fct_type out, char* buffer, size_t idx, size_t maxlen, d
 /*! internal ftoa variant for exponential floating-point type, contributed by Martijn Jasperse <m.jasperse@gmail.com> */
 static size_t _etoa(out_fct_type out, char* buffer, size_t idx, size_t maxlen, double value, unsigned int prec, unsigned int width, unsigned int flags) {
     /* check for NaN and special values */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
     if ((value != value) || (value > DBL_MAX) || (value < -DBL_MAX)) {
+#pragma GCC diagnostic pop
         return _ftoa(out, buffer, idx, maxlen, value, prec, width, flags);
     }
 

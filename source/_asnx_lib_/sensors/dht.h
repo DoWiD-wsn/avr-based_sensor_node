@@ -6,10 +6,8 @@
  *
  * @file    /_asnx_lib_/sensors/dht.h
  * @author  Dominik Widhalm
- * @version 1.2.1
- * @date    2021/08/11
- *
- * @see     http://davidegironi.blogspot.com/2013/02/reading-temperature-and-humidity-on-avr.html
+ * @version 1.3.0
+ * @date    2022/02/21
  */
 
 #ifndef _ASNX_DHT_H_
@@ -24,24 +22,25 @@
 #include <util/delay.h>
 /*** ASNX LIB ***/
 #include "hw/hw.h"
-#if DHT_CHECK_LAST_MEAS
-#  include "timer/systick.h"
-#endif
 
 
 /***** DEFINES ********************************************************/
 /*! Enable last-measurement time check (requires systick lib) */
 #define DHT_CHECK_LAST_MEAS     (0)
+#if DHT_CHECK_LAST_MEAS
+#  include "timer/systick.h"
+#endif
 
 /*! Minimal duration between two consecutive readings [s] */
-#define DHT_TIMING_MIN_INTERVAL 2000UL
-/*! Time-out value [ms] */
-#define DHT_TIMING_TIMEOUT      200
+#define DHT_TIMING_MIN_INTERVAL (2000UL)
+/*! Time-out value [iterations] */
+#define DHT_TIMING_TIMEOUT      (200)
 
 
 /***** ENUMERATION ****************************************************/
 /*! Enumeration for the DHT function return values */
 typedef enum {
+    DHT_RET_ERROR_NODEV         = -5,
     DHT_RET_ERROR_TYPE          = -4,
     DHT_RET_ERROR_CRC           = -3,
     DHT_RET_ERROR_TIMEOUT       = -2,
@@ -75,7 +74,7 @@ typedef struct {
 
 
 /***** FUNCTION PROTOTYPES ********************************************/
-void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type);
+DHT_RET_t dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type);
 DHT_RET_t dht_get_temperature(DHT_t* dev, float* temperature);
 DHT_RET_t dht_get_humidity(DHT_t* dev, float* humidity);
 DHT_RET_t dht_get_temperature_humidity(DHT_t* dev, float* temperature, float* humidity);

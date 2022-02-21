@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/util/diagnostics.h
  * @author  Dominik Widhalm
- * @version 1.4.0
- * @date    2021/10/18
+ * @version 1.4.2
+ * @date    2022/01/25
  */
 
 #ifndef _ASNX_DIAG_H_
@@ -16,6 +16,8 @@
 /*** STD ***/
 #include <stdint.h>
 #include <stddef.h>
+/*** AVR ***/
+#include <util/delay.h>
 /*** ASNX LIB ***/
 #include "adc/adc.h"
 #include "hw/hw.h"
@@ -53,6 +55,14 @@
 #  define DIAG_TMCU_CH                      ADC_CH1
 #endif
 
+/* Battery SoC */
+/*! Battery maximum voltage */
+#define DIAG_VBAT_MAX                       (3.2)
+/*! Battery minimum voltage */
+#define DIAG_VBAT_MIN                       (1.8)
+/*! Battery voltage range */
+#define DIAG_VBAT_RANGE                     (DIAG_VBAT_MAX - DIAG_VBAT_MIN)
+
 
 /***** FUNCTION PROTOTYPES ********************************************/
 /* voltage-divider setup */
@@ -61,8 +71,9 @@ void diag_enable(void);
 void diag_disable(void);
 /* voltage divider reading */
 uint16_t diag_adc_check(void);
-float diag_read_vcc(void);
-float diag_read_vbat(float vcc);
-float diag_read_tsurface(void);
+float diag_vcc_read(void);
+float diag_vbat_read(float vcc);
+uint8_t diag_vbat_soc(float vbat);
+float diag_tsurface_read(void);
 
 #endif // _ASNX_DIAG_H_

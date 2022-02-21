@@ -6,10 +6,8 @@
  *
  * @file    /_asnx_lib_/sensors/dht.c
  * @author  Dominik Widhalm
- * @version 1.2.1
- * @date    2021/08/11
- *
- * @see     http://davidegironi.blogspot.com/2013/02/reading-temperature-and-humidity-on-avr.html
+ * @version 1.3.0
+ * @date    2022/02/21
  */
 
 
@@ -31,8 +29,9 @@ static DHT_RET_t _read(DHT_t* dev);
  * @param[in]   pin     Pointer to the GPIO's PINx register
  * @param[in]   portpin Index of the GPIO pin
  * @param[in]   type    DHT sensor type
+ * @return      OK* in case of success; ERROR* otherwise
  */
-void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type) {
+DHT_RET_t dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatile uint8_t* pin, uint8_t portpin, DHT_DEV_t type) {
     /* Fill the HW GPIO structure */
     dev->gpio.ddr = ddr;
     dev->gpio.port = port;
@@ -42,9 +41,10 @@ void dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, volatil
     dev->type = type;
     /* Get a pointer to the HW GPIO structure */
     hw_io_t* gpio = &(dev->gpio);
-    /* Setup the hardware (pin) */
-    HW_GPIO_OUTPUT(gpio);
-    HW_GPIO_HIGH(gpio);
+    /* Setup the GPIO pin */
+    HW_GPIO_INPUT(gpio);
+    /* Init was successful */
+    return DHT_RET_OK;
 }
 
 
@@ -82,12 +82,14 @@ static DHT_RET_t _read(DHT_t* dev) {
         dev->data[i] = 0;
     }
     
-    /*** Start timing-critical section ***/
-    /* Disable interrupts */
-    cli();
+    /* Set data line to input */
+    HW_GPIO_INPUT(gpio);
+    /* Wait for 1ms */
+    _delay_ms(1);
 
     /* Send a read request */
     HW_GPIO_LOW(gpio);
+    HW_GPIO_OUTPUT(gpio);
     /* And wait for a period according to sensor type */
     switch(dev->type) {
         case DHT_DEV_DHT21:
@@ -101,21 +103,33 @@ static DHT_RET_t _read(DHT_t* dev) {
             _delay_ms(20);
             break;
         default:
+            /* Re-enable interrupts */
+            sei();
             /* Unsupported sensor type */
             return DHT_RET_ERROR_TYPE;
     }
     /* Release the data line */
-    HW_GPIO_HIGH(gpio);
     HW_GPIO_INPUT(gpio);
+    HW_GPIO_HIGH(gpio);
     _delay_us(40);
+    
+    /*** Start timing-critical section ***/
+    /* Disable interrupts */
+    cli();
     
     /* Check start condition high level */
     if(HW_GPIO_READ(gpio)) {
+        /* Re-enable interrupts */
+        sei();
+        /* Did not get start condition */
         return DHT_RET_ERROR_START;
     }
     _delay_us(80);
     /* Check start condition low level */
     if(!HW_GPIO_READ(gpio)) {
+        /* Re-enable interrupts */
+        sei();
+        /* Did not get start condition */
         return DHT_RET_ERROR_START;
     }
     _delay_us(80);
@@ -133,6 +147,9 @@ static DHT_RET_t _read(DHT_t* dev) {
                 cnt++;
                 /* Check if timeout has been reached */
                 if(cnt > DHT_TIMING_TIMEOUT) {
+                    /* Re-enable interrupts */
+                    sei();
+                    /* Timeout reached */
                     return DHT_RET_ERROR_TIMEOUT;
                 }
             }
@@ -149,6 +166,9 @@ static DHT_RET_t _read(DHT_t* dev) {
                 cnt++;
                 /* Check if timeout has been reached */
                 if(cnt > DHT_TIMING_TIMEOUT) {
+                    /* Re-enable interrupts */
+                    sei();
+                    /* Timeout reached */
                     return DHT_RET_ERROR_TIMEOUT;
                 }
             }
@@ -160,11 +180,6 @@ static DHT_RET_t _read(DHT_t* dev) {
     /*** Timing-critical section finished ***/
     /* Restore interrupts */
     sei();
-    
-    /* Reset the data line */
-    HW_GPIO_OUTPUT(gpio);
-    HW_GPIO_HIGH(gpio);
-    _delay_ms(100);
     
     /* Check if the received CRC matches the data */
     if(dev->data[4] == ((dev->data[0] + dev->data[1] + dev->data[2] + dev->data[3]) & 0xFF)) {
