@@ -185,7 +185,7 @@ void x_art_reset(void) {
  * @param[in]   t_art       length of the last active phase (ms)
  * @return      normalized active runtime monitor fault indicator (X_ART) value
  */
-float x_art_get_normalized(uint32_t t_art) {
+float x_art_get_normalized(uint16_t t_art) {
     /* Check if value array is empty */
     if(x_art_index==99) {
         /* Fill entire array with current value */

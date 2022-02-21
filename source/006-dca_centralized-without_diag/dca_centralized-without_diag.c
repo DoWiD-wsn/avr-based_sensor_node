@@ -1,8 +1,8 @@
 /*!
  * @file    /005-dca_centralized/dca_centralized-without-diag.c
  * @author  Dominik Widhalm
- * @version 1.0.3
- * @date    2021/12/29
+ * @version 1.0.4
+ * @date    2022/02/21
  */
 
 
@@ -63,12 +63,15 @@ typedef struct {
  * Put a MCUSR register dump into the .noinit section.
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
-uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
+uint8_t MCUSR_dump __attribute__ ((section (".noinit"))) \
+                   __attribute__ ((used));             // Needed for LTO
 /*!
  * Turn off the WDT as early in the startup process as possible.
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
-void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
+void get_mcusr(void) __attribute__((naked)) \
+                     __attribute__((section(".init3"))) \
+                     __attribute__((used));            // Needed for LTO
 void get_mcusr(void) {
   MCUSR_dump = MCUSR;
   MCUSR = 0;
@@ -145,8 +148,10 @@ int main(void) {
     adc_init(ADC_ADPS_16,ADC_REFS_VCC);
     /* Initialize I2C master interface */
     i2c_init();
-    /* Initialize Xbee 3 (uses UART0) */
-    xbee_init(9600UL);
+    /* Initialize Xbee 3 (uses UART0 @9600 baud; receive via ISR) */
+    uart0_init(9600UL);
+    uart0_interrupt_enable();
+    xbee_init(uart0_write_byte, uart0_pop_byte, uart0_rx_buffer_cnt);
     
     /* Initialize the diagnostic circuitry */
     diag_init();
@@ -182,28 +187,22 @@ int main(void) {
 
     
     /*** 2.) connect to the Zigbee network ****************************/
-    /* Reset the XBee RX buffer */
-    xbee_rx_flush();
     /* Check Xbee module connection */
-    uint32_t retries = 0;
-    /* Check Xbee module connection */
-    while(xbee_is_connected() != XBEE_RET_OK) {
-        /* Check if timeout [s] has been reached (counter in [ms]) */
-        if(retries >= ((uint32_t)XBEE_JOIN_TIMEOUT*1000)) {
-            printf("Couldn't connect to the network ... aborting!\n");
-            /* Wait for watchdog reset */
-            wait_for_wdt_reset();
-        } else {
-            /* Wait for some time */
-            retries += XBEE_JOIN_TIMEOUT_DELAY;
-            _delay_ms(XBEE_JOIN_TIMEOUT_DELAY);
-        }
+    printf("Connecting to Zigbee network ... ");
+    if(xbee_wait_for_connected() != XBEE_RET_OK) {
+        printf("\nERROR connecting to the network ... aborting!\n");
+        /* Wait for watchdog reset */
+        wait_for_wdt_reset();
     }
     /* Print status message */
-    printf("... ZIGBEE connected\n");
+    printf("connected!\n");
 
 
     while(1) {
+        /*** (Re-)enable I2C interface ***/
+        /* Reset the TWI */
+        i2c_reset();
+        
         /*** 3.1) reset RTC (stop-watch mode) *************************/
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
@@ -227,12 +226,8 @@ int main(void) {
             /* Wait for watchdog reset */
             wait_for_wdt_reset();
         }
-        
-        /* Reset the TWI */
-        i2c_reset();
         /* Enable ADC */
         adc_enable();
-
         
         /*** 3.3) query sensors ***************************************/
         /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
