@@ -47,7 +47,7 @@
 /*! Response receive attempts */
 #define XBEE_RESPONSE_ATTEMPTS              (5)
 /*! Response attempt retries */
-#define XBEE_RESPONSE_RETRIES               (10)
+#define XBEE_RESPONSE_RETRIES               (25)
 /*! Response delay between tries [ms] */
 #define XBEE_RESPONSE_DELAY                 (10)
 
