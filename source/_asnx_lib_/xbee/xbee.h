@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.h
  * @author  Dominik Widhalm
- * @version 1.3.6
- * @date    2022/02/14
+ * @version 1.3.7
+ * @date    2022/02/25
  */
 
 #ifndef _ASNX_XBEE_H_
@@ -49,7 +49,7 @@
 /*! Response attempt retries */
 #define XBEE_RESPONSE_RETRIES               (25)
 /*! Response delay between tries [ms] */
-#define XBEE_RESPONSE_DELAY                 (10)
+#define XBEE_RESPONSE_DELAY                 (25)
 
 /*! Maximum Number of Transmission Bytes (for transparent mode) */
 #define XBEE_CONF_NP                        (54)
