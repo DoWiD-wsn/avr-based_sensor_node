@@ -1,13 +1,14 @@
 /*!
  * @file    /005-dca_centralized/dca_centralized-without-diag.c
  * @author  Dominik Widhalm
- * @version 1.0.4
- * @date    2022/02/21
+ * @version 1.0.5
+ * @date    2022/02/28
  */
 
 
 /*** APP CONFIGURATION ***/
 #define ENABLE_DBG                  0               /**< Enable debug output via UART1 (9600 BAUD) */
+#define ENABLE_GPIO_SIG             0               /**< Enable debug signal output via GPIOs (PC4, PC5) */
 #define UPDATE_INTERVAL             10              /**< Update interval [min] */
 
 
@@ -123,6 +124,10 @@ int main(void) {
     float measurement = 0.0;
     float measurement2 = 0.0;
 
+#if ENABLE_GPIO_SIG
+    DDRC |= _BV(PC4) | _BV(PC5);
+    PORTC &= ~(_BV(PC4) | _BV(PC5));
+#endif    
 
     /*** 1.) initialize modules ***************************************/
     /* Disable unused hardware modules */
@@ -199,6 +204,10 @@ int main(void) {
 
 
     while(1) {
+#if ENABLE_GPIO_SIG
+        PORTC |= _BV(PC5);
+#endif
+
         /*** (Re-)enable I2C interface ***/
         /* Reset the TWI */
         i2c_reset();
@@ -219,6 +228,10 @@ int main(void) {
             wait_for_wdt_reset();
         }
 
+#if ENABLE_GPIO_SIG
+        PORTC |= _BV(PC4);
+#endif
+
         /*** 3.2) enable modules/sensors ******************************/
         /* Wake-up xbee */
         if(xbee_sleep_disable() != XBEE_RET_OK) {
@@ -228,6 +241,10 @@ int main(void) {
         }
         /* Enable ADC */
         adc_enable();
+        
+#if ENABLE_GPIO_SIG
+        PORTC &= ~_BV(PC4);
+#endif
         
         /*** 3.3) query sensors ***************************************/
         /* AM2302 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
@@ -243,15 +260,38 @@ int main(void) {
             x_ic_inc(X_IC_INC_NORM);
         }
 
+#if ENABLE_GPIO_SIG
+        PORTC |= _BV(PC4);
+#endif
+
         /*** 3.4) perform self-diagnostics ****************************/
         /* removed */
 
+#if ENABLE_GPIO_SIG
+        PORTC &= ~_BV(PC4);
+#endif
 
         /*** 3.5) send values via Zigbee ******************************/
+        /* Check Xbee module connection */
+        printf("Check Zigbee network connection ... ");
+        uart0_rx_cb_flush();
+        if(xbee_wait_for_connected() != XBEE_RET_OK) {
+            printf("\nERROR rejoining the network ... aborting!\n");
+            /* Wait for watchdog reset */
+            wait_for_wdt_reset();
+        } else {
+            printf("connected!\n");
+        }
+        
+#if ENABLE_GPIO_SIG
+        PORTC |= _BV(PC4);
+#endif
+
 #if ENABLE_DBG
         /* Print the contents of the message to be sent */
         dbg_print_msg(&msg);
 #endif
+
         /* Send the measurement to the CH */
         int8_t ret = xbee_transmit_unicast(SEN_MSG_MAC_CH, (uint8_t*)&msg, sizeof(MSG_t), 0x00);
         if(ret == XBEE_RET_OK) {
@@ -263,8 +303,11 @@ int main(void) {
         }
         /* Increment message number ("time") */
         msg.time++;
-
-
+        
+#if ENABLE_GPIO_SIG
+        PORTC &= ~_BV(PC4);
+#endif
+        
         /*** 3.6) disable modules/sensors *****************************/
         /* Send xbee to sleep */
         if(xbee_sleep_enable() != XBEE_RET_OK) {
@@ -274,7 +317,11 @@ int main(void) {
         }
         /* Disable ADC */
         adc_disable();
-
+        
+#if ENABLE_GPIO_SIG
+        PORTC &= ~_BV(PC5);
+#endif
+        
         /*** 3.7) put MCU to sleep ************************************/
         sleep_enable();
         sleep_bod_disable();
@@ -291,6 +338,4 @@ int main(void) {
 ISR(INT2_vect) {
     /* Actually not needed, but still ... */
     sleep_disable();
-    /* Wait some time to fully wake up */
-    _delay_ms(5);
 }
