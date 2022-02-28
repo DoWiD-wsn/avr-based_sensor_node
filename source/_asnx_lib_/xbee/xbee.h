@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/xbee/xbee.h
  * @author  Dominik Widhalm
- * @version 1.3.7
- * @date    2022/02/25
+ * @version 1.3.8
+ * @date    2022/02/28
  */
 
 #ifndef _ASNX_XBEE_H_
@@ -42,7 +42,7 @@
 /*! Wake-up attempt retries */
 #define XBEE_WAKE_RETRIES                   (200)
 /*! Wake-up delay between tries [ms] */
-#define XBEE_WAKE_DELAY                     (10)
+#define XBEE_WAKE_DELAY                     (25)
 
 /*! Response receive attempts */
 #define XBEE_RESPONSE_ATTEMPTS              (5)

@@ -20,8 +20,8 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 2.1.7
- * @date    2022/02/14
+ * @version 2.1.8
+ * @date    2022/02/28
  */
 
 
@@ -763,7 +763,5 @@ int main(void) {
 ISR(INT2_vect) {
     /* Actually not needed, but still ... */
     sleep_disable();
-    /* Give the MCU some time to fully wake up */
-    _delay_ms(10);
 }
 #endif
