@@ -160,9 +160,9 @@ int main(void) {
     
 #if ENABLE_DBG
     /* Initialize UART1 for debug purposes */
-    uart1_init();
+    uart1_init(9600UL);
     /* Initialize the printf function to use the uart1_putc() function for output */
-    printf_init(uart1_putc);
+    printf_init(uart1_write_char);
 #else
     /* Disable UART1 */
     PRR0 |= _BV(PRUSART1);
