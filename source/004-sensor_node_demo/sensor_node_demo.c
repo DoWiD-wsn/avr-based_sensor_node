@@ -12,23 +12,23 @@
  *
  * @file    /004-sensor_node_demo/sensor_node_demo.c
  * @author  Dominik Widhalm
- * @version 1.5.0
- * @date    2022/01/31
+ * @version 1.5.1
+ * @date    2022/04/12
  */
 
 
 /*** DEMO CONFIGURATION ***/
-#define ASNX_VERSION_MINOR          (4)     /**< Used ASN(x) board version minor number (i.e., 0 to 4) */
+#define ASNX_VERSION_MINOR          (5)     /**< Used ASN(x) board version minor number (i.e., 0 to 4) */
 #define ENABLE_DBG                  (0)     /**< Enable debug output via UART1 (9600 BAUD) */
 #define UPDATE_INTERVAL             (10)    /**< Update interval [min] */
 
 /*** Enable (1) or disable (0) measurements/sensors ***/
 #define ENABLE_103JT_T              (1)     /**< Enable the 103JT thermistor temperature (T) measurement (via ADC) */
 #define ENABLE_TMP275_T             (1)     /**< Enable the TMP275 sensor temperature (T) measurement (via TWI) */
-#define ENABLE_DS18B20_T            (1)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_STEMMA_H             (1)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
-#define ENABLE_AM2302_T             (1)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
-#define ENABLE_AM2302_H             (1)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
+#define ENABLE_DS18B20_T            (0)     /**< Enable the DS18B20 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_STEMMA_H             (0)     /**< Enable the STEMMA SOIL sensor humidity (H) measurement (via TWI) */
+#define ENABLE_AM2302_T             (0)     /**< Enable the AM2302 sensor temperature (T) measurement (via OWI) */
+#define ENABLE_AM2302_H             (0)     /**< Enable the AM2302 sensor humidity (H) measurement (via OWI) */
 
 /*! MAC address of the destination */
 #define XBEE_DESTINATION_MAC        SEN_MSG_MAC_CH
@@ -60,11 +60,12 @@
 #include "uart/uart.h"
 /* Radio */
 #include "xbee/xbee.h"
-#if ASNX_VERSION_MINOR<1
-#include "timer/systick.h"
-#else
+#if ASNX_VERSION_MINOR>0
 /* RTC */
 #  include "rtc/pcf85263.h"
+#else
+/* SysTick */
+#  include "timer/systick.h"
 #endif
 /* Sensors */
 // 103JT
@@ -101,21 +102,24 @@
 
 
 /***** GLOBAL VARIABLES ***********************************************/
-#if ASNX_VERSION_MINOR<1
+#if ASNX_VERSION_MINOR==0
 /*! Variable (flag) for barrier synchronization */
-uint8_t barrier = 1;
+volatile uint8_t barrier = 1;
 #endif
 /*!
  * Put a MCUSR register dump into the .noinit section.
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
-uint8_t MCUSR_dump __attribute__ ((section (".noinit")));
+uint8_t MCUSR_dump __attribute__ ((section (".noinit"))) \
+                   __attribute__ ((used));             // Needed for LTO
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
-void get_mcusr(void) __attribute__((naked)) __attribute__((section(".init3")));
-void sleep_until_reset(uint8_t delay);
-#if ASNX_VERSION_MINOR<1
+void get_mcusr(void) __attribute__((naked)) \
+                     __attribute__((section(".init3"))) \
+                     __attribute__((used));            // Needed for LTO
+void sleep_until_reset(void);
+#if ASNX_VERSION_MINOR==0
 void update(void);
 #endif
 
@@ -126,18 +130,21 @@ void update(void);
  * @see https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
  */
 void get_mcusr(void) {
-  MCUSR_dump = MCUSR;
-  MCUSR = 0;
-  wdt_disable();
+    /* Make a copy of the MCUSR */
+    MCUSR_dump = MCUSR;
+    /* Reset the actual MCUSR */
+    MCUSR = 0;
+    /* Disable the WDT */
+    wdt_disable();
 }
 
 
 /*!
  * Activate WDT with given delay, put MCU to sleep and wait for reset.
  */
-void sleep_until_reset(uint8_t delay) {
-    /* Enable Watchdog with given delay */
-    wdt_enable(delay);
+void sleep_until_reset(void) {
+    /* Enable Watchdog with 60ms delay */
+    wdt_enable(WDTO_60MS);
     /* Put MCU to sleep */
     sleep_enable();
     sleep_bod_disable();
@@ -145,7 +152,7 @@ void sleep_until_reset(uint8_t delay) {
 }
 
 
-#if ASNX_VERSION_MINOR<1
+#if ASNX_VERSION_MINOR==0
 /***
  * Callback function to be called by the systick timer.
  ***/
@@ -173,8 +180,6 @@ int main(void) {
 #if ASNX_VERSION_MINOR>=1
     /* Date/time structure */
     PCF85263_CNTTIME_t time = {0};
-    /* Temporary variables */
-    uint8_t reg = 0;
 #endif
 #if (ENABLE_103JT_T || ENABLE_TMP275_T || ENABLE_DS18B20_T || ENABLE_STEMMA_H || ENABLE_AM2302_T || ENABLE_AM2302_H)
     /* Temporary variable for sensor measurements */
@@ -257,63 +262,22 @@ int main(void) {
     /* Print welcome message */
     printf("=== STARTING UP ... ===\n");
 
-#if ASNX_VERSION_MINOR<1
-    /* Initialize the systick timer */
-    systick_init();
-    /* Set a systick callback function to be called every second */
-    systick_set_callback_min(update);
-#else
+#if ASNX_VERSION_MINOR>0
     /* Initialize the RTC */
-    if(pcf85263_init() != PCF85263_RET_OK) {
-        printf("Couldn't initialize RTC ... aborting!\n");
-        sleep_until_reset(WDTO_15MS);
-    }
-    /* Disable the battery switch */
-    if(pcf85263_set_batteryswitch(PCF85263_CTL_BATTERY_BSOFF) != PCF85263_RET_OK) {
-        printf("RTC: Battery switch configuration FAILED ... aborting!\n");
-        sleep_until_reset(WDTO_15MS);
-    }
-    /* Disable CLK pin; INTA output */
-    if(pcf85263_set_pin_io(PCF85263_CTL_CLKPM | PCF85263_CTL_INTAPM_INTA) != PCF85263_RET_OK) {
-        printf("RTC: Battery switch configuration FAILED ... aborting!\n");
-        sleep_until_reset(WDTO_15MS);
-    }
-    /* Enable stop-watch mode (read first to get 100TH and STOPM bits) */
-    if(pcf85263_get_function(&reg) != PCF85263_RET_OK) {
-        printf("RTC: Function configuration read FAILED ... aborting!\n");
-        sleep_until_reset(WDTO_15MS);
-    }
-    reg |= PCF85263_CTL_FUNC_RTCM;
-    if(pcf85263_set_function(reg) != PCF85263_RET_OK) {
-        printf("RTC: Function configuration write FAILED ... aborting!\n");
-        sleep_until_reset(WDTO_15MS);
-    }
-    /* Set desired wake-up time */
     time.minutes = UPDATE_INTERVAL;
-    if(pcf85263_set_stw_alarm1(&time) != PCF85263_RET_OK) {
-        printf("RTC: Alarm time configuration FAILED ... aborting!\n");
-        sleep_until_reset(WDTO_15MS);
-    }
-    /* Enable the alarm */
-    if(pcf85263_set_stw_alarm_enables(PCF85263_RTC_ALARM_MIN_A1E) != PCF85263_RET_OK) {
-        printf("RTC: Alarm enable configuration FAILED ... aborting!\n");
-        sleep_until_reset(WDTO_15MS);
-    }
-    /* Enable the alarm interrupt */
-    if(pcf85263_set_inta_en(PCF85263_CTL_INTA_A1IEA) != PCF85263_RET_OK) {
-        printf("RTC: Alarm enable configuration FAILED ... aborting!\n");
-        sleep_until_reset(WDTO_15MS);
-    }
-    /* Start RTC */
-    if(pcf85263_start() != PCF85263_RET_OK) {
-        printf("Couldn't start RTC ... aborting!\n");
-        sleep_until_reset(WDTO_15MS);
-    } else {
-        printf("... RTC started\n");
+    ret = pcf85263_init_wakeup_src(&time);
+    if(ret != PCF85263_RET_OK) {
+        printf("Couldn't initialize RTC (%d) ... aborting!\n",ret);
+        sleep_until_reset();
     }
     /* Configure INT2 to fire interrupt when logic level is "low" */
     EICRA = 0x00;
     EIMSK = _BV(INT2);
+#else
+    /* Initialize the systick timer */
+    systick_init();
+    /* Set a systick callback function to be called every second */
+    systick_set_callback_min(update);
 #endif
 
 
@@ -369,16 +333,17 @@ int main(void) {
     }
 #endif
 
+
     /* Check Xbee module connection */
+    printf("Connecting to Zigbee network ...\n");
     ret = xbee_wait_for_connected();
     if(ret != XBEE_RET_OK) {
         printf("Couldn't connect to the network (%d) ... aborting!\n",ret);
         /* Wait for watchdog reset */
-        sleep_until_reset(WDTO_8S);
+        sleep_until_reset();
     }
     /* Print status message */
-    printf("... ZIGBEE connected (variable message size; maximum = %d bytes)\n", SEN_MSG_SIZE_MAX);
-    printf("\n");
+    printf("... ZIGBEE connected (variable message size; maximum = %d bytes)\n\n", SEN_MSG_SIZE_MAX);
 
     /***** MAIN ROUTINE ***********************************************/
     while(1) {
@@ -407,7 +372,7 @@ int main(void) {
         /* Stop RTC */
         if(pcf85263_stop() != PCF85263_RET_OK) {
             printf("Couldn't stop RTC ... aborting!\n");
-            sleep_until_reset(WDTO_15MS);
+            sleep_until_reset();
         }
 #endif
 
@@ -415,7 +380,7 @@ int main(void) {
         if(xbee_sleep_disable() != XBEE_RET_OK) {
             printf("Couldn't wake-up xbee radio ... aborting!\n");
             /* Wait for watchdog reset */
-            sleep_until_reset(WDTO_15MS);
+            sleep_until_reset();
         }
 
 
@@ -432,7 +397,7 @@ int main(void) {
         /* Start RTC */
         if(pcf85263_start() != PCF85263_RET_OK) {
             printf("Couldn't start RTC ... aborting!\n");
-            sleep_until_reset(WDTO_15MS);
+            sleep_until_reset();
         }
 #endif
 
@@ -568,11 +533,11 @@ int main(void) {
         msg.struc.cnt = index;
         /* Check Xbee module connection */
         uart0_rx_cb_flush();
-        ret = xbee_wait_for_reconnected();
+        ret = xbee_wait_for_connected();
         if(ret != XBEE_RET_OK) {
             printf("ERROR rejoining the netwotk (%d) ... aborting!\n",ret);
             /* Wait for watchdog reset */
-            sleep_until_reset(WDTO_8S);
+            sleep_until_reset();
         }
         /* Send the measurement to the CH */
         ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, msg.byte, SEN_MSG_SIZE(index), 0x00);
@@ -587,7 +552,7 @@ int main(void) {
         if(xbee_sleep_enable() != XBEE_RET_OK) {
             printf("Couldn't send xbee radio to sleep ... aborting!\n");
             /* Wait for watchdog reset */
-            sleep_until_reset(WDTO_8S);
+            sleep_until_reset();
         }
 
 #if ENABLE_103JT_T

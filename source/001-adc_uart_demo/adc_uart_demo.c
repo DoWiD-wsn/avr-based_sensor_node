@@ -7,8 +7,8 @@
  *
  * @file    /001-adc_uart_demo/adc_uart_demo.c
  * @author  Dominik Widhalm
- * @version 1.3
- * @date    2022/01/31
+ * @version 1.4.0
+ * @date    2022/02/12
  *****/
 
 
@@ -20,6 +20,7 @@
 #include "adc/adc.h"
 #include "hw/led.h"
 #include "uart/uart.h"
+#include "util/diagnostics.h"
 #include "util/printf.h"
 
 
@@ -33,9 +34,11 @@ int main(void) {
     led_init();                         // Initialize the user LEDs
     led1_low();                         // Initially, set LED1 to low
     led2_high();                        // Initially, set LED2 to high
-    adc_init(ADC_ADPS_16,ADC_REFS_VCC); // Initialize the ADC
+    adc_init(ADC_ADPS_32,ADC_REFS_VCC); // Initialize the ADC
     uart1_init(9600UL);                 // Initialize the UART0
     printf_init(uart1_write_char);      // Initialize the printf function
+    diag_init();                        // Initialize the diagnostic circuitry
+    diag_enable();                      // Enable the diagnostic circuitry
     
     /* Main Routine */
     while (1) {

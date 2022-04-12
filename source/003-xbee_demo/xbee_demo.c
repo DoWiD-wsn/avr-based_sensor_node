@@ -6,8 +6,8 @@
  *
  * @file    /003-xbee_demo/xbee_demo.c
  * @author  Dominik Widhalm
- * @version 1.2
- * @date    2022/01/31
+ * @version 1.3.0
+ * @date    2022/04/12
  *****/
 
 
@@ -24,7 +24,7 @@
 
 
 /***** DEFINES ********************************************************/
-#define XBEE_DESTINATION_MAC                (0x0013A20041B9FD07)
+#define XBEE_DESTINATION_MAC                (0x0013A20041B9DCDC)
 
 /***** MAIN ***********************************************************/
 int main(void) {
@@ -62,7 +62,7 @@ int main(void) {
         /* Toggle LED1 */
         led1_toggle();
         /* Send the measurement to the CH */
-        int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, &cnt, 1, 0x00);
+        int8_t ret = xbee_transmit_unicast(XBEE_DESTINATION_MAC, &cnt, 1, 0x01);
         if(ret == XBEE_RET_OK) {
             printf("Message sent!\n");
             /* Check the transmit response */

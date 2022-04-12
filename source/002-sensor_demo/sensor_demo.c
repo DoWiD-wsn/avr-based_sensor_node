@@ -8,16 +8,16 @@
  *
  * @file    /002-sensor_demo/sensor_demo.c
  * @author  Dominik Widhalm
- * @version 1.2.0
- * @date    2022/01/31
+ * @version 1.3.0
+ * @date    2022/04/12
  *****/
 
 /*** DEMO CONFIGURATION ***/
 /* Update interval [s] */
-#define UPDATE_INTERVAL     15
+#define UPDATE_INTERVAL     10
 /* Enable/disable sensors */
 #define ENABLE_TMP275       (1)     /**< Enable the TMP275 sensor (TWI) */
-#define ENABLE_JT103        (0)     /**< Enable the 103JT thermistor (via ADC) */
+#define ENABLE_JT103        (1)     /**< Enable the 103JT thermistor (via ADC) */
 #define ENABLE_DS18X20      (0)     /**< Enable the DS18X20 sensor (OWI) */
 #define ENABLE_AM2302       (0)     /**< Enable the AM2302 sensor (OWI) */
 #define ENABLE_BME280       (0)     /**< Enable the BME280 sensor (TWI) */
@@ -64,6 +64,8 @@ LM75_t lm75;
 #  include "sensors/stemma_soil.h"
 STEMMA_t stemma;
 #endif
+/* Misc */
+#include "util/diagnostics.h"
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
@@ -223,8 +225,12 @@ int main(void) {
     printf_init(uart1_write_char);
     
     /* Initialize the ADC */
-    adc_init(ADC_ADPS_16,ADC_REFS_VCC);
-    adc_set_input(ADC_CH1);
+    adc_init(ADC_ADPS_32,ADC_REFS_VCC);
+    adc_disable_din(0x07);
+
+    /* Initialize the diagnostic circuitry */
+    diag_init();
+    diag_enable();
 
 #if ENABLE_DS18X20
     /* Initialize the DS18B20 sensor */
