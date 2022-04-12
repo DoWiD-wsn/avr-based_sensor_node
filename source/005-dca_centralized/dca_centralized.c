@@ -20,8 +20,8 @@
  *
  * @file    /005-dca_centralized/dca_centralized.c
  * @author  Dominik Widhalm
- * @version 2.1.8
- * @date    2022/02/28
+ * @version 2.1.9
+ * @date    2022/04/12
  */
 
 
@@ -30,7 +30,7 @@
 #define ENABLE_DBG_MSG              0               /**< Enable debug output of message content */
 #define ENABLE_DBG_INDICATOR        0               /**< Enable debug output of indicator values */
 #define UPDATE_INTERVAL             5               /**< Update interval [min] */
-#define ASNX_VERSION_MINOR          4               /**< Minor version number of the used ASN(x) */
+#define ASNX_VERSION_MINOR          5               /**< Minor version number of the used ASN(x) */
 /* Zigbee network */
 #define ZIGBEE_ENABLE_ACK           0               /**< Enable (1) or disable (0) transmit response */
 /* Enable (1) or disable (0) sensor measurements */
