@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/util/diagnostics.h
  * @author  Dominik Widhalm
- * @version 1.4.2
- * @date    2022/01/25
+ * @version 1.4.3
+ * @date    2022/04/12
  */
 
 #ifndef _ASNX_DIAG_H_
@@ -27,7 +27,7 @@
 /***** DEFINES ********************************************************/
 /* ASN(x) hardware revision (minor) */
 #ifndef ASNX_VERSION_MINOR
-#  define ASNX_VERSION_MINOR                4
+#  define ASNX_VERSION_MINOR                5
 #endif
 
 /* Voltage-divider diagnostics */

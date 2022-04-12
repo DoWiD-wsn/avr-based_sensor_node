@@ -5,8 +5,8 @@
  *
  * @file    /_asnx_lib_/util/diagnostics.c
  * @author  Dominik Widhalm
- * @version 1.4.2
- * @date    2022/01/25
+ * @version 1.4.3
+ * @date    2022/04/12
  */
 
 /***** INCLUDES *******************************************************/
@@ -104,6 +104,11 @@ uint8_t diag_vbat_soc(float vbat) {
     if(vbat >= DIAG_VBAT_MAX) {
         /* Return 100% */
         return 100;
+    }
+    /* Check if battery voltage is below min level */
+    if(vbat <= DIAG_VBAT_MIN) {
+        /* Return 0% */
+        return 0;
     }
     /* Return the linear approximation */
     return (uint8_t)((((float)vbat - DIAG_VBAT_MIN) / DIAG_VBAT_RANGE) * 100.0);
