@@ -26,7 +26,7 @@
 #define ENABLE_SHT30        (1)     /**< Enable the SHT30 sensor (TWI) */
 #define ENABLE_SHTC3        (0)     /**< Enable the SHTC3 sensor (TWI) */
 #define ENABLE_STEMMA       (0)     /**< Enable the STEMMA SOIL sensor (TWI) */
-#define ENABLE_ZMOD4410     (0)     /**< Enable the ZMOD4410 sensor (TWI) */
+#define ENABLE_ZMOD4410     (1)     /**< Enable the ZMOD4410 sensor (TWI) */
 
 
 /***** INCLUDES *******************************************************/
@@ -93,8 +93,8 @@ STEMMA_t stemma;
 #endif
 // ZMOD4410
 #if ENABLE_ZMOD4410
-#  include "sensors/zmod4410.h"     // TODO
-ZMOD4410_t zmod4410;                // TODO
+#  include "sensors/zmod4410.h"
+ZMOD4410_t zmod4410;
 #endif
 
 
@@ -141,7 +141,7 @@ void read_and_print(void) {
     printf("   ... Temperature: ");
     float tmp275_tmp;
     if(tmp275_get_temperature(&tmp275, &tmp275_tmp) == TMP275_RET_OK) {
-        printf("%2.2f C\n",tmp275_tmp);
+        printf("%.2f C\n",tmp275_tmp);
     } else {
         printf("ERROR\n");
     }
@@ -154,7 +154,7 @@ void read_and_print(void) {
     printf("   ... Temperature: ");
     float ds18b20_tmp;
     if(ds18x20_get_temperature(&ds18b20, &ds18b20_tmp) == DS18X20_RET_OK) {
-        printf("%2.2f C\n",ds18b20_tmp);
+        printf("%.2f C\n",ds18b20_tmp);
     } else {
         printf("ERROR\n");
     }
@@ -169,8 +169,7 @@ void read_and_print(void) {
         printf("   ... Temperature: %2.2f C\n",am2302_tmp_t);
         printf("   ... Humidity: %2.2f %%\n",am2302_tmp_h);
     } else {
-        printf("   ... Temperature: ERROR\n");
-        printf("   ... Humidity: ERROR\n");
+        printf("   ... ERROR\n");
     }
 #endif
 
@@ -194,19 +193,19 @@ void read_and_print(void) {
     float bme280_tmp;
     printf("   ... Temperature: ");
     if(bme280_get_temperature(&bme280, &bme280_tmp) == BME280_RET_OK) {
-        printf("%2.2f C\n",bme280_tmp);
+        printf("%.2f C\n",bme280_tmp);
     } else {
         printf("ERROR\n");
     }
     printf("   ... Humidity: ");
     if(bme280_get_humidity(&bme280, &bme280_tmp) == BME280_RET_OK) {
-        printf("%2.2f %%\n",bme280_tmp);
+        printf("%.2f %%\n",bme280_tmp);
     } else {
         printf("ERROR\n");
     }
     printf("   ... Pressure: ");
     if(bme280_get_pressure(&bme280, &bme280_tmp) == BME280_RET_OK) {
-        printf("%2.2f hPa\n",bme280_tmp);
+        printf("%.2f hPa\n",bme280_tmp);
     } else {
         printf("ERROR\n");
     }
@@ -219,7 +218,7 @@ void read_and_print(void) {
     printf("   ... Temperature: ");
     float lm75_tmp;
     if(lm75_get_temperature(&lm75, &lm75_tmp) == LM75_RET_OK) {
-        printf("%2.2f C\n",lm75_tmp);
+        printf("%.2f C\n",lm75_tmp);
     } else {
         printf("ERROR\n");
     }
@@ -232,13 +231,13 @@ void read_and_print(void) {
     printf("   ... Temperature: ");
     float sht30_tmp;
     if(sht30_get_temperature(&sht30, &sht30_tmp) == SHT30_RET_OK) {
-        printf("%2.2f C\n",sht30_tmp);
+        printf("%.2f C\n",sht30_tmp);
     } else {
         printf("ERROR\n");
     }
     printf("   ... Humidity: ");
     if(sht30_get_humidity(&sht30, &sht30_tmp) == SHT30_RET_OK) {
-        printf("%2.2f %%\n",sht30_tmp);
+        printf("%.2f %%\n",sht30_tmp);
     } else {
         printf("ERROR\n");
     }
@@ -251,13 +250,13 @@ void read_and_print(void) {
     printf("   ... Temperature: ");
     float shtc3_tmp;
     if(shtc3_get_temperature(&shtc3, &shtc3_tmp, 1) == SHTC3_RET_OK) {
-        printf("%2.2f C\n",shtc3_tmp);
+        printf("%.2f C\n",shtc3_tmp);
     } else {
         printf("ERROR\n");
     }
     printf("   ... Humidity: ");
     if(shtc3_get_humidity(&shtc3, &shtc3_tmp, 1) == SHTC3_RET_OK) {
-        printf("%2.2f %%\n",shtc3_tmp);
+        printf("%.2f %%\n",shtc3_tmp);
     } else {
         printf("ERROR\n");
     }
@@ -270,13 +269,13 @@ void read_and_print(void) {
     printf("   ... Temperature: ");
     float stemma_tmp;
     if(stemma_get_temperature(&stemma, &stemma_tmp) == STEMMA_RET_OK) {
-        printf("%2.2f C\n",stemma_tmp);
+        printf("%.2f C\n",stemma_tmp);
     } else {
         printf("ERROR\n");
     }
     printf("   ... Humidity: ");
     if(stemma_get_humidity(&stemma, &stemma_tmp) == STEMMA_RET_OK) {
-        printf("%2.2f %%\n",stemma_tmp);
+        printf("%.2f %%\n",stemma_tmp);
     } else {
         printf("ERROR\n");
     }
@@ -285,7 +284,21 @@ void read_and_print(void) {
 
 #if ENABLE_ZMOD4410
     /*** ZMOD4410 ***/
-//                      TODO
+    printf("=> ZMOD4410 (TWI)\n");
+    ZMOD4410_DATA_t zmod4410_tmp;
+    if(zmod4410_get_measurement(&zmod4410, &zmod4410_tmp) == ZMOD4410_RET_OK) {
+        printf("   ... MOx resistances:\n");
+        for(uint8_t i=0; i<13; i++) {
+            printf("       R[%d] = %.2f\n",zmod4410_tmp.rmox[i]);
+        }
+        printf("   ... CDA : %.2f (log10)\n",zmod4410_tmp.log_rcda);
+        printf("   ... IAQ : %.2f\n",zmod4410_tmp.iaq);
+        printf("   ... TVOC: %.2f mg/m^3\n",zmod4410_tmp.tvoc);
+        printf("   ... EtOH: %.2f ppm\n",zmod4410_tmp.etoh);
+        printf("   ... eCO2: %.2f ppm\n",zmod4410_tmp.eco2);
+    } else {
+        printf("   ... ERROR\n");
+    }
 #endif
 
 
@@ -415,7 +428,11 @@ int main(void) {
 #endif
 
 #if ENABLE_ZMOD4410
-//                      TODO
+    /* Initialize the ZMOD4410 sensor */
+    if(zmod4410_init(&zmod4410, ZMOD4410_I2C_ADDRESS) != ZMOD4410_RET_OK) {
+        printf("Couldn't initialize ZMOD4410 ... aborting!\n");
+        error_state();
+    }
 #endif
 
     /* Initialize the systick timer */
