@@ -287,10 +287,6 @@ void read_and_print(void) {
     printf("=> ZMOD4410 (TWI)\n");
     ZMOD4410_DATA_t zmod4410_tmp;
     if(zmod4410_get_measurement(&zmod4410, &zmod4410_tmp) == ZMOD4410_RET_OK) {
-        printf("   ... MOx resistances:\n");
-        for(uint8_t i=0; i<13; i++) {
-            printf("       R[%d] = %.2f\n",zmod4410_tmp.rmox[i]);
-        }
         printf("   ... CDA : %.2f (log10)\n",zmod4410_tmp.log_rcda);
         printf("   ... IAQ : %.2f\n",zmod4410_tmp.iaq);
         printf("   ... TVOC: %.2f mg/m^3\n",zmod4410_tmp.tvoc);

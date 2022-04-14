@@ -14,18 +14,13 @@
 #include "zmod4410.h"
 
 
-
-#include "util/printf.h"
-
-
 /***** GLOBAL VARIABLES ***********************************************/
 /*! Init configuration data */
-static uint8_t conf_init_data[] = {
-                                            0x00, 0x50, 0x00, 0x28,
-                                            0xC3, 0xE3, 0x00, 0x00,
-                                            0x80, 0x40, 0x00, 0x00,
-                                            0x00, 0x00
-                                           };
+uint8_t conf_init_data[] = {
+    0x00, 0x50, 0x00, 0x28, 0xC3,
+    0xE3, 0x00, 0x00, 0x80, 0x40,
+    0x00, 0x00, 0x00, 0x00
+};
 /*! Init configuration structure */
 ZMOD4410_CONF_t conf_init = {
     .h = {.addr = ZMOD4410_DATA_H_ADDR, .len = 2, .data_buf = &conf_init_data[0]},
@@ -33,33 +28,29 @@ ZMOD4410_CONF_t conf_init = {
     .m = {.addr = ZMOD4410_DATA_M_ADDR, .len = 2, .data_buf = &conf_init_data[4]},
     .s = {.addr = ZMOD4410_DATA_S_ADDR, .len = 4, .data_buf = &conf_init_data[6]},
     .r = {.addr = ZMOD4410_DATA_R_ADDR, .len = 4, .data_buf = &conf_init_data[10]},
-                            };
+};
 /*! Measurement configuration data */
-static uint8_t conf_meas_data[] = {
-                                            0x00, 0x50, 0xFF, 0x38,
-                                            0xFE, 0xD4, 0xFE, 0x70,
-                                            0xFE, 0x0C, 0xFD, 0xA8,
-                                            0xFD, 0x44, 0xFC, 0xE0,
-                                            0x00, 0x52, 0x02, 0x67,
-                                            0x00, 0xCD, 0x03, 0x34,
-                                            0x23, 0x03, 0xA3, 0x43,
-                                            0x00, 0x00, 0x06, 0x49,
-                                            0x06, 0x4A, 0x06, 0x4B,
-                                            0x06, 0x4C, 0x06, 0x4D,
-                                            0x06, 0x4E, 0x06, 0x97,
-                                            0x06, 0xD7, 0x06, 0x57,
-                                            0x06, 0x4E, 0x06, 0x4D,
-                                            0x06, 0x4C, 0x06, 0x4B,
-                                            0x06, 0x4A, 0x86, 0x59,
-                                            0x00, 0x00, 0x00, 0x00,
-                                            0x00, 0x00, 0x00, 0x00,
-                                            0x00, 0x00, 0x00, 0x00,
-                                            0x00, 0x00, 0x00, 0x00,
-                                            0x00, 0x00, 0x00, 0x00,
-                                            0x00, 0x00, 0x00, 0x00,
-                                            0x00, 0x00, 0x00, 0x00,
-                                            0x00, 0x00, 0x00, 0x00
-                                           };
+uint8_t conf_meas_data[] = {
+    0x00, 0x50, 0xFF, 0x38, 0xFE,
+    0xD4, 0xFE, 0x70, 0xFE, 0x0C,
+    0xFD, 0xA8, 0xFD, 0x44, 0xFC,
+    0xE0, 0x00, 0x52, 0x02, 0x67,
+    0x00, 0xCD, 0x03, 0x34, 0x23,
+    0x03, 0xA3, 0x43, 0x00, 0x00,
+    0x06, 0x49, 0x06, 0x4A, 0x06,
+    0x4B, 0x06, 0x4C, 0x06, 0x4D,
+    0x06, 0x4E, 0x06, 0x97, 0x06,
+    0xD7, 0x06, 0x57, 0x06, 0x4E,
+    0x06, 0x4D, 0x06, 0x4C, 0x06,
+    0x4B, 0x06, 0x4A, 0x86, 0x59,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00
+};
 /*! Measurement configuration structure */
 ZMOD4410_CONF_t conf_meas = {
     .h = {.addr = ZMOD4410_DATA_H_ADDR, .len = 16, .data_buf = &conf_meas_data[0]},
@@ -67,7 +58,7 @@ ZMOD4410_CONF_t conf_meas = {
     .m = {.addr = ZMOD4410_DATA_M_ADDR, .len =  4, .data_buf = &conf_meas_data[24]},
     .s = {.addr = ZMOD4410_DATA_S_ADDR, .len = 32, .data_buf = &conf_meas_data[28]},
     .r = {.addr = ZMOD4410_DATA_R_ADDR, .len = 32, .data_buf = &conf_meas_data[60]},
-                            };
+};
 
 
 /***** LOCAL FUNCTION PROTOTYPES **************************************/
@@ -89,17 +80,11 @@ static int8_t _calc_iaq(uint8_t* raw, ZMOD4410_DATA_t* data);
  * @return      OK in case of success; ERROR otherwise
  */
 int8_t zmod4410_init(ZMOD4410_t* dev, uint8_t address) {
-    
-    /***/printf("zmod4410_init()\n");
-    
     /* Check if the device is available */
     if(i2c_is_available(address) != I2C_RET_OK) {
         /* Return ERROR */
         return ZMOD4410_RET_ERROR_NODEV;
     }
-    
-    /***/printf("... device available\n");
-    
     /* Store address in device structure */
     dev->address = address;
     /* Set sensor specific configurations */
@@ -110,33 +95,21 @@ int8_t zmod4410_init(ZMOD4410_t* dev, uint8_t address) {
         /* Reading the config failed */
         return ZMOD4410_RET_ERROR;
     }
-    
-    /***/printf("... sensor configuration read\n");
-    
     /* Read sensor production data */
     if(zmod4410_get_production_data(dev, dev->prod_data) != ZMOD4410_RET_OK) {
         /* Reading the production data failed */
         return ZMOD4410_RET_ERROR;
     }
-    
-    /***/printf("... sensor production data read\n");
-    
     /* Initialize the sensor */
     if(_init_sensor(dev) != ZMOD4410_RET_OK) {
         /* Initializing the sensor failed */
         return ZMOD4410_RET_ERROR;
     }
-    
-    /***/printf("... sensor initialized\n");
-    
     /* Initialize the sensor for measurement */
     if(_init_measurement(dev) != ZMOD4410_RET_OK) {
         /* Initializing the sensor for measurement failed */
         return ZMOD4410_RET_ERROR;
     }
-    
-    /***/printf("... sensor measurements configured\n");
-    
     /* Return with success */
     return ZMOD4410_RET_OK;
 }
@@ -275,6 +248,46 @@ int8_t zmod4410_stop(ZMOD4410_t* dev) {
  * @return      OK in case of success; ERROR otherwise
  */
 int8_t zmod4410_get_measurement(ZMOD4410_t* dev, ZMOD4410_DATA_t* data) {
+    /* Status register value */
+    uint8_t status;
+    /* Retry counter for timeout */
+    uint8_t tries = 0;
+    
+    /* Write the measurement start command */
+    if(zmod4410_start(dev) != ZMOD4410_RET_OK) {
+        /* Writing start command failed */
+        return ZMOD4410_RET_ERROR;
+    }
+    
+    /* Wait for the sensor to finish */
+    do {
+        /* Read the status */
+        if(zmod4410_get_status(dev, &status) != ZMOD4410_RET_OK) {
+            /* Reading the status failed */
+            return ZMOD4410_RET_ERROR;
+        }
+        /* Check if status is "running" */
+        if (!(status & ZMOD4410_STATUS_SEQ_RUNNING)) {
+            /* DONE */
+            break;
+        }
+        /* Increase retry counter */
+        tries++;
+        /* Delay 50ms */
+        _delay_ms(50);
+    } while(tries < ZMOD4410_POLLING_MAX);
+    /* Check if timeout was reached */
+    if(tries >= ZMOD4410_POLLING_MAX) {
+        /* Reading from sensor timed out */
+        return ZMOD4410_RET_ERROR_TIMEOUT;
+    }
+    
+    /* Write the measurement stop command */
+    if(zmod4410_stop(dev) != ZMOD4410_RET_OK) {
+        /* Writing stop command failed */
+        return ZMOD4410_RET_ERROR;
+    }
+    
     /* Read ADC data */
     if(_read_adc(dev, &(dev->meas->r)) != ZMOD4410_RET_OK) {
         /* Reading the ADC failed */
@@ -372,17 +385,22 @@ static int8_t _init_sensor(ZMOD4410_t* dev) {
         tries++;
         /* Delay 50ms */
         _delay_ms(50);
-    } while(tries<ZMOD4410_POLLING_MAX);
-    
+    } while(tries < ZMOD4410_POLLING_MAX);
     /* Check if timeout was reached */
-    if(tries<ZMOD4410_POLLING_MAX) {
+    if(tries >= ZMOD4410_POLLING_MAX) {
         /* Reading from sensor timed out */
         return ZMOD4410_RET_ERROR_TIMEOUT;
     }
-
+    
     /* Read R data */
     if(i2c_read_block(dev->address, dev->init->r.addr, dev->init->r.data_buf, dev->init->r.len) != I2C_RET_OK) {
         /* Reading R data failed */
+        return ZMOD4410_RET_ERROR;
+    }
+    
+    /* Write the measurement stop command */
+    if(zmod4410_stop(dev) != ZMOD4410_RET_OK) {
+        /* Writing stop command failed */
         return ZMOD4410_RET_ERROR;
     }
     

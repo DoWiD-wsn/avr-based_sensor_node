@@ -9,6 +9,8 @@
  * @date    2022/04/14
  *
  * @see     https://github.com/renesas/fsp/tree/master/ra/fsp
+ *
+ * @todo    Final IAQ value calculation missing
  */
 
 #ifndef _ASNX_ZMOD4410_H_
