@@ -6,8 +6,8 @@
  *
  * @file    /_asnx_lib_/sensors/dht.c
  * @author  Dominik Widhalm
- * @version 1.3.0
- * @date    2022/02/21
+ * @version 1.3.1
+ * @date    2022/05/02
  */
 
 
@@ -42,7 +42,8 @@ DHT_RET_t dht_init(DHT_t* dev, volatile uint8_t* ddr, volatile uint8_t* port, vo
     /* Get a pointer to the HW GPIO structure */
     hw_io_t* gpio = &(dev->gpio);
     /* Setup the GPIO pin */
-    HW_GPIO_INPUT(gpio);
+    HW_GPIO_HIGH(gpio);
+    HW_GPIO_OUTPUT(gpio);
     /* Init was successful */
     return DHT_RET_OK;
 }

@@ -6,8 +6,8 @@
  *
  * @file    /_asnx_lib_/sensors/dht.h
  * @author  Dominik Widhalm
- * @version 1.3.0
- * @date    2022/02/21
+ * @version 1.3.1
+ * @date    2022/05/02
  */
 
 #ifndef _ASNX_DHT_H_
