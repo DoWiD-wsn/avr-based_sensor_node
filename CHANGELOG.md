@@ -7,6 +7,7 @@ However, the major and minor number are used to express the version of the hardw
 ## [dev]
 ### Added
 ### Changed
+- Changed diagnostic voltage divider resistors back to 10k (lesser noise than 100k)
 ### Removed
 
 
