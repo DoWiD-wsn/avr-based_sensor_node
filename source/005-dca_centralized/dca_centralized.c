@@ -35,11 +35,12 @@
 #define ZIGBEE_ENABLE_ACK           0               /**< Enable (1) or disable (0) transmit response */
 /* Enable (1) or disable (0) sensor measurements */
 #define ENABLE_DS18B20              0               /**< enable DS18B20 sensor */
-#define ENABLE_AM2302               1               /**< enable AM2302 sensor */
+#define ENABLE_AM2302               0               /**< enable AM2302 sensor */
 #define ENABLE_SHTC3                0               /**< enable SHTC3 sensor */
+#define ENABLE_SHT30                1               /**< enable SHT30 sensor (addon board) */
 /* Check configuration */
-#if (ENABLE_AM2302 && ENABLE_SHTC3)
-#  error "Use either AM2302 or SHTC3 for air measurements, not both!"
+#if (ENABLE_AM2302 && ENABLE_SHTC3) || (ENABLE_AM2302 && ENABLE_SHT30) || (ENABLE_SHTC3 && ENABLE_SHT30)
+#  error "Use either AM2302, SHTC3 or SHT30 for air measurements, but not several!"
 #endif
 
 
@@ -78,6 +79,9 @@
 #endif
 #if ENABLE_SHTC3
 #  include "sensors/shtc3.h"
+#endif
+#if ENABLE_SHT30
+#  include "sensors/sht30.h"
 #endif
 /* Misc */
 #include "util/diagnostics.h"
@@ -261,11 +265,15 @@ int main(void) {
     SHTC3_t shtc3;                  /* SHTC3 sensor device structure */
     uint8_t shtc3_en = 0;           /* Sensor enable flag */
 #endif
+#if ENABLE_SHT30
+    SHT30_t sht30;                  /* SHT30 sensor device structure */
+    uint8_t sht30_en = 0;           /* Sensor enable flag */
+#endif
     /* Temporary sensor measurement variables */
-#if (ENABLE_DS18B20 || ENABLE_AM2302 || ENABLE_SHTC3)
+#if (ENABLE_DS18B20 || ENABLE_AM2302 || ENABLE_SHTC3 || ENABLE_SHT30)
     float measurement = 0.0;
 #endif
-#if (ENABLE_AM2302 || ENABLE_SHTC3)
+#if (ENABLE_AM2302 || ENABLE_SHTC3 || ENABLE_SHT30)
     float measurement2 = 0.0;
 #endif
     /* Diagnostic values */
@@ -404,6 +412,18 @@ int main(void) {
     } else {
         printf("SHTC3 initialized ...\n");
         shtc3_en = 1;
+    }
+#endif
+
+#if ENABLE_SHT30
+    /* Initialize the SHT30 sensor */
+    ret = sht30_init(&sht30, SHT30_I2C_ADDRESS);
+    if(ret != SHT30_RET_OK) {
+        printf("Couldn't initialize SHT30! (%d)\n",ret);
+        sht30_en = 0;
+    } else {
+        printf("SHT30 initialized ...\n");
+        sht30_en = 1;
     }
 #endif
 
@@ -557,6 +577,42 @@ int main(void) {
                 x_ic_dec(X_IC_DEC_NORM);
             } else {
                 printf("... SHTC3 reading failed (%d)\n",ret);
+                t_air_t = 0.0;
+                h_air_t = 0.0;
+                msg.t_air = 0;
+                msg.h_air = 0;
+                x_ic_inc(X_IC_INC_NORM);
+            }
+        } else {
+            t_air_t = 0.0;
+            h_air_t = 0.0;
+            msg.t_air = 0;
+            msg.h_air = 0;
+        }
+#endif
+
+#if ENABLE_SHT30
+        /* Check if sensor is ready */
+        if(sht30_en == 0) {
+            /* Try to initialize sensor (again) */
+            if(sht30_init(&sht30, SHT30_I2C_ADDRESS) == SHT30_RET_OK) {
+                printf("Successfully (re-)initialized SHT30!\n");
+                sht30_en = 1;
+            }
+        }
+        if(sht30_en == 1) {
+            /* SHT30 - Temperature in degree Celsius (°C) and relative humidity in percent (% RH) */
+            ret = sht30_get_temperature_humidity(&sht30, &measurement, &measurement2);
+            if(ret == SHT30_RET_OK) {
+                printf("... SHT30 temperature: %.2f\n", measurement);
+                printf("... SHT30 humidity: %.2f\n", measurement2);
+                t_air_t = measurement;
+                h_air_t = measurement2;
+                msg.t_air = fp_float_to_fixed16_10to6(t_air_t);
+                msg.h_air = fp_float_to_fixed16_10to6(h_air_t);
+                x_ic_dec(X_IC_DEC_NORM);
+            } else {
+                printf("... SHT30 reading failed (%d)\n",ret);
                 t_air_t = 0.0;
                 h_air_t = 0.0;
                 msg.t_air = 0;
