@@ -10,7 +10,7 @@
  *
  * @see     https://github.com/renesas/fsp/tree/master/ra/fsp
  *
- * @todo    Final IAQ value calculation missing
+ * @todo    Final IAQ value calculation missing -> closed source
  */
 
 #ifndef _ASNX_ZMOD4410_H_
